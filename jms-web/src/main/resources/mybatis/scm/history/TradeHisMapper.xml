@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.dao.scm.history.TradeHisDao">
+	<resultMap id="base" type="ScmTradeHis" ></resultMap>
+    
+ 	<insert id="insert"  parameterType="ScmTradeHis">
+	   insert into jy_scm_trade_history
+	     (id,
+	      code,
+	      productid,
+	      type,
+	      tradeorder,
+	      tradenum,
+	      tradeweight,
+	      tradegoldprice,
+	      tradebasicwage,
+	      tradeaddwage,
+	      tradeotherwage,
+	      tradeunitprice,
+	      tradetotalprice,
+	      tradeactureprice,
+	      tradewholesale,
+	      tradecostprice,
+	      tradecheckprice,
+	      tradefinanceprice,
+	      inorgid,
+	      inwarehouseid,
+	      outorgid,
+	      outwarehouseid,
+	      createtime,
+	      createuser)
+	   values
+	     (#{id,jdbcType=VARCHAR},
+	      #{code,jdbcType=VARCHAR},
+	      #{productid,jdbcType=VARCHAR},
+	      #{type,jdbcType=VARCHAR},
+	      #{tradeorder,jdbcType=VARCHAR},
+	      #{tradenum,jdbcType=NUMERIC},
+	      #{tradeweight,jdbcType=NUMERIC},
+	      #{tradegoldprice,jdbcType=NUMERIC},
+	      #{tradebasicwage,jdbcType=NUMERIC},
+	      #{tradeaddwage,jdbcType=NUMERIC},
+	      #{tradeotherwage,jdbcType=NUMERIC},
+	      #{tradeunitprice,jdbcType=NUMERIC},
+	      #{tradetotalprice,jdbcType=NUMERIC},
+	      #{tradeactureprice,jdbcType=NUMERIC},
+	      #{tradewholesale,jdbcType=NUMERIC},
+	      #{tradecostprice,jdbcType=NUMERIC},
+	      #{tradecheckprice,jdbcType=NUMERIC},
+	      #{tradefinanceprice,jdbcType=NUMERIC},
+	      #{inorgid,jdbcType=VARCHAR},
+	      #{inwarehouseid,jdbcType=VARCHAR},
+	      #{outorgid,jdbcType=VARCHAR},
+	      #{outwarehouseid,jdbcType=VARCHAR},
+	      sysdate,
+	      #{createUser,jdbcType=VARCHAR})
+	</insert>
+	
+	
+	
+	<select id="findByPage" resultMap="base" parameterType="ScmTradeHis">
+		select t.id,t.code,p.name as productid,item.name as type,t.tradeorder,t.tradenum,t.tradeweight,t.tradecostprice,t.tradecheckprice,t.tradefinanceprice,t.tradewholesale,
+		o.name as inorgid,w.name as inwarehouseid,i.name as outorgid,h.name as outwarehouseid,t.createtime
+		from <!-- (select * from JY_SCM_TRADE_HISTORY t where t.id=any(select max(id) from JY_SCM_TRADE_HISTORY group by code)) --> JY_SCM_TRADE_HISTORY t 
+		left join jy_base_org o on t.inorgid=o.id
+		left join jy_base_org i on t.outorgid=i.id
+		left join jy_scm_warehouse w on t.inwarehouseid=w.id
+		left join jy_scm_warehouse h on t.outwarehouseid=h.id
+		left join jy_scm_ims_product p on t.productid=p.id
+		left join (select name,value from Jy_Data_Dict_Item t where t.dictid=(SELECT id FROM JY_DATA_DICT jdd WHERE jdd.dataKey = 'SCMHISTYPE')) item on item.value=t.type
+		where 1=1 <!-- t.id = any(select max(t.id) from JY_SCM_TRADE_HISTORY group by t.code) -->
+		<if test='param.code != null  and param.code != ""'>
+			AND upper(t.code) like '%'||upper(#{param.code,jdbcType=VARCHAR})||'%'
+       </if> 
+       <if test='param.type != null and param.type != ""'>
+			AND t.type = #{param.type,jdbcType=VARCHAR,jdbcType=VARCHAR}
+       </if>
+       <if test='param.tradeorder != null  and param.tradeorder != ""'>
+			AND upper(t.tradeorder) like '%'||upper(#{param.tradeorder,jdbcType=VARCHAR})||'%'
+       </if>
+       <if test='param.inorgid != null  and param.inorgid != ""'>
+			AND t.inorgid = #{param.inorgid,jdbcType=VARCHAR,jdbcType=VARCHAR}
+       </if>
+       <if test='param.outorgid != null  and param.outorgid != ""'>
+			AND t.outorgid = #{param.outorgid,jdbcType=VARCHAR,jdbcType=VARCHAR}
+       </if>
+       <if test='param.createTime != null and param.createTime != ""'>
+        	AND t.createtime &gt;= #{param.createTime,jdbcType=VARCHAR}
+       </if>
+       <if test='param.updateTime != null and param.updateTime != ""'>
+        	AND t.createtime &lt;= #{param.updateTime,jdbcType=VARCHAR}
+       </if>
+        ORDER BY t.createTime desc
+	</select>
+	
+	
+	
+	<select id="selectTradeDetail" resultMap="base" parameterType="String">
+		select t.id,item.name as type,t.tradeorder,t.tradenum,t.tradeweight,t.tradegoldprice,t.tradebasicwage,t.tradeaddwage,t.tradeotherwage,t.tradeunitprice,t.tradetotalprice,
+		t.tradeactureprice,t.tradewholesale,t.tradecostprice,t.tradecheckprice,t.tradefinanceprice,
+		o.name as inorgid,w.name as inwarehouseid,i.name as outorgid,h.name as outwarehouseid,t.createtime,a.name as createuser
+		from JY_SCM_TRADE_HISTORY  t 
+		left join jy_base_org o on t.inorgid=o.id
+		left join jy_base_org i on t.outorgid=i.id
+		left join jy_scm_warehouse w on t.inwarehouseid=w.id
+		left join jy_scm_warehouse h on t.outwarehouseid=h.id
+		left join jy_scm_ims_product p on t.productid=p.id
+		left join jy_base_account a on t.createuser=a.id
+		left join (select name,value from Jy_Data_Dict_Item t where t.dictid=(SELECT id FROM JY_DATA_DICT jdd WHERE jdd.dataKey = 'SCMHISTYPE')) item on item.value=t.type
+		where t.id=#{code,jdbcType=VARCHAR} order by t.createtime desc
+	</select>
+	
+	
+	
+</mapper>

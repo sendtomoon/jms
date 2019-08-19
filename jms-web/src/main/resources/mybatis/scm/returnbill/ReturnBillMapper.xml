@@ -1,0 +1,998 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.dao.scm.returnbill.ReturnBillDao">
+
+	<!-- 返回类型resultType 传入类型parameterType -->
+	
+	
+		<select id="find" resultType="ReturnBillDetail" parameterType="string">
+		     select 
+                a.ID as id,
+            a.RETURNID as returnId,
+             a.GOODSID as goodsId,
+                a.CODE as "code",
+                a.NAME as "name",
+            a.GOLDTYPE as "goldType",
+            a.GOLDNAME as "goldName",
+        nvl(a.UNQUALIFYNUM,0) as "unqualifyNum",
+         nvl(a.UNQUALIFYWT,0) as "unqualifyWt",
+           nvl(a.basicCost,0) as "basicCost",
+             nvl(a.addCost,0) as "addCost",
+           nvl(a.otherCost,0) as "otherCost",
+             nvl(a.purCost,0) as "purCost",
+             a.CAUSEID as "causeId",
+             b.REMARKS as "remarks",
+         a.DESCRIPTION as "description",
+          b.CREATETIME as "createTime",
+           b.CHECKTIME as "ckeckTime",
+                c.name as "createName",
+                d.name as "checkName",
+            b.returnNo as "returnNo",
+            b.noticeNo as "noticeNo",
+                e.name as "returnOrgName",
+                f.name as "supplierName",
+          nvl(g.goldweight,0) as "goldWeight",
+         nvl(g.fgoldweight,0) as "fgoldWeight",
+    nvl(sum(h.STONEWEIGHT),0) as "stoneWeight",
+              b.status as "status",
+         b.rejectCause as "rejectCause"
+             
+         from 
+           JY_SCM_FLOW_RETURN_DETAIL a
+          left join JY_SCM_FLOW_RETURN_ORDER b on  b.ID = a.RETURNID
+          left join  JY_SCM_IMS_PRODUCT g on  a.goodsid = g.id  
+          left join  JY_SCM_IMS_ACCESSORIES h on a.goodsid = h.PRODUCTID
+          left join JY_BASE_ACCOUNT c on c.ID = b.CREATEUSER
+          left join JY_BASE_ACCOUNT d on b.CHECKUSER = d.ID
+          left join JY_BASE_ORG e on  b.ORGID = e.ID
+           left join JY_BASE_FRANCHISEE f on b.SUPPLIERID = f.ID
+         where 
+           a.RETURNID = #{rb.returnId}
+         group by 
+           a.ID, 
+           a.RETURNID, 
+           a.GOODSID, 
+           a.CODE, 
+           a.NAME, 
+           a.GOLDTYPE, 
+           a.GOLDNAME, 
+           a.UNQUALIFYNUM, 
+           a.UNQUALIFYWT, 
+           a.basicCost, 
+           a.addCost, 
+           nvl(a.UNQUALIFYNUM,0), 
+           a.otherCost, 
+           a.purCost, 
+           a.CAUSEID, 
+           nvl(a.UNQUALIFYWT,0), 
+           b.REMARKS, 
+           a.DESCRIPTION, 
+           b.CREATETIME, 
+           nvl(a.basicCost,0), 
+           b.CHECKTIME, 
+           c.name, 
+           nvl(a.addCost,0), 
+           b.returnNo, 
+           b.noticeNo, 
+           nvl(a.otherCost,0), 
+           e.name, 
+           f.name, 
+           g.goldweight, 
+           nvl(a.purCost,0), 
+           g.fgoldweight, 
+           b.status, 
+           b.rejectCause, 
+           d.name, 
+           nvl(g.goldweight,0), 
+           nvl(g.fgoldweight,0)
+	</select>
+	
+	<select id="findForSujin" resultType="ReturnBillDetail" parameterType="string">
+		     select 
+                  a.ID as "id",
+            a.RETURNID as "returnId",
+             a.GOODSID as "goodsId",
+                a.CODE as "code",
+                a.NAME as "name",
+            a.GOLDTYPE as "goldType",
+            a.GOLDNAME as "goldName",
+        nvl(a.UNQUALIFYNUM,0) as "unqualifyNum",
+         nvl(a.UNQUALIFYWT,0) as "unqualifyWt",
+           nvl(a.basicCost,0) as "basicCost",
+             nvl(a.addCost,0) as "addCost",
+           nvl(a.otherCost,0) as "otherCost",
+             nvl(a.purCost,0) as "purCost",
+             a.CAUSEID as "causeId",
+             a.REMARKS as "remarks",
+         a.DESCRIPTION as "description",
+          b.CREATETIME as "createTime",
+           b.CHECKTIME as "ckeckTime",
+                c.name as "createName",
+                d.name as "checkName",
+            b.returnNo as "returnNo",
+            b.noticeNo as "noticeNo",
+                e.name as "returnOrgName",
+                f.name as "supplierName",
+              b.status as "status",
+         b.rejectCause as "rejectCause"
+             
+         from 
+           JY_SCM_FLOW_RETURN_DETAIL a
+          left join JY_SCM_FLOW_RETURN_ORDER b on  b.ID = a.RETURNID
+          left join  JY_SCM_FLOW_NOTICEDETAIL i on i.id = a.goodsid
+            left join  JY_SCM_IMS_ACCESSORIES h on a.goodsid = h.PRODUCTID
+          left join JY_BASE_ACCOUNT c on c.ID = b.CREATEUSER
+          left join JY_BASE_ACCOUNT d on b.CHECKUSER = d.ID
+          left join JY_BASE_ORG e on  b.ORGID = e.ID
+           left join JY_BASE_FRANCHISEE f on b.SUPPLIERID = f.ID
+         where 
+           a.RETURNID = #{rb.returnId}
+	</select>
+
+	<select id="findByPage" resultType="ReturnBill" parameterType="ReturnBill">
+  	   select 
+              a.id as id, 
+        a.returnNo as returnNo, 
+        a.noticeNo as noticeNo, 
+        nvl(a.totalNum,0) as totalNum, 
+         nvl(a.totalWt,0) as totalWt, 
+      a.supplierId as supplierId, 
+         a.remarks as remarks, 
+          a.status as status, 
+            d.name as checkUser, 
+       a.checkTime as checkTime, 
+            e.name as createUser,
+      a.createTime as createTime,
+            b.name as supplierName, 
+    nvl(a.basicCost,0) as basicCost, 
+      nvl(a.addcost,0) as addCost, 
+    nvl(a.othercost,0) as otherCost, 
+      nvl(a.purcost,0) as purCost 
+       from 
+           JY_SCM_FLOW_RETURN_ORDER a
+            left join JY_BASE_FRANCHISEE b on a.SUPPLIERID = b.ID
+            left join JY_BASE_ACCOUNT d on a.CHECKUSER = d.ID
+            left join JY_BASE_ACCOUNT e on a.createuser = e.ID
+       where 
+            1=1
+        <if test='param.returnNo != null and param.returnNo != ""'>
+             AND a.returnNo like '%'||#{param.returnNo,jdbcType=VARCHAR}||'%'
+        </if>
+        
+        <if test='param.noticeNo != "" and param.noticeNo != null'>
+             AND a.noticeNo like '%'||#{param.noticeNo,jdbcType=VARCHAR}||'%'
+        </if>
+        
+        <if test='param.supplierName != null and param.supplierName != ""'>	
+             AND b.name like '%'||#{param.supplierName,jdbcType=VARCHAR}||'%'
+        </if>
+        
+        <if test='param.status != "" and param.status != null'>
+             AND a.status like '%'||#{param.status,jdbcType=VARCHAR}||'%'
+        </if>
+        order by a.returnNo desc
+	</select>
+
+	<update id="updateReturnBillStatus" parameterType="ReturnBill">
+		UPDATE
+		    JY_SCM_FLOW_RETURN_ORDER
+		SET
+		    STATUS = #{status,jdbcType=VARCHAR},
+		    CHECKUSER = #{checkUser,jdbcType=VARCHAR},
+		    CHECKTIME = sysdate,
+		    REJECTCAUSE = #{rejectCause,jdbcType=VARCHAR}
+		WHERE
+		    id = #{id}
+	</update>  
+	
+	
+	<select id="findReportQC" resultType="ReturnBill" parameterType="String">
+	
+	  select 
+          REPORTNO AS qcNo,
+           ENTRYNO AS noticeNo,
+        SUPPLIERID AS supplierNo, 
+        QCNGWEIGHT AS totalWt,
+        QCNGNUMBER AS totalNum,
+           REMARKS AS remarks,
+           QCORGID AS orgId,
+        SUPPLIERID AS supplierId,
+                ID AS reportId
+      from 
+          JY_SCM_QC_REPORT
+	  where 
+	      REPORTNO = #{reportno,jdbcType=VARCHAR}
+	
+	</select>
+	
+	<select id="findSuJinORXiangQian" parameterType="string" resultType="string">
+	
+	select 
+	   flag 
+	from 
+	  JY_SCM_FLOW_NOTICEORDER
+	where
+	   NOTICENO = #{noticeno,jdbcType=VARCHAR}
+	
+	</select>
+	
+	
+	<select id="findNoticeId" parameterType="string" resultType="string">
+	
+	select 
+	   NOTICENO 
+	from 
+	  JY_SCM_FLOW_RETURN_ORDER
+	where
+	   ID = #{returnid,jdbcType=VARCHAR}
+	
+	</select>	
+	
+	
+	<insert id="insertReturnBill" parameterType="ReturnBill">
+	insert into 
+	JY_SCM_FLOW_RETURN_ORDER (
+	ID,
+	RETURNNO,
+	NOTICENO,
+	qcNo,
+	TOTALNUM,
+	TOTALWT,
+	SUPPLIERID,
+	ORGID,
+	CREATEUSER,
+	CREATETIME,
+	REMARKS,
+	STATUS,
+	DELFLAG,
+	addcost,
+	basiccost,
+	othercost,
+	purcost
+	)
+	VALUES
+	(
+	#{id,jdbcType=VARCHAR},
+	#{returnNo,jdbcType=VARCHAR},
+	#{noticeNo,jdbcType=VARCHAR},
+	#{qcNo,jdbcType=VARCHAR},
+	#{totalNum,jdbcType=NUMERIC},
+	#{totalWt,jdbcType=NUMERIC},
+	#{supplierId,jdbcType=VARCHAR},
+	#{orgId,jdbcType=VARCHAR},
+	#{createUser,jdbcType=VARCHAR},
+	sysdate,
+	#{remarks,jdbcType=VARCHAR},
+	#{status,jdbcType=VARCHAR},
+	#{delFlag,jdbcType=VARCHAR},
+	#{addCost,jdbcType=NUMERIC},
+	#{basicCost,jdbcType=NUMERIC},
+	#{otherCost,jdbcType=NUMERIC},
+	#{purCost,jdbcType=NUMERIC}
+	)
+	</insert>
+
+	<insert id="saveManualReturnBill" parameterType="ReturnBill">
+	
+	insert into JY_SCM_FLOW_RETURN_ORDER 
+	(ID,
+	RETURNNO,
+	NOTICENO,
+	qcNo,
+	SUPPLIERID,
+	ORGID,
+	CREATEUSER,
+	CREATETIME,
+	REMARKS,
+	STATUS,
+	DELFLAG,
+	TOTALNUM,
+	TOTALWT
+	) 
+	values
+	(
+	#{id,jdbcType=VARCHAR},
+	#{returnNo,jdbcType=VARCHAR},
+	#{noticeNo,jdbcType=VARCHAR},
+	#{qcNo,jdbcType=VARCHAR},
+	(select id from JY_BASE_FRANCHISEE where name = #{supplierName,jdbcType=VARCHAR}),
+	#{orgId,jdbcType=VARCHAR},
+	#{createUser,jdbcType=VARCHAR},
+	sysdate,
+	#{remarks,jdbcType=VARCHAR},
+	0,
+	1,
+	#{totalNum},
+	#{totalWt}
+	)
+	
+	</insert>
+	
+	
+	<select id="getReturnBill" resultType="ReturnBill" parameterType="string">
+	select 
+	    a.RETURNNO AS returnNo,
+	    a.NOTICENO AS noticeNo,
+	        b.name AS supplierName,
+	     a.remarks AS remarks,
+	        c.name AS createUser,
+	  a.createTime AS createTime,
+	        d.name AS checkUser,
+	   a.checkTime AS checkTime,
+        a.TOTALNUM AS totalNum,
+         a.TOTALWT AS totalWt,
+     nvl(sum(e.basiccost),0) as basicCost,
+     nvl(sum(e.ADDCOST),0) as addCost,
+     nvl(sum(e.OTHERCOST),0) as otherCost,
+     nvl(sum(e.PURCOST),0) as purCost,
+     nvl(sum(e.stonewt),0) stoneWeight,
+     nvl(sum(e.goldwt),0) fgoldWeight,
+     a.createtime cTime,
+         a.checktime chTime
+    from
+              JY_SCM_FLOW_RETURN_ORDER   a
+    left join JY_BASE_FRANCHISEE         b on b.id = a.supplierid
+    left join JY_BASE_ACCOUNT            c on c.id = a.createuser
+    left join JY_BASE_ACCOUNT            d on d.id = a.checkuser
+    left join JY_SCM_FLOW_RETURN_Detail  e on e.returnid = a.id
+    where
+        RETURNNO = #{RETURNNO}
+    group by 
+        a.RETURNNO, 
+        a.NOTICENO, 
+        b.name, 
+        a.remarks, 
+        c.name, 
+        a.createTime, 
+        d.name, 
+        a.checkTime, 
+        a.TOTALNUM, 
+        a.TOTALWT
+	</select>
+	
+	<select id="getReturnBillDetail" resultType="ReturnBillDetail" parameterType="string">
+	    select 
+                a.ID as id,
+            a.RETURNID as returnId,
+             a.GOODSID as goodsId,
+                a.CODE as "code",
+                a.NAME as "name",
+            a.GOLDTYPE as "goldType",
+            a.GOLDNAME as "goldName",
+        nvl(a.UNQUALIFYNUM,0) as "unqualifyNum",
+         nvl(a.UNQUALIFYWT,0) as "unqualifyWt",
+           nvl(a.basicCost,0) as "basicCost",
+             nvl(a.addCost,0) as "addCost",
+           nvl(a.otherCost,0) as "otherCost",
+             nvl(a.purCost,0) as "purCost",
+             a.CAUSEID as "causeId",
+             a.REMARKS as "remarks",
+         a.DESCRIPTION as "description",
+          b.CREATETIME as "createTime",
+           b.CHECKTIME as "ckeckTime",
+                c.name as "createUser",
+                d.name as "checkUser",
+            b.returnNo as "returnNo",
+            b.noticeNo as "noticeNo",
+                e.name as "returnOrgName",
+                f.name as "supplierName",
+          nvl(g.goldweight,0) as "goldWeight",
+         nvl(g.fgoldweight,0) as "fgoldWeight",
+    nvl(sum(h.STONEWEIGHT),0) as "stoneWeight",
+              b.status as "status",
+         b.rejectCause as "rejectCause"
+         from 
+           JY_SCM_FLOW_RETURN_DETAIL a
+          left join JY_SCM_FLOW_RETURN_ORDER b on  b.ID = a.RETURNID
+          left join  JY_SCM_IMS_PRODUCT g on  a.goodsid = g.id  
+          left join  JY_SCM_IMS_ACCESSORIES h on a.goodsid = h.PRODUCTID
+          left join JY_BASE_ACCOUNT c on c.ID = b.CREATEUSER
+          left join JY_BASE_ACCOUNT d on b.CHECKUSER = d.ID
+          left join JY_BASE_ORG e on  b.ORGID = e.ID
+          left join JY_BASE_FRANCHISEE f on b.SUPPLIERID = f.ID
+         where 
+           b.RETURNNO = #{RETURNNO}
+         group by 
+             a.ID, 
+             a.RETURNID, 
+             a.GOODSID, 
+             a.CODE, 
+             a.NAME, 
+             a.GOLDTYPE, 
+             a.GOLDNAME, 
+             a.UNQUALIFYNUM, 
+             a.UNQUALIFYWT, 
+             a.basicCost, 
+             a.addCost, 
+             a.otherCost, 
+             a.purCost, 
+             a.CAUSEID, 
+             a.REMARKS, 
+             a.DESCRIPTION, 
+             b.CREATETIME, 
+             b.CHECKTIME, 
+             c.name, 
+             d.name, 
+             b.returnNo, 
+             b.noticeNo, 
+             e.name, 
+             f.name, 
+             g.goldweight, 
+             g.fgoldweight, 
+             b.status,
+             b.rejectCause   
+	</select>
+	
+	<select id="getReturnBillStatus" parameterType="string" resultType="string">
+	
+	select status from JY_SCM_FLOW_RETURN_ORDER where id = #{string}
+	
+	</select>
+	
+	<select id="findNoticeForReturnBill" parameterType="string" resultType="ReturnBillDetail">
+	select 
+	    b.SURPPLYID    as supplierId,
+	    b.FLAG         as sujinorxiangqian,
+	    a.name         as name,
+	    a.GOLDTYPE     as goldType,
+	    a.GOLDTYPENAME as goldName,
+	    a.COUNT        as unqualifyNum,
+	    a.ACTUALWT     as unqualifyWt,
+	    a.STONEWT      as stoneWeight,
+	    c.name         as supplierName,
+	    a.id           as goodsId,
+	    a.COST_PRICE   as pureCost,
+	    a.BASICCOST    as basicCost,
+	    a.ADDCOST      as addCost,
+	    a.OTHERCOST    as otherCost,
+              d.code   as code
+
+	from 
+	              JY_SCM_FLOW_NOTICEDETAIL a
+	    left join JY_SCM_FLOW_NOTICEORDER  b on b.id = a.NOTICEID
+	    left join JY_BASE_FRANCHISEE       c on c.id = b.SURPPLYID
+        left join JY_SCM_IMS_PRODUCT       d on d.NOTICENO = b.NOTICENO
+	where 
+	    b.NOTICENO = #{noticeno,jdbcType=VARCHAR}
+	</select>
+	
+	<select id="findNoticeForReturnBillOfXiangqian" parameterType="string" resultType="ReturnBillDetail">
+	select 
+	        a.code as code,
+	       a.count as unqualifyNum,
+     a.TOTALWEIGHT as unqualifyWt,
+(select name from JY_DATA_DICT_ITEM  where dictid = '5c9248462dd94805900bd6b8e065d45c' and value = a.GOLDTYPE) as "goldName",
+            b.name as supplierName,
+            a.name as name,
+            a.id as goodsId
+	from 
+	    JY_SCM_IMS_PRODUCT a
+	left join JY_BASE_FRANCHISEE b on b.id = a.FRANCHISEEID  
+	where
+	    a.noticeno = #{noticeno}
+	</select>
+	
+	
+	
+	<select id="getNoticeNoForReturnBillDetail" parameterType="string" resultType="ReturnBillDetail">
+	select
+	             COST_PRICE as "purCost",
+	             ADDCOST    as "addCost",
+	             BASICCOST  as "basicCost",
+	             OTHERCOST  as "otherCost",
+	          GOLDTYPENAME  as "goldName",
+	              GOLDTYPE  as "goldType",
+	              ACTUALWT  as "actualWt"
+	from
+	    JY_SCM_FLOW_NOTICEDETAIL
+	where
+	    id = #{goodsid}
+	</select>
+	
+	
+    <select id="getNoticeNoForReturnBillDetailForXiangqian" parameterType="string" resultType="ReturnBillDetail">
+	select
+          COSTPUR as "purCost",
+        WAGEBASIC as "basicCost",
+        WAGEOW    as "otherCost",
+        WAGEADD   as "addCost",
+        GOLDTYPE  as "goldType",
+        (select name from JY_DATA_DICT_ITEM  where dictid = '5c9248462dd94805900bd6b8e065d45c' and value = JY_SCM_IMS_PRODUCT.GOLDTYPE) as "goldName"
+    
+    from 
+        JY_SCM_IMS_PRODUCT
+    where 
+        id = #{goodsId}
+	</select>
+	
+	<select id="findForReturnBillDetailFromQCDetail" parameterType="String" resultType="ReturnBillDetail">
+	 select 
+             b.code AS code,
+         a.NGNUMBER	AS unqualifyNum,
+         a.NGWEIGHT	AS unqualifyWt,
+         a.QCFAQID	AS causeId,
+         a.REMARKS	AS remarks,
+          a.PRODID	AS goodsId,
+          nvl(b.WAGEBASIC,0) as basicCost,
+          nvl(b.WAGEADD,0) as addCost,
+          nvl(b.WAGEOW,0) as otherCost,
+          b.COSTPUR AS purCost,
+             b.name AS name,
+         b.GOLDTYPE AS goldType,
+         nvl(b.goldweight,0) as goldWeight,
+         nvl((select sum(a1.stoneweight) from jy_scm_ims_accessories a1 where a1.productid=b.id),0) as stoneWeight
+     from
+        JY_SCM_QC_REPORTDTL a,
+        JY_SCM_IMS_PRODUCT b,
+        JY_SCM_QC_REPORT c
+     where 
+        c.REPORTNO = #{reportno,jdbcType=VARCHAR} and
+        a.reportid = c.id and
+        b.id = a.PRODID 
+	
+	</select>
+	
+	<insert id="insertReturnBillDetailFromQCDetail"  parameterType="ReturnBillDetail">
+	insert into 
+         JY_SCM_FLOW_RETURN_DETAIL(
+           id,
+           returnid,
+           goodsid,
+           name,
+           code,
+           UNQUALIFYNUM,
+           UNQUALIFYWT,
+           causeId,
+           remarks,
+           basicCost,
+           addCost,
+           otherCost,
+           purCost,
+           goldtype,
+           goldName)
+     values
+         (
+           #{id,jdbcType=VARCHAR},
+           #{returnId,jdbcType=VARCHAR},
+           #{goodsId,jdbcType=VARCHAR},
+           #{name,jdbcType=VARCHAR},
+           #{code,jdbcType=VARCHAR},
+           #{unqualifyNum,jdbcType=VARCHAR},
+           #{unqualifyWt,jdbcType=VARCHAR},
+           #{causeId,jdbcType=VARCHAR},
+           #{remarks,jdbcType=VARCHAR},
+           #{basicCost,jdbcType=VARCHAR},
+           #{addCost,jdbcType=VARCHAR},
+           #{otherCost,jdbcType=VARCHAR},
+           #{purCost,jdbcType=VARCHAR},
+           #{goldType,jdbcType=VARCHAR},
+           #{goldName,jdbcType=VARCHAR}
+         )      
+	</insert>
+	
+	<select id="findForReturnBillDetailFromSujin" parameterType="String" resultType="ReturnBillDetail">
+	 select 
+         a.NGNUMBER	AS unqualifyNum,  <!-- 不合格件数 -->
+         a.NGWEIGHT	AS unqualifyWt,   <!-- 不合格重量 -->
+         a.QCFAQID	AS causeId,
+         a.REMARKS	AS remarks,
+          a.PRODID	AS goodsId,
+        b.basicCost AS basicCost,
+          b.addCost AS addCost,
+        b.otherCost AS otherCost,
+       b.COST_PRICE AS purCost,
+       b.stonewt stoneWeight,
+			b.goldwt goldWeight,
+             b.name AS name,
+     b.GOLDTYPENAME AS goldName,
+         b.GOLDTYPE AS goldType,
+         b.ACTUALWT AS actualWt
+     from
+        JY_SCM_QC_REPORTDTL a,
+        JY_SCM_FLOW_NOTICEDETAIL b,
+        JY_SCM_QC_REPORT c,
+        JY_SCM_FLOW_NOTICEORDER e
+     where 
+        c.reportno = #{qcNo,jdbcType=VARCHAR} and
+        a.reportid = c.id and
+        b.id = a.PRODID 
+        and e.id = b.noticeid
+	
+	</select>
+	
+	
+	<select id="findProductOfcode" parameterType="String" resultType="ReturnBillDetail" >
+	select 
+          a.code as code,
+          a.id   as goodsId,
+          a.name as name,
+      a.GOLDTYPE as goldType,
+   a.fgoldWeight as fgoldWeight,
+    a.GOLDWEIGHT AS unqualifyWt,
+sum(b.STONEWEIGHT) as stoneWeight,
+     a.WAGEBASIC as basicCost,
+       a.WAGEADD as addCost,
+        a.WAGEOW as otherCost,
+       a.COSTPUR as purCost,
+          c.name as supplierName,
+            c.id as supplierId,
+      a.noticeno as noticeNo,
+(select name from JY_DATA_DICT_ITEM  where dictid = '5c9248462dd94805900bd6b8e065d45c' and value = a.GOLDTYPE) as "goldName"
+    
+	from 
+	    jy_scm_ims_product a
+	    left join JY_SCM_IMS_ACCESSORIES b on a.id = b.PRODUCTID
+	    left join JY_BASE_FRANCHISEE c on a.FRANCHISEEID = c.id
+	where 
+	    a.CODE = #{code}
+	group by 
+	    a.code, 
+	    a.id,
+	    a.name, 
+	    a.GOLDTYPE, 
+	    a.fgoldWeight, 
+	    a.GOLDWEIGHT, 
+	    a.WAGEBASIC, 
+	    a.WAGEADD, 
+	    a.WAGEOW, 
+	    a.COSTPUR, 
+	    c.name, 
+	    c.id, 
+	    a.noticeno
+	</select>
+	
+	
+	<update id="modifyProductStatusBlock" parameterType="string">
+	update
+	   JY_SCM_IMS_PRODUCT
+	set
+	   status = 'C'
+	where
+	   code = #{code}
+	
+	</update>
+	
+	<update id="modifyProductStatus" parameterType="string">
+	update
+	   JY_SCM_IMS_PRODUCT
+	set
+	   status = 'F'
+	where
+	   code = #{code}
+	
+	</update>
+	
+	<select id="findCodeFromRBD" parameterType="string" resultType="string">
+	
+	select 
+	code 
+	from 
+	JY_SCM_FLOW_RETURN_DETAIL  
+	where returnid = #{id}
+	
+	</select>
+	
+	<select id="findCodeForXiangqianFromRB" parameterType="string">
+	
+	select 
+	    a.code 
+	form 
+	    JY_SCM_FLOW_RETURN_DETAIL a
+	left join JY_SCM_FLOW_RETURN_ORDER b on b.id = a.returnid
+	where 
+	  b.returnid = #{RETURNNO}
+	</select>
+	
+	<delete id="deleteReturnBill" parameterType="string">
+		delete JY_SCM_FLOW_RETURN_ORDER  where ID = #{ID}
+	</delete>
+	
+	<delete id="deleteReturnBillDetail" parameterType="string">
+		delete JY_SCM_FLOW_RETURN_DETAIL  where returnid = #{id}
+	</delete>
+	
+<!-- 	<select id=""> -->
+	
+<!-- 	</select> -->
+	
+	
+	<select id="findGoldName" parameterType="string" resultType="string">
+	
+	select 
+	    b.NAME as goldName  
+	from 
+	    jy_data_dict a 
+	left join 
+	    jy_data_dict_item b on a.id=b.dictid 
+	where 
+	    a.datakey = 'SCM_PRO_GOLD_TYPE' and
+	    value = #{goldType,jdbcType=VARCHAR}
+	
+	</select>
+	
+	<select id="findForModify" parameterType="string" resultType="ReturnBillDetail">
+	
+	SELECT   
+	         a.QCNO as "QCNO",
+         a.returnno as "returnNo",
+         a.NOTICENO as "noticeNo",
+             c.name as "supplierName",
+          a.remarks as "remarks",
+             b.code as "code",
+             b.name as "name",
+         b.goldname as "goldName",
+         b.goldtype goldType,
+     b.UNQUALIFYNUM as "unqualifyNum",
+      b.UNQUALIFYWT as "unqualifyWt",
+          b.CAUSEID as "qcFaqId",
+         b.goodsId  as "goodsId",
+         (select o1.name from jy_base_org o1 where o1.id = a.orgid) orgName,
+         b.unqualifynum unqualifyNum,
+         b.unqualifywt unqualifyWt,
+         b.goldwt goldWeight,
+         b.stonewt stoneWeight,
+         b.basiccost basicCost,
+         b.addcost addCost,
+         b.othercost otherCost,
+         b.purcost purCost,
+         a.createtime cTime,
+         (select name from jy_base_account where id=a.createuser)createUser,
+         a.checktime chTime,
+         (select name from jy_base_account where id=a.checkuser)checkUser
+   FROM JY_SCM_FLOW_RETURN_ORDER a
+   LEFT JOIN  JY_SCM_FLOW_RETURN_DETAIL b
+   ON b.RETURNID = a.id
+   LEFT JOIN JY_BASE_FRANCHISEE c
+   ON c.id = a.supplierid
+   WHERE a.id = #{id}
+	
+	</select>
+	
+	<update id="saveModifyReturnBill" parameterType="ReturnBill">
+	
+	update 
+	    JY_SCM_FLOW_RETURN_ORDER 
+	set 
+	    TOTALNUM = #{totalNum} ,
+	    TOTALWT = #{totalWt} , 
+	    REMARKS = #{remarks} ,
+	    STATUS = #{status}
+	where id = #{id}
+	
+	</update>
+	
+	<delete id="deleteModifyReturnBillDetail" parameterType="string">
+	
+	delete from JY_SCM_FLOW_RETURN_DETAIL where returnid = #{id}
+	
+	</delete>
+	
+	<select id="findStatusFromRB" parameterType="string" resultType="string">
+	
+	select status from JY_SCM_FLOW_RETURN_ORDER where id = #{id}
+	
+	</select>
+	
+	
+	<select id="getDetailXiang" resultType="ReturnBillDetail">
+	         select 
+	         p.id goodsId,
+	         p.code code,
+	         p.name name, 
+	         (select b.name
+              from JY_DATA_DICT d
+              join JY_DATA_DICT_ITEM b
+              on b.dictid = d.id
+              where d.datakey = 'SCM_PRO_GOLD_TYPE' and b.value = p.goldtype) goldName,
+              p.goldtype goldType,p.count unqualifyNum,p.totalweight unqualifyWt,p.goldweight goldWeight,
+               (select sum(a.stoneweight) from jy_scm_ims_accessories a where a.productid=p.id)stoneWeight,
+               p.wagebasic basicCost,
+               p.wageadd addCost,
+               p.wageow otherCost,
+               p.costpur purCost,
+               p.franchiseeid supplierId,
+               (select f.name from jy_base_franchisee f where f.id = p.franchiseeid) supplierName,
+               (select o1.name from jy_base_org o1 where o1.id = #{orgId,jdbcType=VARCHAR}) orgName,
+	           (select o1.id from jy_base_org o1 where o1.id = #{orgId,jdbcType=VARCHAR}) orgId
+                from JY_SCM_IMS_PRODUCT p where p.code=#{enteryNo,jdbcType=VARCHAR} and p.noticeno=#{noticeNo,jdbcType=VARCHAR}
+	</select>
+	
+	
+	<select id="getDetailSu"  resultType="ReturnBillDetail">
+		select
+	       n1.id id,
+	           n.purchaseno purchaseNo,
+	           (select o1.name from jy_base_org o1 where o1.id = n.orgid) orgName,
+	           n1.count unqualifyNum,
+	           n1.requirewt unqualifyWt,
+	           n1.basiccost basicCost,
+	           n1.addcost addCost,
+	           n1.othercost otherCost,
+	           n1.cost_price purCost,
+	           n1.goldtype goldType,
+	           n1.goldtypename goldName,
+	           n1.name name,
+	           n1.goldwt goldWeight,
+	           n1.stonewt stoneWeight,
+	           (select f.name from jy_base_franchisee f where f.id = n.surpplyid) supplierName,
+	           n.surpplyid supplierId,
+	           (select o1.name from jy_base_org o1 where o1.id = #{orgId,jdbcType=VARCHAR}) orgName,
+	           (select o1.id from jy_base_org o1 where o1.id = #{orgId,jdbcType=VARCHAR}) orgId
+	      from jy_scm_flow_noticeorder  n,
+	           jy_scm_flow_noticedetail n1
+	     where  n1.noticeid = n.id
+	         and n.noticeno = #{noticeNo,jdbcType=VARCHAR}
+	</select>
+	
+	<insert id="saveReturnBill" parameterType="ReturnBill">
+		insert into JY_SCM_FLOW_RETURN_ORDER(
+		       ID,
+		       RETURNNO,
+		       NOTICENO,
+		       QCNO,
+		       TOTALNUM,
+		       TOTALWT,
+		       SUPPLIERID,
+		       ORGID,
+		       CREATEUSER,
+		       CREATETIME,
+		       REMARKS,
+		       STATUS,
+		       DELFLAG,
+		       REJECTCAUSE,
+		       BASICCOST,
+		       ADDCOST,
+		       OTHERCOST,
+		       PURCOST
+		)values(
+		       #{id,jdbcType=VARCHAR},
+		       #{returnNo,jdbcType=VARCHAR},
+		       #{noticeNo,jdbcType=VARCHAR},
+		       #{qcNo,jdbcType=VARCHAR},
+		       #{totalNum,jdbcType=NUMERIC},
+		       #{totalWt,jdbcType=NUMERIC},
+		       #{supplierId,jdbcType=VARCHAR},
+		       #{orgId,jdbcType=VARCHAR},
+		       #{createUser,jdbcType=VARCHAR},
+		       sysdate,
+		       #{remarks,jdbcType=VARCHAR},
+		       #{status,jdbcType=VARCHAR},
+		       #{delFlag,jdbcType=VARCHAR},
+		       #{rejectCause,jdbcType=VARCHAR},
+		       #{basicCost,jdbcType=NUMERIC},
+		       #{addCost,jdbcType=NUMERIC},
+		       #{otherCost,jdbcType=NUMERIC},
+		       #{purCost,jdbcType=NUMERIC}
+		)
+	</insert>
+	
+	
+	<insert id="insertReturnBillDetailDetail"  parameterType="ReturnBillDetail">
+	<foreach collection="list" item="item" index="index" open="begin" close=";end;" separator=";">
+	insert into 
+         JY_SCM_FLOW_RETURN_DETAIL(
+           id,
+           returnid,
+           goodsid,
+           name,
+           code,
+           UNQUALIFYNUM,
+           UNQUALIFYWT,
+           causeId,
+           remarks,
+           basicCost,
+           addCost,
+           otherCost,
+           purCost,
+           goldtype,
+           goldName,
+           goldwt,
+           stonewt)
+     values
+         (
+           #{item.id,jdbcType=VARCHAR},
+           #{item.returnId,jdbcType=VARCHAR},
+           #{item.goodsId,jdbcType=VARCHAR},
+           #{item.name,jdbcType=VARCHAR},
+           #{item.code,jdbcType=VARCHAR},
+           #{item.unqualifyNum,jdbcType=NUMERIC},
+           #{item.unqualifyWt,jdbcType=NUMERIC},
+           #{item.causeId,jdbcType=VARCHAR},
+           #{item.remarks,jdbcType=VARCHAR},
+           #{item.basicCost,jdbcType=NUMERIC},
+           #{item.addCost,jdbcType=NUMERIC},
+           #{item.otherCost,jdbcType=NUMERIC},
+           #{item.purCost,jdbcType=NUMERIC},
+           #{item.goldType,jdbcType=VARCHAR},
+           #{item.goldName,jdbcType=VARCHAR},
+           #{item.goldWeight,jdbcType=NUMERIC},
+           #{item.stoneWeight,jdbcType=NUMERIC}
+         )  
+        </foreach>    
+	</insert>
+	
+	<update id="updateProduct">
+		update JY_SCM_IMS_PRODUCT set status=#{status,jdbcType=VARCHAR}
+			where id = #{goodsId,jdbcType=VARCHAR}
+	</update>
+	
+	<select id="getReturnDetail" resultType="ReturnBillDetail">
+		select o.returnno returnNo,
+			o.noticeno noticeNo,
+			(select o1.name from jy_base_org o1 where o1.id = o.orgid) orgName,
+			(select f.name from jy_base_franchisee f where f.id = o.supplierid)supplierName,
+			d.code enteryNo,
+			d.name name,
+			d.goldname goldName,
+			d.unqualifynum unqualifyNum,
+			d.unqualifywt unqualifyWt,
+			d.stonewt stoneWeight,
+			d.goldwt goldWeight,
+			d.basiccost basicCost,
+			d.addcost addCost,
+			d.othercost otherCost,
+			d.purcost purCost,
+			o.createtime cTime,
+			(select name from jy_base_account where id=o.createuser)createName,
+			o.checktime chTime,
+			(select name from jy_base_account where id=o.checkuser)checkName,
+			o.remarks remarks,
+			d.goodsid goodsId
+		from JY_SCM_FLOW_RETURN_ORDER o,JY_SCM_FLOW_RETURN_DETAIL d where o.id=d.returnid and returnId=#{returnId,jdbcType=VARCHAR}
+	</select>
+	
+	<insert id="insertDetail" parameterType="ReturnBillDetail">
+		<foreach collection="list" item="item" index="index" open="begin" close=";end;" separator=";">
+    	insert into 
+         JY_SCM_FLOW_RETURN_DETAIL(
+           id,
+           returnid,
+           goodsid,
+           name,
+           code,
+           UNQUALIFYNUM,
+           UNQUALIFYWT,
+           causeId,
+           remarks,
+           basicCost,
+           addCost,
+           otherCost,
+           purCost,
+           goldtype,
+           goldName,
+           STONEWT,
+           GOLDWT
+           )
+     	values
+         (
+           #{item.id,jdbcType=VARCHAR},
+           #{item.returnId,jdbcType=VARCHAR},
+           #{item.goodsId,jdbcType=VARCHAR},
+           #{item.name,jdbcType=VARCHAR},
+           #{item.code,jdbcType=VARCHAR},
+           #{item.unqualifyNum,jdbcType=VARCHAR},
+           #{item.unqualifyWt,jdbcType=VARCHAR},
+           #{item.causeId,jdbcType=VARCHAR},
+           #{item.remarks,jdbcType=VARCHAR},
+           #{item.basicCost,jdbcType=VARCHAR},
+           #{item.addCost,jdbcType=VARCHAR},
+           #{item.otherCost,jdbcType=VARCHAR},
+           #{item.purCost,jdbcType=VARCHAR},
+           #{item.goldType,jdbcType=VARCHAR},
+           #{item.goldName,jdbcType=VARCHAR},
+           #{item.stoneWeight,jdbcType=NUMERIC},
+           #{item.goldWeight,jdbcType=NUMERIC}
+         )  
+        </foreach>    
+    </insert>
+	
+</mapper>
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,115 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.dao.pos.goldprice.PriceApplyDao">
+
+	<resultMap id="base" type="ScmPriceApply">
+	</resultMap>
+
+	<insert id="insert"  parameterType="ScmPriceApply">
+		insert into jy_pos_price_apply
+		(
+			id,
+			orderno,
+			createuser,
+			orgid,
+			creorgid,
+			createtime,
+			rejectcause,
+			status,
+			note
+		)
+		values
+		(
+			#{id, jdbcType=VARCHAR},
+			#{orderNo, jdbcType=VARCHAR},
+			#{createUser, jdbcType=VARCHAR},
+			#{orgId, jdbcType=VARCHAR},
+			#{creOrgId, jdbcType=VARCHAR},
+			sysdate,
+			#{rejectCause, jdbcType=VARCHAR},
+			#{status, jdbcType=VARCHAR},
+			#{note, jdbcType=VARCHAR}
+		)
+	</insert>
+
+    <select id="find" parameterType="ScmPriceApply" resultMap="base">
+		select  i.*,
+		(select a.name from JY_BASE_ACCOUNT a where a.id = i.createuser) as createName,
+		(select a.name from JY_BASE_ACCOUNT a where a.id = i.checkuser) as checkName,
+        (select o.name from JY_BASE_ORG o where i.creorgid = o.id) as orgName,
+        (select o.name from JY_BASE_ORG o where i.checkorg = o.id) as checkOrgName
+		from jy_pos_price_apply i where 1 = 1
+		<if test='id != null and id != ""'>
+		     and i.id = #{id}
+		</if>
+    </select>
+    
+	<select id="findByPage"  resultMap="base" parameterType="ScmPriceApply">
+		select i.*,
+		(select a.name from JY_BASE_ACCOUNT a where a.id = i.createuser) as createName,
+		(select a.name from JY_BASE_ACCOUNT a where a.id = i.checkuser) as checkName,
+		(select o.name from JY_BASE_ORG o where i.creorgid = o.id) as orgName,
+		(select o.name from JY_BASE_ORG o where i.checkorg = o.id) as checkOrgName
+		from jy_pos_price_apply i where 1 = 1
+		<if test='param.status != null and param.status != ""'>
+			AND i.status = #{param.status}
+		</if> 
+		<if test='param.orderNo != null and param.orderNo != ""'>
+			AND i.orderNo like '%'||#{param.orderNo}||'%'
+		</if>
+		<if test='param.applyStartDate != null and param.applyStartDate != ""'>
+			AND i.createtime &gt;= #{param.applyStartDate}
+		</if>
+		<if test='param.applyEndDate != null and param.applyEndDate != ""'>
+			AND i.createtime &lt;= #{param.applyEndDate}
+		</if>
+		<if test='param.orgId != null and param.orgId != ""'>
+			AND i.orgid IN (SELECT jbg.id FROM jy_base_org jbg start with jbg.id=#{param.orgId} connect by prior jbg.id = jbg.pid)
+		</if>
+		order by i.createtime desc
+    </select>
+
+    <update id="update" parameterType="ScmPriceApply">
+		update jy_pos_price_apply
+			set
+				orgid = #{orgId, jdbcType = VARCHAR},
+				status = #{status, jdbcType=VARCHAR},
+				rejectcause = #{rejectCause, jdbcType=VARCHAR},
+				note = #{note, jdbcType=VARCHAR}
+		where id = #{id, jdbcType=VARCHAR}
+    </update>
+
+	<delete id="batchDeleteById" parameterType="java.util.List">
+		delete from jy_pos_price_apply
+		where id in
+		<foreach collection="list" item="item" open="(" separator="," close=")">
+		    #{item}
+	    </foreach>
+	</delete>
+
+	<delete id="deleteById" parameterType="String">
+		delete from jy_pos_price_apply where id = #{id, jdbcType=VARCHAR}
+	</delete>
+
+	<update id="updatePriceApply" parameterType="ScmPriceApply">
+		update jy_pos_price_apply
+		  set
+		    status = #{status, jdbcType=VARCHAR},
+		    <if test="checkUser != null and checkUser != ''">
+                checkUser = #{checkUser, jdbcType=VARCHAR},
+                checkTime = sysdate,
+                checkOrg = #{checkOrg, jdbcType=VARCHAR},
+            </if>
+		    rejectcause = #{rejectCause, jdbcType=VARCHAR}
+		where id = #{id, jdbcType=VARCHAR}
+	</update>
+
+	<select id="getOrgById" resultType="com.jy.common.utils.tree.entity.ZNodes" parameterType="String">
+		SELECT jbg.id,jbg.name,jbg.pid as pId,jbg.orggrade as orgGrade
+		FROM jy_base_org jbg start with jbg.id= #{id}
+		connect by prior jbg.id = jbg.pid and jbg.status='1'
+		and jbg.orggrade != '1'
+		ORDER BY jbg.orggrade desc,jbg.sort
+	</select>
+	
+</mapper>

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.dao.crm.members.PointsDetailDao">
+	 <resultMap id="base" type="pointsDetail">
+	 </resultMap>
+	
+     <insert id="insert"  parameterType="pointsDetail">	
+		insert into JY_CRM_POINTS_DETAIL
+		  (id,memberid,systemid,moduleid,orgid,source,type,pointnum,createuser,createtime,createip,remarks,expireTime)
+		  values
+		  (#{id,jdbcType=VARCHAR},
+		   #{memberId,jdbcType=VARCHAR},
+		   #{systemId,jdbcType=VARCHAR},
+		   #{moduleId,jdbcType=VARCHAR},
+		   #{orgId,jdbcType=VARCHAR},
+		   #{source,jdbcType=VARCHAR},
+		   #{type,jdbcType=VARCHAR},
+		   #{pointNum,jdbcType=NUMERIC},
+		   #{createUser,jdbcType=VARCHAR},
+		   sysdate,
+		   #{createIp,jdbcType=VARCHAR},
+		   #{remarks,jdbcType=VARCHAR},
+		   to_date(#{expireTime,jdbcType=VARCHAR},'yyyy-mm-dd'))
+	</insert>
+	
+	<select id="findByPage" resultMap="base" parameterType="pointsDetail">
+		select t.id,t.memberid as memberId,t.systemid as systemId,t.moduleid as moduleId,t.orgid as orgId,t.source,t.type,t.pointnum as pointNum,
+		(select name from jy_base_account where id=t.createuser) as createUser,t.createtime as createTime,t.createip as createIp,t.remarks,m.name as memberName
+	    from JY_CRM_POINTS_DETAIL t 
+	    left join jy_crm_members m on t.memberid=m.id 
+		where 1=1
+		<if test='param.memberName != null and param.memberName != ""'>
+		     and m.name = #{param.memberName}
+		</if>
+		<if test='param.cardNo != null and param.cardNo != ""'>
+		     and m.cardno = #{param.cardNo}
+		</if>
+		<if test='param.mobile != null and param.mobile != ""'>
+		     and m.mobile = #{param.mobile}
+		</if>
+		<if test='param.type != null and param.type != ""'>
+		     and t.type = #{param.type}
+		</if>
+		<if test='param.createTime != null and param.createTime != ""'>
+        	AND t.createtime &gt;= #{param.createTime,jdbcType=VARCHAR}
+      	</if>
+       	<if test='param.updateTime != null and param.updateTime != ""'>
+        	AND t.createtime &lt;= #{param.updateTime,jdbcType=VARCHAR}
+       	</if>
+		order by t.createtime desc
+	</select>
+</mapper>

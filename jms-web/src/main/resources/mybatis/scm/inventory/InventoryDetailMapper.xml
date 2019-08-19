@@ -1,0 +1,142 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.dao.scm.inventory.InventoryDetailDao" >
+  <resultMap id="BaseResultMap" type="ScmInventoryDetail" >
+  </resultMap>
+	<resultMap id="base" type="ScmInventoryDetail">
+	</resultMap>
+
+  <select id="select" resultMap="BaseResultMap" parameterType="java.lang.String" >
+    select 
+    from JY_SCM_IMS_INVENTORY_DETAIL
+    where ID = #{id,jdbcType=VARCHAR}
+  </select>
+  <delete id="delete" parameterType="java.lang.String" >
+    delete from JY_SCM_IMS_INVENTORY_DETAIL
+    where ID = #{id,jdbcType=VARCHAR}
+  </delete>
+  <insert id="insert" parameterType="ScmInventoryDetail" >
+    insert into JY_SCM_IMS_INVENTORY_DETAIL (ID, INVENTORYID, INVENTORYNO, 
+      CODE, NAME, NUMBERS, 
+      WEIGHT, CHKNUM, CHKWEIGHT, 
+      CHKUSER, CHKTIME, DIFF, 
+      DIFFREMARK, REMARK, DESCRIPTION
+      )
+    values (#{id,jdbcType=VARCHAR}, #{inventoryId,jdbcType=VARCHAR}, #{inventoryNo,jdbcType=VARCHAR}, 
+      #{code,jdbcType=VARCHAR}, #{name,jdbcType=VARCHAR}, #{numbers,jdbcType=NUMERIC}, 
+      #{weight,jdbcType=DECIMAL}, #{chkNum,jdbcType=DECIMAL}, #{chkWeight,jdbcType=DECIMAL}, 
+      #{chkUser,jdbcType=VARCHAR}, #{chkTime,jdbcType=TIMESTAMP}, #{diff,jdbcType=VARCHAR}, 
+      #{diffRemark,jdbcType=VARCHAR}, #{remark,jdbcType=VARCHAR}, #{description,jdbcType=VARCHAR}
+      )
+  </insert>
+   <select id="findByPage" resultMap="BaseResultMap" parameterType="ScmInventoryDetail">
+	       select * from JY_SCM_IMS_INVENTORY_DETAIL t
+	       where 1 = 1
+		<if test='param.inventoryId != null and param.inventoryId != ""'>
+		     and t.inventoryId = #{param.inventoryId}
+		</if>
+	       
+	</select>
+	<select id="findInventoryNo" resultType="com.jy.entity.scm.inventory.Inventory" parameterType="java.lang.String">
+	       select * from JY_SCM_IMS_INVENTORY where inventoryNo=#{inventoryNo}
+	</select>
+  <delete id="deleteBatch" parameterType="java.lang.String" >
+    delete from JY_SCM_IMS_INVENTORY_DETAIL
+    where ID = 
+    <foreach collection="list" item="item" open="(" separator="," close=")">
+			#{item.id}
+	</foreach>
+  </delete>
+ 
+  <update id="update" parameterType="ScmInventoryDetail" >
+    update JY_SCM_IMS_INVENTORY_DETAIL
+    set INVENTORYID = #{inventoryId,jdbcType=VARCHAR},
+      INVENTORYNO = #{inventoryNo,jdbcType=VARCHAR},
+      CODE = #{code,jdbcType=VARCHAR},
+      NAME = #{name,jdbcType=VARCHAR},
+      NUMBERS = #{numbers,jdbcType=NUMERIC},
+      WEIGHT = #{weight,jdbcType=DECIMAL},
+      CHKNUM = #{chkNum,jdbcType=DECIMAL},
+      CHKWEIGHT = #{chkWeight,jdbcType=DECIMAL},
+      CHKUSER = #{chkUser,jdbcType=VARCHAR},
+      CHKTIME = #{chkTime,jdbcType=TIMESTAMP},
+      DIFF = #{diff,jdbcType=VARCHAR},
+      DIFFREMARK = #{diffRemark,jdbcType=VARCHAR},
+      REMARK = #{remark,jdbcType=VARCHAR},
+      DESCRIPTION = #{description,jdbcType=VARCHAR}
+    where ID = #{id,jdbcType=VARCHAR}
+  </update>
+  
+	<insert id="batchInsert" parameterType="java.util.List">
+		<foreach collection="list" item="item" index="index" open="begin" close=";end;" separator=";">
+			insert into JY_SCM_IMS_INVENTORY_DETAIL (ID, INVENTORYID, INVENTORYNO, 
+		      CODE, NAME, NUMBERS, 
+		      WEIGHT, CHKNUM, CHKWEIGHT, 
+		      CHKUSER, CHKTIME, DIFF, 
+		      DIFFREMARK, REMARK, DESCRIPTION
+		      )
+		    values (#{item.id,jdbcType=VARCHAR}, #{item.inventoryId,jdbcType=VARCHAR}, #{item.inventoryNo,jdbcType=VARCHAR}, 
+		      #{item.code,jdbcType=VARCHAR}, #{item.name,jdbcType=VARCHAR}, #{item.numbers,jdbcType=NUMERIC}, 
+		      #{item.weight,jdbcType=DECIMAL}, #{item.chkNum,jdbcType=DECIMAL}, #{item.chkWeight,jdbcType=DECIMAL}, 
+		      #{item.chkUser,jdbcType=VARCHAR}, #{item.chkTime,jdbcType=TIMESTAMP}, #{item.diff,jdbcType=VARCHAR}, 
+		      #{item.diffRemark,jdbcType=VARCHAR}, #{item.remark,jdbcType=VARCHAR}, #{item.description,jdbcType=VARCHAR}
+		      )
+		</foreach>
+	</insert>
+	
+    <select id="find" parameterType="ScmInventoryDetail" resultMap="base">
+		select t.* from JY_SCM_IMS_INVENTORY_DETAIL t where 1 = 1
+		<if test='inventoryId != null and inventoryId != ""'>
+		     and t.inventoryId = #{inventoryId}
+		</if>
+		<if test='inventoryNo != null and inventoryNo != ""'>
+		     and t.inventoryNo = #{inventoryNo}
+		</if>
+    </select>
+    
+    <delete id="batchDeleteById" parameterType="java.util.List">
+		delete from JY_SCM_IMS_INVENTORY_DETAIL  
+		where id in
+		<foreach collection="list" item="item" open="(" separator="," close=")">
+		    #{item.id}
+	    </foreach>
+	</delete>
+	
+	<select id="findByCodeAndInventoryId" parameterType="ScmInventoryDetail" resultMap="base">
+		select * from jy_scm_ims_inventory_detail where 1 = 1 and code = #{code} and inventoryid = #{inventoryId}
+    </select>
+    
+	<select id="findOtherDetailByInventoryId" resultMap="base">
+		select * from jy_scm_ims_inventory_detail where 1 = 1 
+		and inventoryid = #{detail.inventoryId, jdbcType=VARCHAR}
+		<if test='list != null and list.size() > 0'>
+			and id not in 
+			<foreach collection="list" item="item" open="(" separator="," close=")">
+			    #{item.id}
+		    </foreach>
+		</if>
+		and nvl(chknum, 0) = 0 and nvl(chkweight, 0) = 0 and (diff = '' or diff is null)
+    </select>
+    
+    <update id="batchUpdate" parameterType="java.util.List" >
+    	<if test='list != null and list.size() > 0'>
+			<foreach collection="list" item="item" index="index" open="begin" close=";end;" separator=";">
+			    update JY_SCM_IMS_INVENTORY_DETAIL
+				set CODE = #{item.code,jdbcType=VARCHAR},
+					NAME = #{item.name,jdbcType=VARCHAR},
+					NUMBERS = #{item.numbers,jdbcType=NUMERIC},
+					WEIGHT = #{item.weight,jdbcType=DECIMAL},
+					CHKNUM = #{item.chkNum,jdbcType=DECIMAL},
+					CHKWEIGHT = #{item.chkWeight,jdbcType=DECIMAL},
+					CHKUSER = #{item.chkUser,jdbcType=VARCHAR},
+					CHKTIME = #{item.chkTime,jdbcType=TIMESTAMP},
+					DIFF = #{item.diff,jdbcType=VARCHAR},
+					DIFFREMARK = #{item.diffRemark,jdbcType=VARCHAR},
+					REMARK = #{item.remark,jdbcType=VARCHAR},
+					DESCRIPTION = #{item.description,jdbcType=VARCHAR}
+				where id = #{item.id,jdbcType=VARCHAR}
+		    </foreach>
+		</if>
+	</update>
+  
+</mapper>

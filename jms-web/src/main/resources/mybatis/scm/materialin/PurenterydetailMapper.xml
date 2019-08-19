@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.dao.scm.materialin.PurenterydetailDao">
+	<resultMap id="base" type="purenterydetail" ></resultMap>
+	<insert id="batchInsert" parameterType="java.util.List">
+		<foreach collection="list" item="item" index="index" open="begin" close=";end;" separator=";">
+		      insert into JY_SCM_IMS_PURENTERYDETAIL(id, enteryno, code,  num, weight, price, purcost, saleprice, finacost,diffweight,remarks,type,checkcost)
+			  values
+		    (#{item.id,jdbcType=VARCHAR}, #{item.enteryno,jdbcType=VARCHAR}, #{item.code,jdbcType=VARCHAR}, #{item.num,jdbcType=NUMERIC}, #{item.weight,jdbcType=NUMERIC}, #{item.price,jdbcType=NUMERIC}, #{item.purcost,jdbcType=NUMERIC}, 
+		    #{item.saleprice,jdbcType=NUMERIC},  #{item.finacost,jdbcType=NUMERIC}, #{item.diffweight,jdbcType=NUMERIC}, #{item.remarks,jdbcType=VARCHAR}, #{item.type,jdbcType=VARCHAR}, #{item.checkcost,jdbcType=VARCHAR})
+        </foreach>
+    </insert>
+   <select id="find" resultMap="base" parameterType="purenterydetail">
+   		select t.*,( select p.name from jy_scm_ims_product p where p.code=t.code) as name,'2' as feeType from JY_SCM_IMS_PURENTERYDETAIL t where  t.type='0' 
+   		<if test='enteryno != null and enteryno != ""'>
+		     and t.enteryno=#{enteryno}
+		</if>
+		<if test='id != null and id != ""'>
+		     and t.id=#{id}
+		</if>
+		union all
+		select t.*,( select p.name from jy_scm_ims_material p where p.code=t.code) as name,( select p.feeType from jy_scm_ims_material p where p.code=t.code) as feeType from JY_SCM_IMS_PURENTERYDETAIL t where t.type='1'
+		<if test='enteryno != null and enteryno != ""'>
+		     and t.enteryno=#{enteryno}
+		</if>
+		<if test='id != null and id != ""'>
+		     and t.id=#{id}
+		</if>  
+		<!-- select t.*,(select name from jy_scm_ims_product p where p.code=t.code) as name   from JY_SCM_IMS_PURENTERYDETAIL t  where 1=1 -->
+	</select>
+	
+	<select id="findDetail" resultMap="base" parameterType="purenterydetail">
+		select t.*  from JY_SCM_IMS_PURENTERYDETAIL t  where 1=1
+		<if test='enteryno != null and enteryno != ""'>
+		     and t.enteryno=#{enteryno}
+		</if>
+		<if test='id != null and id != ""'>
+		     and t.id=#{id}
+		</if>  
+	</select>
+	
+	<delete id="deleteBatch">
+		delete JY_SCM_IMS_PURENTERYDETAIL  
+		where id not in
+		<foreach collection="list" item="item" open="(" separator="," close=")">
+		    #{item.id}
+	    </foreach>
+	    and enteryno=#{enteryno}
+	</delete>
+	
+	
+	<delete id="deleteBatchById" parameterType="java.util.List">
+		delete JY_SCM_IMS_PURENTERYDETAIL  
+		where id  in
+		<foreach collection="list" item="item" open="(" separator="," close=")">
+		    #{item.id}
+	    </foreach>
+	</delete>
+	
+	
+	<update id="update" parameterType="purenterydetail">
+		update JY_SCM_IMS_PURENTERYDETAIL set enteryno=#{enteryno,jdbcType=VARCHAR}, code= #{code,jdbcType=VARCHAR},  num=#{num,jdbcType=NUMERIC}, weight=#{weight,jdbcType=NUMERIC}, price=#{price,jdbcType=NUMERIC}, 
+		purcost=#{purcost,jdbcType=NUMERIC}, saleprice=#{saleprice,jdbcType=NUMERIC}, finacost=#{finacost,jdbcType=NUMERIC},diffweight=#{diffweight,jdbcType=NUMERIC},remarks=#{remarks,jdbcType=VARCHAR},checkcost=#{checkcost,jdbcType=VARCHAR}  where id=#{id,jdbcType=VARCHAR}
+	</update>
+	
+	
+	<select id="findMaterialCode" resultMap="base" parameterType="purentery">
+	     select m.name as name,m.code as code,1 as type,m.feetype as feeType from jy_scm_ims_material m where m.status='1' and  upper(code)=upper(#{code})  and m.batchnum=#{purno}
+    </select>
+    
+    <select id="findProductCode" resultMap="base" parameterType="purentery">
+		 select p.name as name, p.code as code,nvl(p.totalweight,0) as weight,nvl(p.count,0) as num,0 as type,'2' as feeType,
+		 nvl((p.FGOLDWEIGHT-p.TOTALWEIGHT),0)  as DIFFWEIGHT,nvl(p.price,0) as PRICE,nvl(p.COSTPUR,0) as PURCOST,nvl(p.COSTFIN,0) as FINACOST,0 as saleprice,nvl(p.COSTCHK,0) as checkcost   from jy_scm_ims_product p 
+		 where p.status in ('A','C') and code not in (select code from jy_scm_ims_purenterydetail d left join jy_scm_ims_purentery t on t.enteryno=d.enteryno where 
+		 <!-- (t.orgid in (select o.id from jy_base_org o where o.companyid=#{orgId,jdbcType=VARCHAR} and o.orggrade != '4') or t.orgid=#{orgId,jdbcType=VARCHAR}) -->
+		  t.orgid=#{orgId,jdbcType=VARCHAR}) 
+		  and upper(code)=upper(#{code}) and p.orgid=#{orgId,jdbcType=VARCHAR}
+		<!--  and p.purchasenum=#{purno} -->
+    </select>
+    
+    <select id="findSetMaterialin" resultMap="base" parameterType="purentery">
+	    select m.id as id,m.code as code from jy_scm_ims_material m where m.status='1' and upper(code) like '%'||upper(#{code})||'%' and m.batchnum=#{purno}
+    </select>
+    
+    <select id="findSetProductin" resultMap="base" parameterType="purentery">
+    	select p.id as id,p.code as code from jy_scm_ims_product p where p.status in ('A','C') and  upper(code) like '%'||upper(#{code})||'%' and purchasenum=#{purno}
+    </select>
+</mapper>

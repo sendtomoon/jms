@@ -1,0 +1,316 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.dao.scm.purorder.PurOutStorageDao">
+	<resultMap id="base" type="purOSOrder" ></resultMap>
+    <select id="findPurOSOrder" parameterType="purOSOrder" resultType="purOSOrder">
+    	select  o.id,
+           o.outboundno as outBoundNo,
+           o.type,
+           o.status,
+           o.orgid as orgId,
+           (select name from jy_base_org where id=o.orgid) as orgName,
+           o.inorgid as inOrgId,
+           (select longname from jy_base_org where id=o.inorgid) as inOrgLongName,
+           (select name from jy_base_org where id=o.inorgid) as inOrgName,
+           o.outorgid as outOrgId,
+           (select longname from jy_base_org where id=o.outorgid) as outOrgLongName,
+           (select name from jy_base_org where id=o.outorgid) as outOrgName,
+           o.ordernum as orderNum,
+           o.remarks,
+           o.description,
+           o.createtime as createTime,
+          (select u.name from jy_base_account u where o.createuser=u.id) as createName,
+           o.checktime as checkTime,
+           (select u.name from jy_base_account u where o.checkUser=u.id) as checkName,
+           o.updatetime as updateTime,
+           (select u.name from jy_base_account u where o.updateUser=u.id) as updateName,
+           o.deletetag as deletetag,
+           o.supplierid as supplierId,
+           f.longname as franchiseeName,
+           f.name as franchiseeNameShort,
+           o.balancetype as balancetype,
+           o.ratio as ratio,
+           o.warehouseid as warehouseid,
+           to_char(o.createtime,'yyyy-MM-dd') printCreate, to_char(o.updatetime,'yyyy-MM-dd') printUpdate, to_char(o.checktime,'yyyy-MM-dd') printCheck,
+           (select sum(num) from jy_scm_ims_outbounddetail d where d.outboundno=o.outboundno) as num,
+           (select sum(weight) from jy_scm_ims_outbounddetail d where d.outboundno=o.outboundno) as weight,
+           (select sum(COSTING) from jy_scm_ims_outbounddetail d where d.outboundno=o.outboundno) as totalCosing,
+           (select sum(WAGE) from jy_scm_ims_outbounddetail d where d.outboundno=o.outboundno) as totalWage,
+           (select sum(TAGEPRICE) from jy_scm_ims_outbounddetail d where d.outboundno=o.outboundno) as totalTageprice,
+           (select sum(PRADEPRICE) from jy_scm_ims_outbounddetail d where d.outboundno=o.outboundno) as totalPradeprice,
+           (select sum(PRICE) from jy_scm_ims_outbounddetail d where d.outboundno=o.outboundno) as totalPrice,
+           (select t.name from JY_DATA_DICT d join JY_DATA_DICT_ITEM t on t.dictid=d.id where d.datakey='SCM_OUTBOUND_TYPE' and t.value=o.type) as typeName
+	      from jy_scm_ims_outbound o
+	      left join jy_base_franchisee f on o.supplierid = f.id
+		  where o.id=#{id,jdbcType=VARCHAR}
+    </select>
+    
+    <select id="find" parameterType="purOSOrder" resultType="purOSOrder">
+    	select  *  from jy_scm_ims_outbound o where 1=1
+    	<if test='id != null and id != ""'>
+		     and o.id=#{id,jdbcType=VARCHAR}
+		</if>
+		<if test='outBoundNo != null and outBoundNo != ""'>
+		     and o.outboundno= #{outBoundNo,jdbcType=VARCHAR}
+		</if>
+    </select>
+    
+    <select id="findPurOSOrderDetail" parameterType="purOSOrderDetail" resultType="purOSOrderDetail" >
+    	select d.*,(select name from jy_scm_warehouse  where id=d.outWarehouseId) as outWarehouseName,(select name from jy_scm_warehouse_location  where id=d.outLocationId) as outLocationName
+    	,m.price as unitPrice,m.type as feeType,t.cernum as cerno from JY_SCM_IMS_OUTBOUNDDETAIL d  
+    	left join jy_scm_ims_material m on m.code=d.code
+    	left join jy_scm_ims_product t on t.code=d.code
+    	where 1=1
+    	<if test='id != null and id != ""'>
+		     and d.id=#{id,jdbcType=VARCHAR}
+		  </if>
+		  <if test='outBoundId != null and outBoundId != ""'>
+		     and d.outboundid= #{outBoundId,jdbcType=VARCHAR}
+		  </if>
+    </select>
+    <select id="findWarehouse" parameterType="purOSOrderDetail" resultType="purOSOrderDetail">
+    	select t.outwarehouseid as outWarehouseId,io.outorgid as outOrgId from jy_scm_ims_outbounddetail t inner join jy_scm_ims_outbound io  on io.id=t.outboundid 
+    	where t.code=#{code} and io.inorgid=#{orgid} order by io.createtime
+    </select>
+    
+    <select id="findDetail" parameterType="String" resultType="purOSOrderDetail" >
+    	select *  from JY_SCM_IMS_OUTBOUNDDETAIL d  where d.id=#{id,jdbcType=VARCHAR}
+    </select>
+
+    <insert id="insertPurOSOrder"  parameterType="purOSOrder">	
+		insert into JY_SCM_IMS_OUTBOUND(id,OUTBOUNDNO,TYPE,STATUS,ORGID,INORGID,OUTORGID,ORDERNUM,description,CREATETIME,CREATEUSER,DELETETAG,catgory,supplierid,balancetype,ratio,warehouseid,remarks)
+		values(#{id,jdbcType=VARCHAR},#{outBoundNo,jdbcType=VARCHAR},#{type,jdbcType=VARCHAR},#{status,jdbcType=VARCHAR},#{orgId,jdbcType=VARCHAR},#{inOrgId,jdbcType=VARCHAR},#{outOrgId,jdbcType=VARCHAR},#{orderNum,jdbcType=VARCHAR},
+		#{description,jdbcType=VARCHAR},sysdate,#{createUser,jdbcType=VARCHAR},#{deleteTag,jdbcType=VARCHAR},#{catgory,jdbcType=VARCHAR},#{supplierId,jdbcType=VARCHAR},#{balancetype,jdbcType=VARCHAR},#{ratio,jdbcType=VARCHAR},#{warehouseid,jdbcType=VARCHAR},#{remarks,jdbcType=VARCHAR})
+	</insert>
+	
+	<insert id="batchInsert"  parameterType="java.util.List">
+		<foreach collection="list" item="item" index="index" open="begin" close=";end;" separator=";">	
+			insert into JY_SCM_IMS_OUTBOUNDDETAIL(id,OUTBOUNDID,OUTBOUNDNO,NAME,CODE,NUM,WEIGHT,WAGEBASIC,WAGEADD,TOTALFEE,OUTWAREHOUSEID,OUTLOCATIONID,REMARKS,costing，pradeprice,price,wage,tageprice)
+			values(#{item.id,jdbcType=VARCHAR},#{item.outBoundId,jdbcType=VARCHAR},#{item.outBoundNo,jdbcType=VARCHAR},#{item.name,jdbcType=VARCHAR},#{item.code,jdbcType=VARCHAR},#{item.num,jdbcType=VARCHAR},
+			#{item.weight,jdbcType=VARCHAR},#{item.wageBasic,jdbcType=VARCHAR},#{item.wageAdd,jdbcType=VARCHAR},#{item.totalFee,jdbcType=VARCHAR},#{item.outWarehouseId,jdbcType=VARCHAR},
+			#{item.outLocationId,jdbcType=VARCHAR},#{item.remarks,jdbcType=VARCHAR},#{item.costing,jdbcType=VARCHAR},#{item.pradeprice,jdbcType=VARCHAR},#{item.price,jdbcType=VARCHAR},#{item.wage,jdbcType=VARCHAR},#{item.tageprice,jdbcType=VARCHAR})
+		</foreach>
+	</insert>
+    
+    <select id="findByPage"  resultType="purOSOrder" parameterType="purOSOrder">
+       select  o.id,
+		       o.outboundno as outBoundNo,
+		       o.type,
+		       o.status,
+		       (select sum(num) from jy_scm_ims_outbounddetail where outboundno=o.outboundno) as num,
+	           (select sum(weight) from jy_scm_ims_outbounddetail where outboundno=o.outboundno) as weight,
+		       o.orgid as orgId,
+		       (select name from jy_base_org where id=o.orgid) as orgName,
+		       o.inorgid as inOrgId,
+		       (select name from jy_base_org where id=o.inorgid) as inOrgName,
+		       o.outorgid as outOrgId,
+		       (select name from jy_base_org where id=o.outorgid) as outOrgName,
+		       o.ordernum as orderNum,
+		       o.createtime as createTime,
+		       o.deletetag as deleteTag,
+	           (select sum(costing) from jy_scm_ims_outbounddetail where outboundno=o.outboundno) as totalCosing,
+	           (select sum(price) from jy_scm_ims_outbounddetail where outboundno=o.outboundno) as totalPrice,
+	           (select sum(pradeprice) from jy_scm_ims_outbounddetail where outboundno=o.outboundno) as totalPradeprice,
+	           (select sum(wage) from jy_scm_ims_outbounddetail where outboundno=o.outboundno) as totalWage,
+	           (select sum(tageprice) from jy_scm_ims_outbounddetail where outboundno=o.outboundno) as totalTageprice
+		  from jy_scm_ims_outbound o
+		  where 1=1
+		  <if test='param.outBoundNo != null and param.outBoundNo != ""'>
+		     and upper(o.outboundno) like '%'||upper(#{param.outBoundNo,jdbcType=VARCHAR})||'%'
+		  </if>
+		  <if test='param.orderNum != null and param.orderNum != ""'>
+		     and upper(o.ordernum) like '%'||upper(#{param.orderNum,jdbcType=VARCHAR})||'%'
+		  </if>
+		  <if test='param.inOrgId != null and param.inOrgId != ""'>
+		     and o.inorgid=#{param.inOrgId,jdbcType=VARCHAR}
+		  </if>
+		  <if test='param.outOrgId != null and param.outOrgId != ""'>
+		     and o.outorgid=#{param.outOrgId,jdbcType=VARCHAR}
+		  </if>
+		  <if test='param.createTime != null and param.createTime != ""'>
+        	AND o.createtime &gt;= #{param.createTime,jdbcType=VARCHAR}
+       </if>
+       <if test='param.createTimeEnd != null and param.createTimeEnd != ""'>
+        	AND o.createtime &lt;= #{param.createTimeEnd,jdbcType=VARCHAR}
+       </if>
+       <if test='param.catgory != null and param.catgory != ""'>
+        	AND o.catgory = #{param.catgory,jdbcType=VARCHAR}
+       </if>
+       <if test='param.status != null and param.status != ""'>
+		     and o.status=#{param.status,jdbcType=VARCHAR}
+	   </if>
+	   <if test='param.stauesOut != null and param.stauesOut != ""'>
+		     and o.status in ('2','3')
+	   </if>
+	    <if test='param.orgId != null and param.orgId != ""'>
+		     <!-- and (o.orgid in (select o.id from jy_base_org o where o.companyid=#{param.orgId,jdbcType=VARCHAR} and o.orggrade != '4') or o.orgid=#{param.orgId,jdbcType=VARCHAR}) -->
+		     and o.orgid=#{param.orgId,jdbcType=VARCHAR}
+	   </if>
+       order by o.createtime desc 
+    </select>
+	
+    <select id="findByCode" resultType="purOSOrderDetail" parameterType="String">
+        select id,
+       p.code,
+       p.name,
+       p.warehouseid as outWarehouseId,
+       p.locationid as outLocationId,
+       p.count       as num,
+       p.totalweight as weight
+     from jy_scm_ims_product p
+     where id=#{id,jdbcType=VARCHAR} 
+     union all
+     select m.id, m.code, 
+     (select name from jy_scm_ims_material where code=m.code) as name,
+     m.warehouseid as outWarehouseId, m.locationid as outLocationId, m.num, m.weight
+     from jy_scm_ims_materialin m
+     where id=#{id,jdbcType=VARCHAR}
+     
+    </select>
+    
+   <!-- 出库单物料条码 模糊检索-->
+    <select id="findSetMatin" resultType="CodeVO">
+	     select m.id, m.code  from jy_scm_ims_materialin m  where upper(m.code) like '%'||upper(#{code,jdbcType=VARCHAR})||'%'
+	       AND m.status = '3'  and m.orgid=#{orgId,jdbcType=VARCHAR}
+	      <!--  (m.orgid in (select o.id from jy_base_org o where o.companyid=#{orgId,jdbcType=VARCHAR} and o.orggrade != '4') or m.orgid=#{orgId,jdbcType=VARCHAR}) -->
+    </select>
+    
+    <!-- 出库单商品条码 模糊检索-->
+    <select id="findSetPro" resultType="CodeVO">
+       select id,p.code from jy_scm_ims_product p  where upper(p.code) like '%'||upper(#{code,jdbcType=VARCHAR})||'%'  AND p.status = 'B'
+	    and p.orgid=#{orgId,jdbcType=VARCHAR}
+	    <!-- (p.orgid in (select o.id from jy_base_org o where o.companyid=#{orgId,jdbcType=VARCHAR} and o.orggrade != '4') or p.orgid=#{orgId,jdbcType=VARCHAR}) -->
+    </select>
+    
+    <!-- 出库单查询物料  根据条码 -->
+   	<select id="matinQueryCode" resultType="purOSOrderDetail">
+			select 
+             m.code,
+             c.name as name,
+             m.availnum as num,
+             m.availweight as weight,
+             m.type as feeType,
+             c.description as proRemarks,
+             c.cernum as cerno,
+             m.price as price,
+             decode(m.type,1,m.availweight*m.price,2,m.availnum*m.price) as costing,
+             m.warehouseid as outWarehouseId
+        from jy_scm_ims_materialin m
+        left join jy_scm_ims_material c on m.code=c.code
+		 where upper(m.code) = #{code,jdbcType=VARCHAR}
+		   AND m.status = '3'
+		  <!--  and (m.orgid in (select o.id from jy_base_org o where o.companyid=#{orgid,jdbcType=VARCHAR} and o.orggrade != '4') or m.orgid=#{orgid,jdbcType=VARCHAR}) -->
+		   and m.orgid=#{orgid,jdbcType=VARCHAR}
+		   and m.warehouseid=#{outWarehouseId,jdbcType=VARCHAR}
+   	</select>
+   	
+   	<!-- 出库单查询商品  根据条码 -->
+   	<select id="proQueryCode" resultType="purOSOrderDetail">
+		   	<!-- select id,
+		       p.code,
+		       p.name,
+		       p.warehouseid as outWarehouseId,
+		       p.locationid  as outLocationId,
+		       p.count       as num,
+		       p.totalweight as weight ,
+		       p.wageMode as feeType
+		  from jy_scm_ims_product p
+		 where upper(p.code) = #{code}
+		   AND p.status = 'B'
+		   and p.warehouseid in (select w.id from jy_scm_warehouse W where w.orgid in (select bo.companyid from jy_base_org bo where bo.id=#{orgId})) -->
+		   select t.name as name,t.code as code,t.cernum as cerno,t.remarks as proRemarks,t.count as num,t.totalweight as weight
+	      from jy_scm_ims_product t
+	       where upper(t.code) =#{code,jdbcType=VARCHAR}
+			   AND t.status = 'B'
+		   and t.orgid=#{orgid,jdbcType=VARCHAR}
+		   <!-- (t.orgid in (select o.id from jy_base_org o where o.companyid=#{orgid,jdbcType=VARCHAR} and o.orggrade != '4') or t.orgid=#{orgid,jdbcType=VARCHAR}) -->
+   	</select>
+   	
+   	   	<!-- 出库单查询商品  根据条码 -->
+   	<select id="proUpdateCode" resultType="purOSOrderDetail">
+		   select t.name as name,t.code as code,t.cernum as cerno,t.remarks as proRemarks,t.count as num,t.totalweight as weight
+	      from jy_scm_ims_product t
+	       where upper(t.code) =#{code,jdbcType=VARCHAR} and t.orgid=#{orgid,jdbcType=VARCHAR}
+		   <!-- and (t.orgid in (select o.id from jy_base_org o where o.companyid=#{orgid,jdbcType=VARCHAR} and o.orggrade != '4') or t.orgid=#{orgid,jdbcType=VARCHAR}) -->
+   	</select>
+   	
+   	
+   	<!--出库单查询商品  根据入库单 -->
+   	<select id="productinCode" resultType="purOSOrderDetail">
+   		 select d.code as code,t.cernum as cerno,t.name as name,t.remarks as proRemarks,t.count as num,t.totalweight as weight from jy_scm_ims_purentery p 
+		 left join jy_scm_ims_purenterydetail d on p.enteryno=d.enteryno
+		 left join jy_scm_ims_product t on t.code=d.code
+		 where p.enteryno=#{code,jdbcType=VARCHAR} and p.status='3' and p.type='0'
+		 AND t.status = 'B'  and p.orgid=#{orgid,jdbcType=VARCHAR}
+		  <!-- and (p.orgid in (select o.id from jy_base_org o where o.companyid=#{orgid,jdbcType=VARCHAR} and o.orggrade != '4') or p.orgid=#{orgid,jdbcType=VARCHAR}) -->
+   	</select>
+   	
+   	<!--出库单查询物料  根据入库单 -->
+   	<select id="matinCode" resultType="purOSOrderDetail">
+   		select m.code,c.name as name,m.availnum as num,m.availweight as weight,m.type as feeType,c.description as proRemarks,c.cernum as cerno, m.price as price,
+   		  decode(m.type,1,m.availweight*m.price,2,m.availnum*m.price) as costing
+          from jy_scm_ims_purentery p 
+		  left join jy_scm_ims_purenterydetail d on p.enteryno=d.enteryno
+		  left join jy_scm_ims_materialin m on m.code=d.code
+		  left join jy_scm_ims_material c on m.code=c.code 
+		  where p.enteryno=#{code,jdbcType=VARCHAR} and p.status='3' and p.type='1' and  m.status = '3'
+		  <!-- and (p.orgid in (select o.id from jy_base_org o where o.companyid=#{orgid,jdbcType=VARCHAR} and o.orggrade != '4') or p.orgid=#{orgid,jdbcType=VARCHAR}) -->
+		  and p.orgid=#{orgid,jdbcType=VARCHAR}
+		  and p.warehouseid=#{outWarehouseId,jdbcType=VARCHAR}
+   	</select>
+   	
+   	
+   	<update id="updatePurOSOrderDetail" parameterType="purOSOrderDetail">
+	   	<foreach collection="list" item="item" index="index" open="begin" close=";end;" separator=";">
+			update JY_SCM_IMS_OUTBOUNDDETAIL set  code=#{item.code,jdbcType=VARCHAR},name=#{item.name,jdbcType=VARCHAR},outWarehouseId=#{item.outWarehouseId,jdbcType=VARCHAR},
+			wageBasic=#{item.wageBasic,jdbcType=NUMERIC},wageAdd=#{item.wageAdd,jdbcType=NUMERIC},totalFee=#{item.totalFee,jdbcType=NUMERIC},outLocationId=#{item.outLocationId,jdbcType=VARCHAR},num=#{item.num,jdbcType=NUMERIC}
+			,weight=#{item.weight,jdbcType=NUMERIC},remarks=#{item.remarks,jdbcType=VARCHAR},costing=#{item.costing,jdbcType=VARCHAR},pradeprice=#{item.pradeprice,jdbcType=VARCHAR},price=#{item.price,jdbcType=VARCHAR},wage=#{item.wage,jdbcType=VARCHAR},tageprice=#{item.tageprice,jdbcType=VARCHAR}
+			where id=#{item.id,jdbcType=VARCHAR}
+		</foreach>
+   	</update>
+   	<update id="updatePurOSOrder" parameterType="purOSOrder">
+   		update JY_SCM_IMS_OUTBOUND set outboundno=#{outBoundNo,jdbcType=VARCHAR},type=#{type,jdbcType=VARCHAR},status=#{status,jdbcType=VARCHAR},  
+   		orgid=#{orgId,jdbcType=VARCHAR},inorgid=#{inOrgId,jdbcType=VARCHAR},outorgid=#{outOrgId,jdbcType=VARCHAR},ordernum=#{orderNum,jdbcType=VARCHAR},description=#{description,jdbcType=VARCHAR},remarks=#{remarks,jdbcType=VARCHAR},
+   		updatetime=#{updateTime,jdbcType=VARCHAR},updateuser=#{updateUser,jdbcType=VARCHAR},supplierId=#{supplierId,jdbcType=VARCHAR},balancetype=#{balancetype,jdbcType=VARCHAR},ratio=#{ratio,jdbcType=VARCHAR},warehouseid=#{warehouseid,jdbcType=VARCHAR}
+   		where id=#{id,jdbcType=VARCHAR}
+   	</update>
+   	<update id="updateStatus">
+   		update JY_SCM_IMS_OUTBOUND set deletetag=#{deleteTag,jdbcType=VARCHAR} where id=#{id,jdbcType=VARCHAR}
+   	</update>
+   	<update id="updateTag">
+   		update JY_SCM_IMS_OUTBOUND set status=#{status,jdbcType=VARCHAR},checkuser=#{checkUser,jdbcType=VARCHAR},checktime=sysdate,remarks=#{remarks,jdbcType=VARCHAR},description=#{description,jdbcType=VARCHAR} where id=#{id,jdbcType=VARCHAR}
+   	</update>
+   	
+   	<!-- 批量删除出单详情 -->
+   	<delete id="deleteBat" parameterType="purOSOrderDetail">
+   		delete from JY_SCM_IMS_OUTBOUNDDETAIL
+   		where id in
+   		<foreach collection="list" item="item" open="(" separator="," close=")">
+		    #{item.id,jdbcType=VARCHAR}
+	    </foreach>
+   	</delete>
+   	
+   	<!-- 删除出单主信息 -->
+   	<delete id="delete" parameterType="purOSOrder">
+   		delete from JY_SCM_IMS_OUTBOUND
+   		where id=#{id,jdbcType=VARCHAR}
+   	</delete>
+   	
+   	<!-- 被删除的出单详情id -->
+   	<select id="byDeleteBatch"  resultType="purOSOrderDetail" parameterType="java.util.List">
+		select * from  jy_scm_ims_outbounddetail  
+		where id not in
+		<foreach collection="list" item="item" open="(" separator="," close=")">
+		    #{item.id,jdbcType=VARCHAR}
+	    </foreach>
+	    and outBoundNo=#{outBoundNo,jdbcType=VARCHAR}
+	</select>
+	
+	<select id="selectInOrgId" parameterType="purOSOrder" resultType="purOSOrder">
+		select t.orgid as inOrgId,t.orderno as orderNum,(select name from jy_base_org where id=t.orgid) as inOrgName from JY_SCM_PUR_ORDER t where  t.status='2'  and  t.orderno=#{orderNum,jdbcType=VARCHAR} and t.ordertype='0'
+	</select>
+   	
+   	<update id="modifyStatus"  parameterType="product">
+   		update jy_scm_ims_product set status=#{status,jdbcType=VARCHAR} where id=#{id,jdbcType=VARCHAR}
+   	</update>
+</mapper>

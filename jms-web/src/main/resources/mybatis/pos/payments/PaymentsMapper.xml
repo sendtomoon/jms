@@ -1,0 +1,154 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.dao.pos.payments.PaymentsDao">
+
+	<resultMap id="base" type="posPayments">
+	</resultMap>
+	
+	
+    <select id="find" parameterType="posPayments" resultMap="base">
+    	select t.*
+       from jy_pos_payments t
+       where t.id = #{id}
+    </select>
+    <insert id="insert"  parameterType="posPayments">	
+		insert into jy_pos_payments
+		  (
+		  id,
+		  orderId,
+		  type,
+		  orderNo,
+		  payment,
+		  bank,
+		  currency,
+		  denomination,
+		  cardno,
+		  rate,
+		  amount,
+		  note
+		  )
+		values
+		  (
+		  #{id,jdbcType=VARCHAR},
+		  #{orderId,jdbcType=VARCHAR},
+		  #{type,jdbcType=VARCHAR},
+		  #{orderNo,jdbcType=VARCHAR},
+		  #{payment,jdbcType=VARCHAR},
+		  #{bank,jdbcType=VARCHAR},
+		  #{currency,jdbcType=VARCHAR},
+		  #{denomination,jdbcType=VARCHAR},
+		  #{cardno,jdbcType=VARCHAR},
+		  #{rate,jdbcType=NUMERIC},
+		  #{amount,jdbcType=NUMERIC},
+		  #{note,jdbcType=VARCHAR}
+		   )
+	</insert>
+	<insert id="batchInsert"  parameterType="java.util.List">
+		<foreach collection="list" item="item" index="index" open="begin" close=";end;" separator=";">	
+		insert into jy_pos_payments
+		(
+		  id,
+		  orderId,
+		  type,
+		  orderNo,
+		  payment,
+		  bank,
+		  currency,
+		  denomination,
+		  cardno,
+		  rate,
+		  amount,
+		  note
+		  )
+		values
+		  (
+		  #{item.id,jdbcType=VARCHAR},
+		  #{item.orderId,jdbcType=VARCHAR},
+		  #{item.type,jdbcType=VARCHAR},
+		  #{item.orderNo,jdbcType=VARCHAR},
+		  #{item.payment,jdbcType=VARCHAR},
+		  #{item.bank,jdbcType=VARCHAR},
+		  #{item.currency,jdbcType=VARCHAR},
+		  #{item.denomination,jdbcType=VARCHAR},
+		  #{item.cardno,jdbcType=VARCHAR},
+		  #{item.rate,jdbcType=NUMERIC},
+		  #{item.amount,jdbcType=NUMERIC},
+		  #{item.note,jdbcType=VARCHAR}
+		  )
+		</foreach>
+	</insert>
+    <select id="findByPage"  resultMap="base" parameterType="posPayments">
+        select  t.* 
+        		from jy_pos_payments t
+		 where 1=1
+      	<if test='param.type != null and param.type != ""'>
+        	AND t.type=#{param.type}
+		</if> 
+		<if test='param.orderId != null and param.orderId != ""'>
+        	AND t.orderId=#{param.orderId}
+		</if> 
+		<if test='param.orderNo != null and param.orderNo != ""'>
+        	AND t.orderNo=#{param.orderNo}
+		</if> 
+    </select>
+     <select id="findByList"  resultMap="base" parameterType="posPayments">
+        select  t.* 
+        		from jy_pos_payments t
+		 where 1=1
+      	<if test='param.type != null and param.type != ""'>
+        	AND t.type=#{param.type}
+		</if> 
+		<if test='param.orderId != null and param.orderId != ""'>
+        	AND t.orderId=#{param.orderId}
+		</if> 
+		<if test='param.orderNo != null and param.orderNo != ""'>
+        	AND t.orderNo=#{param.orderNo}
+		</if> 
+    </select>
+    <update id="update" parameterType="posPayments">
+    	update jy_pos_payments
+	       set 
+			 orderId= #{orderId,jdbcType=VARCHAR},
+			 type= #{type,jdbcType=VARCHAR},
+			 orderNo= #{orderNo,jdbcType=VARCHAR},
+			 payment= #{payment,jdbcType=VARCHAR},
+			 bank= #{bank,jdbcType=VARCHAR},
+			 currency= #{currency,jdbcType=VARCHAR},
+			 denomination= #{denomination,jdbcType=VARCHAR},
+			 cardno= #{cardno,jdbcType=VARCHAR},
+			 rate= #{rate,jdbcType=NUMERIC},
+			 amount= #{amount,jdbcType=NUMERIC},
+			 note= #{note,jdbcType=VARCHAR}
+	     where id = #{id}
+	    
+    </update>
+	<delete id="delete" parameterType ="posPayments">
+		delete from jy_pos_payments  
+		WHERE id=#{id}
+	</delete>
+	<delete id="deleteBatch" parameterType ="java.util.List">
+	DELETE FROM jy_pos_payments WHERE id in(
+		<foreach item="item" collection="list" open="" separator="," close="" >
+			#{item.id}
+		</foreach>
+		)
+	</delete>
+	
+	<select id="findByEarnest"  resultMap="base" parameterType="posPayments">
+        select t.id as id,(select t.name from JY_DATA_DICT d join JY_DATA_DICT_ITEM t on t.dictid=d.id where d.datakey='POS_PAYMENT' and t.value=t.PAYMENT) as PAYMENT,DECODE(t.payment,1,(select t.name from JY_DATA_DICT d join JY_DATA_DICT_ITEM t on t.dictid=d.id where d.datakey='POS_PAYMENT_MONEY' and t.value=t.currency)
+		,2,(select t.name from JY_DATA_DICT d join JY_DATA_DICT_ITEM t on t.dictid=d.id where d.datakey='POS_PAYMENT_BANK' and t.value=t.bank)
+		,3,(select t.name from JY_DATA_DICT d join JY_DATA_DICT_ITEM t on t.dictid=d.id where d.datakey='POS_PAYMENT_COUPON' and t.value=t.DENOMINATION)
+		,4,null,5,null) as bank,t.CARDNO as CARDNO,t.RATE as RATE,t.AMOUNT as AMOUNT,t.NOTE as NOTE
+		from JY_POS_PAYMENTS t
+		 where 1=1
+      	<if test='param.type != null and param.type != ""'>
+        	AND t.type=#{param.type}
+		</if> 
+		<if test='param.orderId != null and param.orderId != ""'>
+        	AND t.orderId=#{param.orderId}
+		</if> 
+		<if test='param.orderNo != null and param.orderNo != ""'>
+        	AND t.orderNo=#{param.orderNo}
+		</if> 
+    </select>
+</mapper>

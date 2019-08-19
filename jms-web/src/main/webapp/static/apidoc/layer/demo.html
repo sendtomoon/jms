@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>弹窗-demo</title>
+  <link rel="stylesheet" href="skin/default/layer.css" />
+  <script src="../../js/jquery/jquery-2.0.3.min.js"></script>
+  <script src="layer.js"></script>
+ 
+</head>
+<body id="mybody">
+<div id="testbuhuo" style="background:#5fb878;width:300px;height:auto;">
+	<ul>
+		<li><a href="#info">1,信息框</a></li>
+		<li><a href="#load">2,加载层</a></li>
+		<li><a href="#tips">3,Tips消息</a></li>
+		<li><a href="#confirm">4,弹出框：询问</a></li>
+		<li><a href="#page">5,页面层/iframe层</a></li>
+		<li><a href="#tab">6,弹窗Tab</a></li>
+	</ul>
+</div>
+<p></p>
+<hr>
+<p id="info"><strong>信息框</strong></p>
+<hr>
+<p>
+信息提示：(窗口)
+<button onclick="xinxi()" >墨绿深蓝</button>&nbsp;&nbsp;
+<button onclick="buhuo()" >捕获页</button>&nbsp;&nbsp;
+<button onclick="xinxi1(0)" >禁告</button>&nbsp;&nbsp;
+<button onclick="xinxi1(1)" >绿勾</button>&nbsp;&nbsp;
+<button onclick="xinxi1(2)" >红叉</button>&nbsp;&nbsp;
+<button onclick="xinxi1(3)" >疑问</button>&nbsp;&nbsp;
+<button onclick="xinxi1(4)" >锁定</button>&nbsp;&nbsp;
+<button onclick="xinxi1(6)" >笑脸</button>&nbsp;&nbsp;
+<button onclick="xinxi1(5)" >不高兴</button>
+</p>
+<p>
+提示信息：(div 2秒后消失)
+<button onclick="xinxi2_1()" >原始的</button>
+<button onclick="xinxi2_2()" >正上方</button>
+<button onclick="xinxi2(0)" >禁告</button>
+<button onclick="xinxi2(1)" >绿勾</button>
+<button onclick="xinxi2(2)" >红叉</button>
+<button onclick="xinxi2(3)" >疑问</button>
+<button onclick="xinxi2(4)" >锁定</button>
+<button onclick="xinxi2(5)" >笑脸</button>
+<button onclick="xinxi2(6)" >不高兴</button>
+<button onclick="xinxi2_3()" >带回调</button>
+</p>
+<p id="load">
+<strong>加载层</strong>
+</p>
+<hr>
+<p>
+<button onclick="load1()" >加载样式1</button>
+<button onclick="load2()" >加载样式2</button>
+<button onclick="load3()" >加载样式3</button>
+<button onclick="load4()" >加载样式4</button>
+</p>
+<p id="tips">
+<strong>Tips消息</strong>
+</p>
+<hr>
+<p>
+	<button id="test1" onclick="tips1()" >提示：上</button>
+	<button class="test2" onclick="tips2()" >提示：下</button>
+	<button id="test3" onclick="tips3()" >提示：左</button>
+	<button class="test4" onclick="tips4()" >提示：右</button>
+</p>
+<p id="confirm"><strong>弹出框：询问</strong></p>
+<hr>
+<p>
+<button onclick="confirm1()" >询问框</button>
+<button onclick="confirm2()" >询问框：透明的</button>
+<button onclick="prompt()" >默认prompt：弹出框输入值</button>
+<button onclick="prompt2()" >prompt嵌套</button>
+	
+</p>
+<p id="page">
+	<strong>页面层/iframe层</strong>
+</p>
+<p>
+	<button onclick="page5()" >iframe-图片</button>
+	<button onclick="page4()" >iframe-金一视频</button>
+	<button id="parentIframe" onclick="page3()" >iframe-父子页面</button>
+	<button onclick="page1()" >自定义页面</button>
+	<button onclick="page2()" >页面dom</button>
+	<button onclick="page()" >弹出公告</button>
+</p>
+<p id="tab"><strong>弹窗Tab</strong></p>
+<hr>
+<p>
+	<button onclick="tabTest()" >弹出框：Tab形式</button>
+</p>
+<script>
+function xinxi(){
+	//墨绿深蓝风
+	layer.alert('墨绿风格，点击确认看深蓝', {
+	  skin: 'layui-layer-molv' //样式类名
+	  ,closeBtn: 0
+	}, function(){
+	  layer.alert('偶吧深蓝style', {
+	    skin: 'layui-layer-lan'
+	    ,closeBtn: 0
+	    ,anim: 4 //动画类型
+	  });
+	});
+}
+function buhuo(){
+	layer.open({
+		  type: 1,
+		  shade: false,
+		  title: false, //不显示标题
+		  content: $('#testbuhuo'), //捕获的元素，注意：最好该指定的元素要存放在body最外层，否则可能被其它的相对元素所影响
+		  cancel: function(){
+		    layer.msg('捕获就是从页面已经存在的元素上，包裹layer的结构', {time: 5000, icon:6});
+		  }
+		});
+}
+
+function xinxi1(i){
+	layer.alert('给爷弹一个看看！', {icon: i});
+}
+
+function xinxi2(i){
+	layer.msg('今天心情是灰色的！', {icon: i});
+}
+function xinxi2_1(){
+	layer.msg('金一欢迎您!');
+}
+function xinxi2_2(){
+	layer.msg('我在这里哟！哈哈。。。', {
+		  offset: 't',
+		  anim: 6
+		});
+}
+function xinxi2_3(){
+	layer.msg('稍等，回调中。。。再给我2秒钟！', function(){
+		//关闭后的操作
+		layer.alert('爷给你回调一个看看！',{icon:5});
+	});
+}
+/*加载层*/
+function load1(){
+	layer.load();
+	//3秒后关闭所有
+	setTimeout(function(){
+	  layer.closeAll('loading');
+	}, 3000);
+}
+function load2(){
+	layer.load(1);
+	setTimeout(function(){
+	  layer.closeAll('loading');
+	}, 3000);
+}
+function load3(){
+	layer.load(2);
+	setTimeout(function(){
+	  layer.closeAll('loading');
+	}, 3000);
+}
+function load4(){
+	layer.msg('加载中', {
+		  icon: 16
+		  ,shade: 0.01
+		});
+}
+/*Tips*/
+function tips1(){
+	layer.tips('上了了了呀', '#test1',{
+		tips: [1, '#f11010'] //还可配置颜色
+		});
+}
+function tips2(){
+	layer.tips('下哈哈哈啦', '.test2',{
+		tips: [3, '#2913e4'] //还可配置颜色
+		});
+}
+function tips3(){
+	layer.tips('左边么么哒', '#test3',{
+		tips: [4, '#0FA6D8'] //还可配置颜色
+		});
+}
+function tips4(){
+	layer.tips('默认就是向右的', '.test4');
+}
+/*确认框*/
+function confirm1(){
+	layer.confirm('您是如何看待程序员职业的？', {
+		  btn: ['牛逼','苦逼'] //按钮
+		}, function(){
+		  layer.msg('的确很牛逼！', {icon: 1});
+		}, function(){
+		  layer.msg('为什么觉得苦逼？', {
+		    time: 20000, //20s后自动关闭
+		    btn: ['加班多', '压力大']
+		  });
+		});
+}
+
+function confirm2(){
+	layer.msg('我是个询问框哦？', {
+		  time: 0 //不自动关闭
+		  ,btn: ['知道', '不知道']
+		  ,yes: function(index){
+		    layer.close(index);
+		    layer.msg('我会自动消失哦,再给我2秒钟~', {
+		      icon: 6
+		      ,btn: ['拜拜','886','bye']
+		    });
+		  }
+		});
+}
+
+function prompt(){
+	layer.prompt(function(val, index){
+		  layer.msg('得到了'+val);
+		  layer.close(index);
+	});
+}
+function prompt2(){
+	//prompt层
+	layer.prompt({title: '输入任何口令，并确认', formType: 1}, function(pass, index){
+	  layer.close(index);
+	  layer.prompt({title: '随便写点啥，并确认', formType: 2}, function(text, index){
+	    layer.close(index);
+	    layer.msg('演示完毕！您的口令：'+ pass +'您最后写下了：'+text);
+	  });
+	});
+}
+
+function page(){
+	//示范一个公告层
+	layer.open({
+	  type: 1
+	  ,title: false //不显示标题栏
+	  ,closeBtn: false
+	  ,area: '300px;'
+	  ,shade: 0.8
+	  ,id: 'LAY_layuipro' //设定一个id，防止重复弹出
+	  ,resize: false
+	  ,btn: ['火速围观', '残忍拒绝']
+	  ,btnAlign: 'c'
+	  ,moveType: 1 //拖拽模式，0或者1
+	  ,content: '<div style="padding: 50px; line-height: 22px; background-color: #393D49; color: #fff; font-weight: 300;">公告：<br>内容<br>。。。。</div>'
+	  ,success: function(layero){
+	    var btn = layero.find('.layui-layer-btn');
+	    btn.find('.layui-layer-btn0').attr({
+	      href: '#'
+	      ,target: '_blank'
+	    });
+	  }
+	});
+}
+//页面层-自定义
+function page1(){
+	layer.open({
+	  type: 1,
+	  title: false,
+	  closeBtn: 0,
+	  shadeClose: true,
+	  skin: 'yourclass',
+	  content: '<br><br><br><br><br>自定义HTML内容。。。<br><br>'
+	});
+}
+function page2(){
+	layer.open({
+		  type: 1,
+		  title: false,
+		  closeBtn: 0,
+		  area: '516px',
+		  skin: 'layui-layer-nobg', //没有背景色
+		  shadeClose: true,
+		  content: $('#mybody')
+		});	
+}
+
+function page3(){
+	//iframe层-父子操作
+	layer.open({
+	  type: 2,
+	  area: ['700px', '530px'],
+	  fixed: false, //不固定
+	  maxmin: true,
+	  content: 'iframe.html'
+	});
+}
+function page4(){
+	//iframe层-多媒体
+	layer.open({
+	  type: 2,
+	  title: false,
+	  area: ['630px', '360px'],
+	  shade: 0.8,
+	  closeBtn: 0,
+	  shadeClose: true,
+	  content: 'http://player.youku.com/embed/XMjQ3NDI3NjAwMA=='
+	});	
+}
+function page5(){
+	layer.open({
+		  type: 1,
+		  title: false,
+		  closeBtn: 0,
+		  area: '516px',
+		  skin: 'layui-layer-nobg', //没有背景色
+		  shadeClose: true,
+		  content: '<img src="http://www.king1.com.cn/media/kingee_pc/201510/1444850591620857224.jpg">'
+		});	
+}
+/*tab层*/
+function tabTest(){
+	layer.tab({
+	  area: ['600px', '300px'],
+	  tab: [{
+	    title: 'TAB1', 
+	    content: '<center><p>此时此刻我想吟诗一首：</p><p><p>啊！这个组件不一般！</p>又能装逼又能弹，</p><p>又能装逼有能弹啊！</p><p>这个组件不一般！！</p><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;——Damon</p><br><br><br></center>'
+	  }, {
+	    title: 'TAB2', 
+	    content: '内容：哈哈哈'
+	  }, {
+	    title: 'TAB3', 
+	    content: '内容：嘿嘿嘿'
+	  }]
+	});
+}
+
+</script>
+</body>
+</html>

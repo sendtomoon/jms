@@ -1,0 +1,279 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.dao.scm.circulation.CirculationDao">
+	<resultMap id="base" type="circulation" ></resultMap>
+	<select id="findByPage" resultType="circulation" parameterType="circulation">
+		select
+		h.id,h.flowno,h.noticeno,h.handoverwt,h.handovercount,
+		(select name from jy_base_org where id=h.handoverorgid) as handoverOrgName,
+		(select name from jy_base_org where id=h.receiveorgid)  as receiveOrgName,
+		(select name　from jy_base_account where id=h.handoverId) as handoverName,
+		(select name　from jy_base_account where id=h.receiverId) as receiver,
+		h.surplusWT,h.surpluscount,h.status,h.createtime
+		from jy_scm_flow_handover h 
+		where 1=1
+		<if test='param.status != null and param.status != ""'>
+			AND h.status = #{param.status}
+		</if>
+		<if test='param.flowNo != null and param.flowNo != ""'>
+			AND h.flowno  like '%'|| #{param.flowNo} ||'%'
+		</if>
+		<if test='param.noticeNo != null and param.noticeNo != ""'>
+			AND h.noticeno  like '%'|| #{param.noticeNo} ||'%'
+		</if>
+		order by h.createtime desc
+	</select>
+	<delete id="delBatch"  parameterType="java.util.List">
+		delete from  jy_scm_flow_handover  where createuser=#{userid} and id in(
+		<foreach item="o" collection="list" open="" separator="," close="" >
+			#{o.id}
+		</foreach>
+		)
+		
+	</delete>
+	<select id="findStatus" parameterType="String" resultType="circulation">
+		select id,status from jy_scm_flow_handover where id=#{id}
+	</select>
+	<select id="getByOrg" resultType="SelectData" parameterType="String">
+		select id as value,name as key from jy_base_account where orgid=#{orgid}
+	</select>
+	<select id="findNoticeno"  resultType="CirculationVO" parameterType="String">
+	     select  n.id as prodid,
+	          (select b.name
+	             from JY_DATA_DICT d
+	             join JY_DATA_DICT_ITEM b
+	               on b.dictid = d.id
+	            where d.datakey = 'SCM_PRO_GOLD_TYPE'
+	              and b.value = n.goldtype) as goldName,
+	          n.name as name,
+	          n.ACTUALWT as weight,
+	          n.COUNT as count,
+	          n.REMAINCOUNT as remaincount,
+	          n.REMAINWT as remainwt
+	     from jy_scm_flow_noticedetail n
+	     left join jy_scm_flow_noticeorder n1
+	       on n.noticeid = n1.id
+	    where n1.noticeno = #{noticeno}
+	  and n1.status='2' and n.REMAINCOUNT>0
+	</select>
+	<select id="queryNoticeno" resultType="CirculationVO" parameterType="String">		  
+	  select hp.id as cid,p.id as prodid,hp.handid,
+	             p.code as code,
+	             p.name as name,
+	             (select b.name
+	                from JY_DATA_DICT d
+	                join JY_DATA_DICT_ITEM b
+	                  on b.dictid = d.id
+	               where d.datakey = 'SCM_PRO_GOLD_TYPE'
+	                 and b.value = p.goldtype) as goldName,
+	             p.TOTALWEIGHT as weight,
+	             p.COUNT as count
+	        from jy_scm_ims_product p
+	        left join jy_scm_flow_handover_prod hp
+	          on p.id = hp.handid
+	       where p.noticeno = #{noticeno}
+	         and p.id not in (select hp.prodid as prodid from JY_SCM_FLOW_HANDOVER h left join JY_SCM_FLOW_HANDOVER_PROD hp on h.id=hp.handid where h.noticeno=#{noticeno})
+	</select>
+	<select id="queryType" resultType="materialcome" parameterType="String">
+		select * from jy_scm_flow_noticeorder where noticeno =#{noticeno}
+	</select>
+	<insert id="insertCirculation"  parameterType="circulation">
+		insert into jy_scm_flow_handover(id,flowno,noticeno,handoverwt,handovercount,handovertime,handoverid,handoverorgid,handoverwareid,handoverlocid,surpluswt,surpluscount,receiverid,receiveorgid,receivewareid,receivelocid,receivetime,status,delFlag,note,createuser,createtime)
+		values(#{id,jdbcType=VARCHAR},#{flowNo,jdbcType=VARCHAR},#{noticeNo,jdbcType=VARCHAR},#{handoverWt,jdbcType=NUMERIC},#{handoverCount,jdbcType=NUMERIC},sysdate,#{handoverId,jdbcType=VARCHAR},#{handoverOrgId,jdbcType=VARCHAR},#{handoverWareId,jdbcType=VARCHAR},#{handoverLocId,jdbcType=VARCHAR},#{surplusWt,jdbcType=NUMERIC},#{surplusCount,jdbcType=NUMERIC},#{receiverId,jdbcType=VARCHAR},#{receiveOrgId},#{receiveWareId,jdbcType=VARCHAR},#{receiveLocId,jdbcType=VARCHAR},sysdate,#{status,jdbcType=VARCHAR},#{delFlag,jdbcType=VARCHAR},#{note,jdbcType=VARCHAR},#{createUser,jdbcType=VARCHAR},sysdate)
+	</insert>
+	<insert id="batchInsert" parameterType="java.util.List">
+		<foreach collection="list" item="item" index="index" open="begin" close=";end;" separator=";">
+			insert into jy_scm_flow_handover_prod(id,handid,prodid,type,noticeno,count,weight)
+			values(#{item.id},#{item.handid,jdbcType=VARCHAR},#{item.prodid,jdbcType=VARCHAR},#{item.type,jdbcType=VARCHAR},#{item.noticeno,jdbcType=VARCHAR},#{item.count,jdbcType=NUMERIC},#{item.weight,jdbcType=NUMERIC})
+		</foreach>
+	</insert>
+	<select id="queryNumber" resultType="materialcome" parameterType="String">
+		select sum(count) as  count,sum(actualWt) as actualWt from jy_scm_flow_noticeorder n left join jy_scm_flow_noticedetail n1 on n.id=n1.noticeid where noticeno =#{noticeno}
+	</select>
+	<select id="find"  resultType="circulation" parameterType="String">
+		select h.id,h.flowno,h.noticeno,handoverId,receiverId,handoverorgid,receiveorgid,status,
+	    (select name from jy_base_org where id=h.handoverorgid) as handoverOrgName,
+	    (select name from jy_base_org where id=h.receiveorgid)  as receiveOrgName,
+	    (select name　from jy_base_account where id=h.handoverId) as handoverName,
+	    (select name　from jy_base_account where id=h.receiverId) as receiver,
+	    note,createuser,h.handoverwt,h.handovercount,h.handovertime,h.handoverwareid,h.handoverlocid,h.surpluswt,h.surpluscount
+    	from jy_scm_flow_handover h where h.id=#{id}
+	</select>
+	<!-- 审核修改状态 -->
+	<update id="updateStatus" parameterType="String">
+		update jy_scm_flow_handover set status='1' where id=#{id} and receiverId=#{receiverId}
+	</update>
+	<update id="updateCirculation" parameterType="circulation">
+			update jy_scm_flow_handover set handoverwt=#{handoverWt},handovercount=#{handoverCount}, receiverId=#{receiverId},receiveorgid=#{receiveOrgId},handoverId=#{handoverId},note=#{note} where id=#{id} and createuser=#{createUser}
+	</update>
+	<!-- 删除流转中间表 -->
+	<delete id="bacthdel"  parameterType="String">
+		delete from JY_SCM_FLOW_HANDOVER_PROD
+		where  id  =#{cid}
+	</delete>
+		<!-- 根据入库通知单查询素金信息 -->
+		<select id="findById" resultType="CirculationVO" parameterType="String">
+		 select hp.id as cid,hp.handid,
+           n.id as prodid,
+           (select b.name
+              from JY_DATA_DICT d
+              join JY_DATA_DICT_ITEM b
+                on b.dictid = d.id
+             where d.datakey = 'SCM_PRO_GOLD_TYPE'
+               and b.value = n.goldtype) as goldName,
+           name as name,
+           (select sum(count) from jy_scm_flow_handover_prod where handid=hp.handid) as totalCount,
+           (select sum(weight) from jy_scm_flow_handover_prod where handid=hp.handid) as totalWeight,
+         hp.weight as weight,
+             hp.COUNT as count,
+           n.REMAINWT,
+           n.REMAINCOUNT
+      from jy_scm_flow_noticedetail n
+      left join jy_scm_flow_noticeorder n1
+        on n.noticeid = n1.id
+      left join jy_scm_flow_handover_prod hp
+        on hp.prodid = n.id
+	  where hp.handid = #{id}
+
+	</select>
+	<!-- 根据入库通知单查询商品信息 -->
+	<select id="queryById" resultType="CirculationVO" parameterType="String">
+		select pd.id as cid,pd.handid,pd.prodid as prodid,p.code as code, p.name as name, p.totalweight as weight,p.COUNT as count,
+		(select b.name
+          from JY_DATA_DICT d
+          join JY_DATA_DICT_ITEM b
+            on b.dictid = d.id
+         where d.datakey = 'SCM_PRO_GOLD_TYPE'
+           and b.value = p.goldtype) as goldName,
+           (select sum(count) from jy_scm_flow_handover_prod where handid=pd.handid) as totalCount,
+           (select sum(weight) from jy_scm_flow_handover_prod where handid=pd.handid) as totalWeight
+	   from jy_scm_flow_handover_prod pd
+	   left join jy_scm_ims_product p
+	     on pd.prodid = p.id
+	  where pd.handid = #{id}
+	</select>
+	
+	<select id="findCirculation" resultType="Circulation" parameterType="String">
+		select * from (select h.* from jy_scm_flow_handover h where h.noticeno=#{noticeno} order by h.createtime desc) where rownum=1
+	</select>
+	<!-- 删除流转主表 -->
+	<delete id="deleteCirculationProd" parameterType="String">
+		delete from jy_scm_flow_handover_prod where  handid in(
+		<foreach item="o" collection="list" open="" separator="," close="" >
+			#{o.id}
+		</foreach>
+		)
+	</delete>
+	<!-- 查询流转中间表 -->
+	<select id="findCirculationProd" resultType="circulationProd" parameterType="String">
+		select * from jy_scm_flow_handover_prod where noticeno=#{noticeno}
+	</select>
+	<select id="findByNo" resultType="CirculationVO" parameterType="String">
+		 select hp.id as cid, n.id as prodid,
+          (select b.name
+             from JY_DATA_DICT d
+             join JY_DATA_DICT_ITEM b
+               on b.dictid = d.id
+            where d.datakey = 'SCM_PRO_GOLD_TYPE'
+              and b.value = n.goldtype) as goldName,
+          name as name,
+          n.ACTUALWT as weight,
+          n.COUNT as count,
+          n.REMAINCOUNT,
+          n.REMAINWT
+	     from jy_scm_flow_noticedetail n
+	     left join jy_scm_flow_noticeorder n1
+	       on n.noticeid = n1.id
+	       left join jy_scm_flow_handover_prod hp
+          on n.id = hp.prodid
+	    where n1.noticeno = #{noticeno}
+		and n1.status='2'
+	</select>
+	<update id="batchCirculationProd" parameterType="java.util.List">
+		 <foreach collection="list" item="item" index="index" open="begin" close=";end;" separator=";">
+			update jy_scm_flow_handover_prod set count=#{item.count,jdbcType=NUMERIC},weight=#{item.weight,jdbcType=NUMERIC} where  id=#{item.id,jdbcType=VARCHAR}
+		 </foreach>
+	</update>
+	<select id="selectNoticeno" resultType="materialcome" parameterType="String">
+		select noticeno from  jy_scm_flow_noticeorder where  upper(noticeno) like '%'||upper(#{noticeno})||'%'
+	</select>
+	<update id="batchUpdate" parameterType="java.util.List">
+		<foreach collection="list" item="item" index="index" open="begin" close=";end;" separator=";">
+			update jy_scm_flow_handover set surplusWT=#{item.surplusWt,jdbcType=NUMERIC},surpluscount=#{item.surplusCount,jdbcType=NUMERIC} where noticeno=#{item.noticeNo,jdbcType=VARCHAR}
+		</foreach>
+	</update>
+	<select id="queryProductNumber" resultType="product" parameterType="String">
+		select sum(count) as count, sum(totalweight) as totalWeight
+		  from jy_scm_ims_product 
+		 where noticeno = #{noticeno}
+	</select>
+	<update id="updateNoticedetail"  parameterType="java.util.List">
+		<foreach collection="list" item="item" index="index" open="begin" close=";end;" separator=";">
+			update jy_scm_flow_noticedetail set REMAINCOUNT=remaincount-#{item.remaincount},REMAINWT=remainwt-#{item.remainwt} where id =#{item.prodid}
+		</foreach>
+	</update>
+	
+	<select id="selectHandid" resultType="circulationProd" parameterType="String">
+		select * from jy_scm_flow_handover_prod where handid=#{handid}
+	</select>
+	
+	<update id="modifyNoticedetail" parameterType="java.util.List">
+		<foreach collection="list" item="item" index="index" open="begin" close=";end;" separator=";">
+			update jy_scm_flow_noticedetail set remaincount=remaincount+#{item.count},remainwt=remainwt+#{item.weight} where id = #{item.prodid}
+		</foreach>
+	</update>
+	<update id="modifyById" parameterType="CirculationVO">
+		update jy_scm_flow_noticedetail set remaincount=remaincount+#{count},remainwt=remainwt+#{weight} where id = #{prodid}
+	</update>
+	<select id="selectById" resultType="circulationProd" parameterType="String">
+		select * from jy_scm_flow_handover_prod where id=#{id}
+	</select>
+	<select id="selectNoticedetail" resultType="materialcome" parameterType="String">
+		   select n.remaincount,n.remainwt
+       from jy_scm_flow_noticedetail n
+       left join jy_scm_flow_noticeorder n1
+         on n.noticeid = n1.id
+      where n1.noticeno = #{noticeno}
+	</select>
+	<select id="queryByNo" resultType="CirculationVO" parameterType="String">
+		select hp.id as cid,p.id as prodid,hp.handid,
+	             p.code as code,
+	             p.name as name,
+	             (select b.name
+	                from JY_DATA_DICT d
+	                join JY_DATA_DICT_ITEM b
+	                  on b.dictid = d.id
+	               where d.datakey = 'SCM_PRO_GOLD_TYPE'
+	                 and b.value = p.goldtype) as goldName,
+	             p.TOTALWEIGHT as weight,
+	             p.COUNT as count
+	        from jy_scm_ims_product p
+	        left join jy_scm_flow_handover_prod hp
+	          on p.id = hp.handid
+	       where p.noticeno = #{noticeno}
+	</select>
+	<!-- 删除流转中间表 -->
+	<delete id="removeProd"  parameterType="String">
+		delete from jy_scm_flow_handover_prod where id=#{id}
+	</delete>
+	<!-- 查询中间表信息 -->
+	<select id="selectByNoticeno"  resultType="CirculationVO" parameterType="String">
+		 select hp.id as cid,p.id as prodid,hp.handid,
+               p.code as code,
+               p.name as name,
+               (select b.name
+                  from JY_DATA_DICT d
+                  join JY_DATA_DICT_ITEM b
+                    on b.dictid = d.id
+                 where d.datakey = 'SCM_PRO_GOLD_TYPE'
+                   and b.value = p.goldtype) as goldName,
+               p.TOTALWEIGHT as weight,
+               p.COUNT as count
+          from  jy_scm_flow_handover_prod hp
+          left join  jy_scm_ims_product p
+            on p.id = hp.handid
+         where p.noticeno = #{noticeno}
+           and p.id not in (select hp.prodid as prodid from JY_SCM_FLOW_HANDOVER h left join JY_SCM_FLOW_HANDOVER_PROD hp on h.id=hp.handid where h.noticeno=#{noticeno})
+  
+	</select>
+</mapper>

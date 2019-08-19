@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.dao.system.district.DistrictDao">
+	<!-- com.jy.entity.system.dict.DataDict -->
+	<!-- com.jy.entity.system.dict.DataDictItem -->
+	<resultMap id="district" type="baseDistrict"></resultMap>
+
+	<select id="find" resultMap="district" parameterType="baseDistrict">
+		select d.id as id,
+		d.pid as pid,
+		d2.name as pName,
+		d.name as name,
+		d.status as status,
+		d.sort as sort,
+		d.descrition as descrition,
+		d.createtime as createtime,
+		d.createuser as createuser
+		from Jy_Base_District d left join Jy_Base_District d2 on d.pid=d2.id
+		where 1=1
+		<if test="name != null and name !='' ">
+			and d.name=#{name}
+		</if>
+		<if test="id != null and id !='' ">
+			and d.id=#{id}
+		</if>
+	</select>
+
+	<select id="findByPage" resultMap="district" parameterType="baseDistrict">
+		select d.id         as id,
+                      d.pid        as pid,
+                      d.name,
+                      d.descrition,
+                      d.createtime,
+                      d.createuser,
+                      d.status     as status,
+                      d.createname,
+                      d.sort,
+                      d.updatetime,
+                      d.updateuser,
+                      d.updatename
+                 from (select * FROM Jy_Base_District
+                start with pid = #{param.id}
+               connect by prior id = pid) d
+               where 1=1
+		
+       <if test='param.status != null and param.status != ""'>
+        	AND d.status=#{param.status}
+       </if> 
+	</select>
+	<select id="count" resultType="int" parameterType="baseDistrict">
+		SELECT count(*) FROM Jy_Base_District d WHERE d.id=#{id}
+	</select>
+
+	<insert id="insert" parameterType="baseDistrict">	
+ 	<![CDATA[
+		insert into Jy_Base_District(id,pid,name,sort,status,descrition,createtime,createuser,createname)
+		values(#{id},#{pid},#{name},#{sort},#{status},#{descrition},#{createTime},#{createUser},#{createName})
+	]]>
+	</insert>
+	<delete id="delete" parameterType="baseDistrict">
+		UPDATE JY_BASE_DISTRICT SET STATUS=#{status} WHERE id=#{id}
+	</delete>
+	<delete id="removeDistrict" parameterType="java.util.List">
+	UPDATE JY_BASE_DISTRICT SET STATUS=#{district.status} WHERE id in(
+		<foreach item="d" collection="list" open="" separator=","
+			close="">
+			#{d.id}
+		</foreach>
+		)
+	</delete>
+	<update id="update" parameterType="baseDistrict">
+		update Jy_Base_District
+		set
+		pid=#{pid},
+		name=#{name},
+		sort=#{sort},
+		status=#{status},
+		descrition=#{descrition}
+		WHERE id=#{id}
+	</update>
+	<select id="getDistrictTree" resultMap="district" parameterType="String">
+		 SELECT d.id as id,
+	   		  d.name as name,
+	   		  d.pId as pId
+	  	 FROM Jy_Base_District d
+	  	 WHERE 1=1
+	  	 <if test='status != null and status !=""'>
+	  	 	AND status=#{status}
+	  	 </if>
+      	 ORDER BY d.id,d.name
+	</select>
+	<select id="getDistrictById" resultMap="district" parameterType="baseDistrict">
+		select status from jy_base_district where id=#{id}
+	</select>
+</mapper>

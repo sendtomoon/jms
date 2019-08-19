@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.dao.scm.franchisee.FranchiseeDao">
+	<resultMap id="franchisee" type="baseFranchisee"></resultMap>
+	
+	<resultMap id="dict" type="baseDict"></resultMap>
+	
+	<select id="find" resultMap="franchisee" parameterType="baseFranchisee">
+		select f.id as id ,f.code as code,f.name as name,f.longname as  longname,f.legalname as legalname,f.licensenum as licensenum,f.email as email,
+	    f.status as status,f.province as province,f.city as city,f.county as county ,f.address as address,f.contactor as contactor,
+	    f.bankname as bankname,f.accountname as accountname,f.accountnum as accountnum,f.accountcode as accountcode,f.taxnum as taxnum,f.contactnum as contactnum
+	    from jy_base_franchisee f
+		where 1=1
+		<if test="name != null and name !='' ">
+			and f.name=#{name}
+		</if>  
+		<if test="id != null and id !='' ">
+			and f.id=#{id}
+		</if>
+	</select>
+	<select id="findByPage" resultMap="franchisee" parameterType="baseFranchisee">
+		select f.id as id,f.code as code,f.name as name,f.longname as  longname,
+		f.legalname as legalname,f.licensenum as licensenum,
+		f.email as email,f.status as status 
+		from jy_base_franchisee f
+		where 1=1
+		
+       <if test='param.status != null and param.status != ""'>
+        	AND f.status=#{param.status}
+       </if> 
+       <if test='param.name != null and param.name != ""'>
+        	AND f.name like '%'||#{param.name}||'%'
+       </if>
+        <if test='param.longName != null and param.longName != ""'>
+        	AND f.longName =#{param.longName}
+       </if>  
+       ORDER BY f.id desc
+	</select>
+	
+	<select id="count" resultType="int" parameterType="baseFranchisee">
+		SELECT count(*) FROM jy_base_franchisee f WHERE f.id=#{id}
+	</select>
+	
+	<insert id="insert" parameterType="baseFranchisee">
+		<![CDATA[
+			insert into jy_base_franchisee
+			(id,code,name,longname,status,email,province,city,county,address,contactor,contactnum,
+			legalname,licensenum,taxnum,bankname,accountname,accountnum,accountcode,
+			createtime,createuser)
+			values(#{id},#{code},#{name},#{longName},#{status},#{email},#{province},#{city},#{county},
+			#{address},#{contactor},#{contactnum},#{legalName},#{licenseNum},#{taxNum},#{bankName},#{accountName},#{accountNum},#{accountCode},
+			#{createTime},#{createUser})
+		]]>
+	</insert>
+	<delete id="delete" parameterType="baseFranchisee">
+		UPDATE jy_base_franchisee SET STATUS=#{status} WHERE id=#{id}
+	</delete>
+	<delete id="removeFranchisee" parameterType="java.util.List">
+	UPDATE jy_base_franchisee SET STATUS=#{franchisee.status} WHERE id in(
+		<foreach item="d" collection="list" open="" separator=","
+			close="">
+			#{d.id}
+		</foreach>
+		)
+	</delete>
+	<update id="update" parameterType="baseFranchisee">
+		update jy_base_franchisee
+		set
+		code=#{code,jdbcType=VARCHAR},
+		name=#{name,jdbcType=VARCHAR},
+		longname=#{longName,jdbcType=VARCHAR},
+		status=#{status,jdbcType=VARCHAR},
+		email=#{email,jdbcType=VARCHAR},
+		legalname=#{legalName,jdbcType=VARCHAR},
+		licensenum=#{licenseNum,jdbcType=VARCHAR},
+		bankname=#{bankName,jdbcType=VARCHAR},
+		contactor=#{contactor,jdbcType=VARCHAR},
+		contactnum=#{contactnum,jdbcType=VARCHAR},
+		accountcode=#{accountCode,jdbcType=VARCHAR},
+		taxnum=#{taxNum,jdbcType=VARCHAR},
+		updateuser=#{updateUser},
+		updatetime=#{updateTime},
+		province=#{province},
+		city=#{city},
+		county=#{county},
+		address=#{address}
+		WHERE id=#{id,jdbcType=VARCHAR}
+	</update>
+	
+	<select id="getDictById" resultMap="dict" parameterType="baseDict">
+		select jsd.paramvalue,jsd.id,jsd.pid from jy_sys_dict jsd where jsd.pid='-1' order by id
+	</select>
+	<select id="findDictByPid" resultMap="dict" parameterType="baseDict">
+		select jsd.paramvalue,jsd.id,jsd.pid from jy_sys_dict jsd where jsd.pid=#{id}
+	</select>
+	<select id="getFranchiseeByStatus" resultMap="franchisee" parameterType="baseFranchisee">
+		select status from jy_base_franchisee where id=#{id}
+	</select>
+	<select id="findLongName" resultMap="franchisee" parameterType="String">
+		select f.id as id,f.name as longName from jy_base_franchisee f
+		where f.name like '%'||#{longName}||'%'
+	</select>
+	<select id="queryByCode" resultMap="franchisee" parameterType="baseFranchisee">
+		select * from jy_base_franchisee where code=#{code}
+	</select>
+</mapper>

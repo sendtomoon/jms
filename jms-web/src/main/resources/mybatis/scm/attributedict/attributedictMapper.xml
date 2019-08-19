@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.dao.scm.attributedict.AttributedictDao">
+	<resultMap id="attributedict" type="baseAttributedict"></resultMap>
+	
+    <insert id="insert"  parameterType="baseAttributedict">	
+		insert into JY_SCM_ATTRIBUTEDICT
+		  (id, name, code, sort, type, dictid, length, nullable, filtertag,status)
+		values
+		  (#{id}, #{name}, #{code}, #{sort}, #{type}, #{dictId}, #{length}, #{nullable}, #{filtertag},#{status})
+	</insert>
+
+    
+    <select id="findByPage"  resultMap="attributedict" parameterType="baseAttributedict">
+		      select t.id,
+	           t.name,
+	           t.code,
+	           t.sort,
+	           t.type,
+	           t.dictId as dictId,
+	           DECODE(d.name, '', '-', d.name || ',' || d.datakey) as dictName,
+	           t.length,
+	           t.nullable,
+	           t.filterTag,
+	           t.status
+	      from JY_SCM_ATTRIBUTEDICT t
+	      left join jy_data_dict d
+	        on t.dictid = d.id
+          WHERE 1=1
+		 <if test='param.status != null and param.status !=""'>
+			AND t.STATUS=#{param.status}
+	     </if>
+	     <if test='param.name != null and param.name !=""'>	     
+    	    AND t.NAME LIKE '%'||#{param.name}||'%'
+	     </if>
+    </select>
+	
+	<select id="find" resultMap="attributedict" parameterType="baseAttributedict">
+    	 SELECT  t.id,t.name,t.code,t.sort,t.type,t.dictId as dictId,
+           DECODE((select name || ',' || datakey from jy_data_dict where id = t.dictId), '', '-',NAME) as dictName,
+           t.length,t.nullable,t.filterTag,t.status
+      	  FROM JY_SCM_ATTRIBUTEDICT t where id=#{id}
+    </select>
+    
+    <select id="count"  resultType="int" parameterType="baseAttributedict">
+       SELECT count(*) FROM JY_SCM_ATTRIBUTEDICT  where id=#{id}
+    </select>
+    
+    <update id="update" >
+		update JY_SCM_ATTRIBUTEDICT 
+		set name = #{name},code = #{code},sort = #{sort},type = #{type},dictid = #{dictId},length = #{length},nullable = #{nullable},filtertag = #{filtertag},status = #{status}
+		where id = #{id}
+    </update>
+	
+	<delete id="delete" parameterType="baseAttributedict">
+		UPDATE JY_SCM_ATTRIBUTEDICT SET STATUS=#{status} WHERE id=#{id}
+	</delete>
+    
+    <select id="getByStatus" resultMap="attributedict" parameterType="baseAttributedict">
+		select status from JY_SCM_ATTRIBUTEDICT where id=#{id}
+	</select>
+	
+	<select id="getByName" resultMap="attributedict" parameterType="baseAttributedict">
+		SELECT ID,NAME FROM JY_SCM_ATTRIBUTEDICT 
+	</select>
+	<select id="findName"  resultMap="attributedict" parameterType="baseAttributedict">
+		  SELECT  t.id,t.name,t.code,t.sort,t.type,t.dictId as dictId,
+           DECODE((select name || ',' || datakey from jy_data_dict where id = t.dictId), '', '-',NAME) as dictName,
+           t.length,t.nullable,t.filterTag,t.status
+      	  FROM JY_SCM_ATTRIBUTEDICT t
+          WHERE t.name=#{name}
+    </select>
+	
+</mapper>

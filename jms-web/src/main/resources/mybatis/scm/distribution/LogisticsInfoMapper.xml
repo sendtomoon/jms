@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.dao.scm.distribution.LogisticsInfoDao">
+	<!-- com.jy.entity.system.dict.SysDict  -->
+ 	<resultMap id="base" type="logisticsInfo" ></resultMap>
+ 	
+ 	<!-- <select id="findByPage" resultMap="base" parameterType="logisticsInfo">
+ 		select * from JY_SCM_IMS_LOGISTICSINFO
+ 	</select> -->
+ 	
+ 	 <select id="find" resultMap="base" parameterType="logisticsInfo">
+ 		<!-- select id as id ,stauts as stauts,bussnessid as bussnessId,outboundno as outboundNo,
+ 		recipient as recipient,recpost as recPost,recphone as recPhone,recaddress as recAddress,recprovince as recProvince,reccity as recCity,reccounty as recCounty,
+ 		sender as sender,senpost as sendPost,senphone as sendPhone,senprovince as senProvince,sencity as senCity,sencounty as senCounty,senaddress as sendAddress,express as express,expressno as expressNo,
+ 		createtime as createTime,createuser as createUser,updatetime as updateUser,updateuser as updateUser 
+ 		from JY_SCM_IMS_LOGISTICSINFO where 1=1
+ 		<if test='id != null and id != ""'>
+		   AND id=#{id,jdbcType=VARCHAR}
+	    </if>
+ 		<if test='bussnessId != null and bussnessId != ""'>
+		   AND bussnessid=#{bussnessId,jdbcType=VARCHAR}
+	    </if> -->
+	    
+	    select t.id as id ,t.stauts as stauts,t.bussnessid as bussnessId,t.outboundno as outboundNo,
+ 		t.recipient as recipient,t.recpost as recPost,t.recphone as recPhone,t.recaddress as recAddress,t.recprovince as recProvince,t.reccity as recCity,t.reccounty as recCounty,
+ 		t.sender as sender,t.senpost as sendPost,t.senphone as sendPhone,t.senprovince as senProvince,t.sencity as senCity,t.sencounty as senCounty,t.senaddress as sendAddress,t.express as express,t.expressno as expressNo,
+ 		t.createtime as createTime,t.createuser as createUser,t.updatetime as updateUser,t.updateuser as updateUser,o.inorgid,o.outorgid,'1' as type
+ 		from JY_SCM_IMS_LOGISTICSINFO t
+	    left join jy_scm_ims_outbound o on o.outboundNo = t.outboundNo
+	    where 1=1 
+	    <if test='id != null and id != ""'>
+		   AND id=#{id,jdbcType=VARCHAR}
+	    </if>
+ 		<if test='bussnessId != null and bussnessId != ""'>
+		   AND bussnessid=#{bussnessId,jdbcType=VARCHAR}
+	    </if>
+	    <if test='type != null and type != ""'>
+		   AND outorgid=#{type,jdbcType=VARCHAR}
+	    </if>
+	    UNION ALL
+        select t.id as id ,t.stauts as stauts,t.bussnessid as bussnessId,t.outboundno as outboundNo,
+ 		t.recipient as recipient,t.recpost as recPost,t.recphone as recPhone,t.recaddress as recAddress,t.recprovince as recProvince,t.reccity as recCity,t.reccounty as recCounty,
+ 		t.sender as sender,t.senpost as sendPost,t.senphone as sendPhone,t.senprovince as senProvince,t.sencity as senCity,t.sencounty as senCounty,t.senaddress as sendAddress,t.express as express,t.expressno as expressNo,
+ 		t.createtime as createTime,t.createuser as createUser,t.updatetime as updateUser,t.updateuser as updateUser,o.inorgid,o.outorgid,'2' as type
+ 		from JY_SCM_IMS_LOGISTICSINFO t
+	    left join jy_scm_ims_outbound o on o.outboundNo = t.outboundNo
+	    where 1=1 
+	    <if test='id != null and id != ""'>
+		   AND id=#{id,jdbcType=VARCHAR}
+	    </if>
+ 		<if test='bussnessId != null and bussnessId != ""'>
+		   AND bussnessid=#{bussnessId,jdbcType=VARCHAR}
+	    </if>
+	    <if test='type != null and type != ""'>
+		   AND inorgid=#{type,jdbcType=VARCHAR}
+	    </if>
+ 	</select>
+ 	
+ 	<insert id="insert" parameterType="logisticsInfo">
+ 		insert into JY_SCM_IMS_LOGISTICSINFO(id,stauts,bussnessid,outboundno,
+ 		recipient,recpost,recphone,recaddress,
+ 		recprovince,reccity ,reccounty,
+ 		sender,senpost,senphone,senaddress,
+ 		senprovince,sencity,sencounty,
+ 		express,expressno,createtime,createuser) values 
+ 		(#{id,jdbcType=VARCHAR}, #{stauts,jdbcType=VARCHAR}, #{bussnessId,jdbcType=VARCHAR}, #{ outboundNo,jdbcType=VARCHAR},
+ 		#{ recipient,jdbcType=VARCHAR} , #{ recPost,jdbcType=VARCHAR},#{ recPhone,jdbcType=VARCHAR}, #{ recAddress,jdbcType=VARCHAR},
+ 		#{ recProvince,jdbcType=VARCHAR}, #{ recCity,jdbcType=VARCHAR},#{ recCounty,jdbcType=VARCHAR}, 
+ 		#{ sender,jdbcType=VARCHAR}, #{ sendPost,jdbcType=VARCHAR},#{ sendPhone,jdbcType=VARCHAR}, #{ sendAddress,jdbcType=VARCHAR},
+ 		#{ senProvince,jdbcType=VARCHAR},#{senCity ,jdbcType=VARCHAR}, #{senCounty,jdbcType=VARCHAR},
+ 		#{express ,jdbcType=VARCHAR}, #{expressNo,jdbcType=VARCHAR}, sysdate, #{ createUser,jdbcType=VARCHAR})
+ 	</insert>
+ 	
+ 	<update id="update" parameterType="logisticsInfo">
+ 		update JY_SCM_IMS_LOGISTICSINFO set stauts=#{stauts,jdbcType=VARCHAR},bussnessid=#{bussnessId,jdbcType=VARCHAR},outboundno=#{ outboundNo,jdbcType=VARCHAR},recipient=#{ recipient,jdbcType=VARCHAR},
+ 		recpost=#{ recPost,jdbcType=VARCHAR},recphone=#{ recPhone,jdbcType=VARCHAR},
+ 		recprovince=#{ recProvince,jdbcType=VARCHAR},reccity=#{ recCity,jdbcType=VARCHAR} ,reccounty=#{ recCounty,jdbcType=VARCHAR},
+ 		recaddress= #{ recAddress,jdbcType=VARCHAR},sender=#{ sender,jdbcType=VARCHAR},senPost=#{ sendPost,jdbcType=VARCHAR},senphone=#{ sendPhone,jdbcType=VARCHAR},
+ 		senprovince=#{ senProvince,jdbcType=VARCHAR},sencity=#{senCity ,jdbcType=VARCHAR},senCounty=#{senCounty,jdbcType=VARCHAR},
+ 		senaddress=#{ sendAddress,jdbcType=VARCHAR},express=#{ express,jdbcType=VARCHAR},expressno=#{ expressNo,jdbcType=VARCHAR},
+ 		updatetime=sysdate,updateuser=#{updateUser,jdbcType=VARCHAR} where id = #{id,jdbcType=VARCHAR}
+ 	</update>
+ 	
+ 	<delete id="delete" parameterType="logisticsInfo">
+ 		delete JY_SCM_IMS_LOGISTICSINFO where id=#{id,jdbcType=VARCHAR}
+ 	</delete>
+	
+ 	<select id="findByOutbound" resultMap="base" >
+ 		<!-- select t.id as bussnessId,t.outboundno as outboundNo,w.director as sender,w.directornm as sendPhone,w.zipcode as sendPost
+		,w.province as senProvince,w.city as senCity,w.county as senCounty,w.address as sendAddress,
+		r.director as recipient,r.directornm as recPhone,r.zipcode as recPost,r.province as recProvince,r.city as recCity,r.county as recCounty,w.address as recaddress
+		from jy_scm_ims_outbound t
+		left join jy_scm_warehouse w on t.inorgid=w.orgid and w.defaults='0'
+		left join jy_scm_warehouse r on t.outorgid=r.orgid and r.defaults='0'
+		 where t.id=#{id,jdbcType=VARCHAR} -->
+		 
+		 select distinct ta.*,'1' as type from (select t.id as bussnessId,t.outboundno as outboundNo,w.director as sender,w.directornm as sendPhone,w.zipcode as sendPost
+	    ,w.province as senProvince,w.city as senCity,w.county as senCounty,w.address as sendAddress,
+	    r.director as recipient,r.directornm as recPhone,r.zipcode as recPost,r.province as recProvince,r.city as recCity,r.county as recCounty,w.address as recaddress,t.inorgid,t.outorgid
+	    from jy_scm_ims_outbound t
+	    left join jy_scm_warehouse w on t.inorgid=w.orgid and w.defaults='0'
+	    left join jy_scm_warehouse r on t.outorgid=r.orgid and r.defaults='0'
+	     where t.id=#{id,jdbcType=VARCHAR})  ta 
+	     <!--  where ta.outorgid=#{orgId,jdbcType=VARCHAR} -->
+	     
+		<!-- UNION ALL
+		select distinct ta.*,'2' as type from (select t.id as bussnessId,t.outboundno as outboundNo,w.director as sender,w.directornm as sendPhone,w.zipcode as sendPost
+	    ,w.province as senProvince,w.city as senCity,w.county as senCounty,w.address as sendAddress,
+	    r.director as recipient,r.directornm as recPhone,r.zipcode as recPost,r.province as recProvince,r.city as recCity,r.county as recCounty,w.address as recaddress,t.inorgid,t.outorgid
+	
+	    from jy_scm_ims_outbound t
+	    left join jy_scm_warehouse w on t.inorgid=w.orgid and w.defaults='0'
+	    left join jy_scm_warehouse r on t.outorgid=r.orgid and r.defaults='0'
+	     where t.id=#{id,jdbcType=VARCHAR})  ta  where ta.inorgid=#{orgId,jdbcType=VARCHAR} -->
+ 	</select> 
+</mapper>

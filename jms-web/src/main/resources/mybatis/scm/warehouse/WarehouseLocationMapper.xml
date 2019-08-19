@@ -1,0 +1,125 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.dao.scm.warehouse.WarehouseLocationDao">
+
+	<resultMap id="base" type="ScmWarehouseLocation"></resultMap>
+    
+    <insert id="insert"  parameterType="ScmWarehouseLocation">	
+		insert into jy_scm_warehouse_location
+		  (id,
+		  code,
+		  name,
+		  type,
+		  status,
+		  sort,
+		  defaults,
+		  warehouseid,
+		  warehousecode,
+		  description,
+		  createtime,
+		  createuser,
+		  createname)
+		values
+		  (#{id},
+		   #{code},
+		   #{name},
+		   #{type},
+		   #{status},
+		   #{sort},
+		   #{defaults},
+		   #{warehouseid},
+		   #{warehousecode},
+		   #{description},
+		   sysdate,
+		   #{createUser},
+		   #{createName}
+		   )
+	</insert>
+    
+    <select id="findByPage"  resultMap="base" parameterType="ScmWarehouseLocation">
+        select t.*,(select jsw.name from jy_scm_warehouse jsw where jsw.id=t.warehouseid) as warehouseName
+		  from 
+		       jy_scm_warehouse_location t
+		 where 1=1
+       <if test='param.status != null and param.status != ""'>
+        	AND t.status=#{param.status}
+       </if> 
+       <if test='param.warehouseid != null and param.warehouseid != ""'>
+        	AND t.warehouseid=#{param.warehouseid}
+       </if> 
+        ORDER BY t.createTime desc
+    </select>
+     <select id="findScmWarehouseLocationRecordByCode" parameterType="String" resultType="int">
+    	select count(1) from jy_scm_warehouse_location where code=#{code} and warehouseid =#{warehouseid}
+    </select>
+    <select id="findScmWarehouseLocationRecordByName" parameterType="String" resultType="ScmWarehouseLocation">
+    	select id from jy_scm_warehouse_location where name=#{name} and warehouseid =#{warehouseid}
+    </select>
+    <select id ="findDefaults" parameterType="String" resultType="int">
+    	select count(1) from  jy_scm_warehouse_location t where t.warehouseid =#{warehouseid} and t.defaults='1'
+    </select>
+    <select id="find" parameterType="ScmWarehouseLocation" resultType="ScmWarehouseLocation">
+    	select *
+       from jy_scm_warehouse_location
+        where 1=1
+        <if test='id != null and id != ""'>
+        	AND id = #{id}
+       </if> 
+       <if test='warehouseid != null and warehouseid != ""'>
+        	AND warehouseid=#{warehouseid}
+       </if> 
+       order by sort asc
+    </select>
+    
+    <update id="update" parameterType="ScmWarehouseLocation">
+    	update jy_scm_warehouse_location
+	       set 
+	           name = #{name},
+	           status = #{status},
+	           sort = #{sort},
+	           defaults = #{defaults},
+	           warehouseid = #{warehouseid},
+	           warehousecode = #{warehousecode},
+	           description = #{description},
+	           updatetime = #{updateTime},
+	           updateuser = #{updateUser},
+	           updatename = #{updateName}
+	     where id = #{id}
+    </update>
+    
+    <update id="updateScmWarehouseLocationState" parameterType="ScmWarehouseLocation">
+		UPDATE jy_scm_warehouse_location
+		SET   status = #{status},
+			  updatetime =#{updateTime},
+			  updateuser = #{updateUser},
+			  updateName = #{updateName}
+		WHERE id=#{id}
+	</update>
+	
+	<update id="batchUpdateScmWarehouseLocationState"  parameterType="java.util.List">  
+	        update jy_scm_warehouse_location
+	        set status=#{warehouseLocation.status},
+	        	updateuser=#{warehouseLocation.updateUser},
+	        	updatename=#{warehouseLocation.updateName},
+	        	updatetime=sysdate
+		    where id in
+		    <foreach collection="list" item="item" open="(" separator="," close=")">
+		    		#{item.id}
+	   		</foreach>
+	</update>
+	
+	
+	<!-- 根据仓库id查仓位信息 -->
+	 <select id="findWarehouseLocationAll" parameterType="String" resultType="SelectData">
+		 select id as key,name as value from jy_scm_warehouse_location where status='1' and warehouseid = #{warehouseId} order by sort asc
+    </select>
+    
+    <select id="findWarehouseLocationDefault" parameterType="String" resultType="ScmWarehouseLocation">
+    	select * from jy_scm_warehouse_location where status='1' and warehouseid = #{warehouseId} and defaults='1'
+    </select>
+    
+    <!-- 删除仓位 -->
+    <delete id="delete" parameterType="ScmWarehouseLocation">
+    	delete from jy_scm_warehouse_location WHERE id=#{id}
+	</delete>
+</mapper>

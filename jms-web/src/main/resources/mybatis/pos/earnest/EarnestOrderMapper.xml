@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.dao.pos.earnest.EarnestOrderDao">
+	<resultMap id="base" type="earnestOrder"></resultMap>
+
+	<select id="dataFilter_findByPage" resultMap="base" parameterType="earnestOrder">
+		select e.id,e.orderno as orderNo,e.vipcode as vipCode,e.customer as customer,e.validdate as validDate,e.createtime as createTime,e.orgid as orgId,
+		e.status as status,e.type  AS type,(select u.name from jy_base_account u where e.createuser=u.id) as createUser,o.name as orgName
+	    from jy_pos_earnest_order e 
+	    left join jy_base_org o on o.id=e.orgid
+		where 1=1
+		<if test='param.orderNo != null and param.orderNo != ""'>
+		     and e.orderno like '%'||#{param.orderNo}||'%'
+		</if>
+		<if test='param.customer != null and param.customer != ""'>
+		     and e.customer like '%'||#{param.customer}||'%'
+		</if>
+		<if test='param.vipCode != null and param.vipCode != ""'>
+		     and e.vipCode like '%'||#{param.vipCode}||'%'
+		</if>
+		<if test='param.orgId != null and param.orgId != ""'>
+		     and e.orgid = #{param.orgId}
+		</if>
+		<if test='param.status != null and param.status != ""'>
+		     and e.status = #{param.status}
+		</if>
+		 <if test='param.createTime != null and param.createTime != ""'>
+        	AND e.validdate &gt;= #{param.createTime,jdbcType=VARCHAR}
+       </if>
+       <if test='param.updateTime != null and param.updateTime != ""'>
+        	AND e.validdate &lt;= #{param.updateTime,jdbcType=VARCHAR}
+       </if>
+		order by e.createtime asc
+	</select>
+	
+	<insert id="insert" parameterType="earnestOrder">
+		<![CDATA[
+		      insert into jy_pos_earnest_order(id, orderno, originalno, amount, vipCode, customer, phone, validDate, orgId, note, type, status, cashier, createuser,createtime)
+			  values
+		    (#{ id,jdbcType=VARCHAR}, #{ orderNo,jdbcType=VARCHAR}, #{ originalNo,jdbcType=VARCHAR}, #{ amount,jdbcType=VARCHAR},#{ vipCode,jdbcType=VARCHAR} , #{ customer,jdbcType=VARCHAR}, 
+		    #{ phone,jdbcType=VARCHAR},to_date(#{validDate},'yyyy/mm/dd'), #{ orgId,jdbcType=VARCHAR}, #{ note,jdbcType=VARCHAR}, #{ type,jdbcType=VARCHAR}, #{ status,jdbcType=VARCHAR}, 
+		    #{ cashier,jdbcType=VARCHAR}, #{ createUser,jdbcType=VARCHAR}, sysdate)
+		]]>
+    </insert>
+    
+    <select id="find" resultMap="base" parameterType="earnestOrder">
+		select t.*,(select u.name from jy_base_account u where t.cashier=u.id) as cashierName from jy_pos_earnest_order t where 1=1 and id=#{id,jdbcType=VARCHAR}
+	</select>
+	
+	<update id="update" parameterType="earnestOrder">
+		update jy_pos_earnest_order set status=#{status,jdbcType=VARCHAR},cashier=#{cashier,jdbcType=VARCHAR} WHERE id=#{id,jdbcType=VARCHAR}
+	</update>
+	<delete id="deleteBth" parameterType="java.util.List">
+		delete jy_pos_earnest_order  
+		where id  in
+		<foreach collection="list" item="item" open="(" separator="," close=")">
+		    #{item.id}
+	    </foreach>
+	</delete>
+	
+	<update id="updateEarnest" parameterType="earnestOrder">
+		update jy_pos_earnest_order set note=#{note,jdbcType=VARCHAR} 
+		<if test='vipCode != null and vipCode != ""'>
+        	,vipCode=#{vipCode,jdbcType=VARCHAR}
+        </if>
+        <if test='customer != null and customer != ""'>
+        	,customer=#{customer,jdbcType=VARCHAR}
+        </if>
+        <if test='phone != null and phone != ""'>
+        	,phone=#{phone,jdbcType=VARCHAR}
+        </if>
+		<if test='validDate != null and validDate != ""'>
+        	,validDate=to_date(#{validDate},'yyyy/mm/dd')
+        </if>
+		WHERE id=#{id,jdbcType=VARCHAR}
+	</update>
+	
+</mapper>

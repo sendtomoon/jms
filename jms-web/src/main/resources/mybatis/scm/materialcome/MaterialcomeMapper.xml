@@ -1,0 +1,377 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.dao.scm.materialcome.MaterialcomeDao">
+	<resultMap id="base" type="materialcome" ></resultMap>
+	<select id="findByPage" resultMap="base" parameterType="materialcome">
+	    select n.id id,
+           n.noticeno noticeNo,
+           n.purchaseno purchaseNo,
+           (select o1.name from jy_base_org o1 where o1.id = n.orgid) orgName,
+           n.totalcount count,
+           n.totalwt requireWt,
+           (select sum(n2.actualwt) from jy_scm_flow_noticedetail n2 where n2.noticeid = n.id)actualWt,
+           n.basicCost basicCost,
+           n.addcost addCost,
+           n.othercost otherCost,
+           (select sum(n2.cost_price) from jy_scm_flow_noticedetail n2 where n2.noticeid = n.id)costPrice,
+           (select f.name from jy_base_franchisee f where f.id = n.surpplyid)surpplyName,
+           n.operator operator,
+           n.status status,
+           (select name from jy_base_account where id=n.createuser)createUser,
+           n.createtime createTime,
+           (select name from jy_base_account where id=n.checkuser)checkUser,
+           n.checktime checkTime,
+           (select name from jy_base_account where id =n.receiverId)receiverName
+      	from jy_scm_flow_noticeorder  n
+	       where 1=1
+	    <if test='param.noticeNo != null and param.noticeNo != ""'>
+		     and n.noticeno like '%'||#{param.noticeNo}||'%'
+		</if>
+		<if test='param.purchaseNo != null and param.purchaseNo != ""'>
+		     and n.purchaseno like '%'||#{param.purchaseNo}||'%'
+		</if>
+    	<if test='param.status != null and param.status != ""'>
+		     and n.status=#{param.status}
+		</if>
+		<if test='param.flag != null and param.flag != ""'>
+		     and n.flag=#{param.flag}
+		</if>
+		order by n.createtime desc
+	</select>
+	
+	<insert id="insert">
+		insert into JY_SCM_FLOW_NOTICEORDER
+			(ID,
+			NOTICENO,
+			ORGID,
+			SURPPLYID,
+			RECEIVERID,
+			OPERATOR, 
+			OPERATORID,
+			STATUS,
+			CREATEUSER,
+			CREATETIME,
+			PURCHASENO,
+			NOTE,
+			FLAG, 
+			DELFLAG,
+			totalcount,
+			totalwt,
+			basiccost,
+			addcost,
+			othercost
+			)
+			values
+			(#{id,jdbcType=VARCHAR},
+			#{noticeNo,jdbcType=VARCHAR},
+			#{orgId,jdbcType=VARCHAR},
+			#{surpplyId,jdbcType=VARCHAR}, 
+			#{receiverId,jdbcType=VARCHAR},
+			#{operator,jdbcType=VARCHAR}, 
+			#{operatorId,jdbcType=VARCHAR},
+			#{status,jdbcType=VARCHAR},
+			#{createUser,jdbcType=VARCHAR},
+			sysdate, 
+			#{purchaseNo,jdbcType=VARCHAR},
+			#{note,jdbcType=VARCHAR},
+			#{flag,jdbcType=VARCHAR},
+			#{delFlag,jdbcType=VARCHAR},
+			#{totalCount,jdbcType=NUMERIC},
+			#{totalWt,jdbcType=NUMERIC},
+			#{sumBasicCost,jdbcType=NUMERIC},
+			#{sumAddCost,jdbcType=NUMERIC},
+			#{sumOtherCost,jdbcType=NUMERIC}
+			)
+	</insert>
+	
+	
+	<insert id="batchInsert" parameterType="java.util.List">
+		<foreach collection="list" item="item" index="index" open="begin" close=";end;" separator=";">
+			insert into JY_SCM_FLOW_NOTICEORDER
+			(ID,
+			NOTICENO,
+			ORGID,
+			SURPPLYID,
+			RECEIVERID,
+			OPERATOR, 
+			OPERATORID,
+			STATUS,
+			CREATEUSER,
+			CREATETIME,
+			PURCHASENO,
+			NOTE,
+			FLAG, 
+			DELFLAG,
+			totalcount,
+			totalwt
+			)
+			values
+			(#{item.id,jdbcType=VARCHAR},
+			#{item.noticeNo,jdbcType=VARCHAR},
+			#{item.orgId,jdbcType=VARCHAR},
+			#{item.surpplyId,jdbcType=VARCHAR}, 
+			#{item.receiverId,jdbcType=VARCHAR},
+			#{item.operator,jdbcType=VARCHAR}, 
+			#{item.operatorId,jdbcType=VARCHAR},
+			#{item.status,jdbcType=VARCHAR},
+			#{item.createUser,jdbcType=VARCHAR},
+			sysdate, 
+			#{item.purchaseNo,jdbcType=VARCHAR},
+			#{item.note,jdbcType=VARCHAR},
+			#{item.flag,jdbcType=VARCHAR},
+			#{item.delFlag,jdbcType=VARCHAR},
+			#{item.totalCount,jdbcType=NUMERIC},
+			#{item.totalWt,jdbcType=NUMERIC}
+			)
+		</foreach>
+	</insert>
+	
+	<insert id="insertDetail" parameterType="materialcome">
+	<foreach collection="list" item="item" index="index" open="begin" close=";end;" separator=";">
+		insert into jy_scm_flow_noticedetail
+		(id,
+		noticeid,
+		name,
+		goldtype,
+		goldtypename,
+		count,
+		requirewt,
+		actualwt,
+		stonewt,
+		goldwt,
+		cost_price,
+		basiccost,
+		addcost,
+		othercost,
+		delflag,
+		stoneunit,
+		remainCount,
+		remainwt
+		)
+		values
+		(#{item.detailId,jdbcType=VARCHAR},
+		#{item.noticeId,jdbcType=VARCHAR},
+		#{item.name,jdbcType=VARCHAR},
+		#{item.goldType,jdbcType=VARCHAR},
+		#{item.goldTypeName,jdbcType=VARCHAR},
+		#{item.count,jdbcType=NUMERIC},
+		#{item.requireWt,jdbcType=NUMERIC},
+		#{item.actualWt,jdbcType=NUMERIC},
+		#{item.stoneWt,jdbcType=NUMERIC},
+		#{item.goldWt,jdbcType=NUMERIC},
+		#{item.costPrice,jdbcType=NUMERIC},
+		#{item.basicCost,jdbcType=NUMERIC},
+		#{item.addCost,jdbcType=NUMERIC},
+		#{item.otherCost,jdbcType=NUMERIC},
+		#{item.delFlag,jdbcType=VARCHAR},
+		#{item.stoneUnit,jdbcType=VARCHAR},
+		#{item.remainCount,jdbcType=NUMERIC},
+		#{item.remainWt,jdbcType=NUMERIC}
+		)
+		</foreach>
+	</insert>
+	
+	<update id="update" parameterType="materialcome">
+			update JY_SCM_FLOW_NOTICEORDER set
+				ORGID = #{orgId,jdbcType=VARCHAR},
+				SURPPLYID = #{surpplyId,jdbcType=VARCHAR}, 
+				RECEIVERID = #{receiverId,jdbcType=VARCHAR},
+				OPERATOR = #{operator,jdbcType=VARCHAR},
+				OPERATORID = #{operatorId,jdbcType=VARCHAR},
+				STATUS = #{status,jdbcType=VARCHAR},
+				UPDATEUSER = #{updateUser,jdbcType=VARCHAR},
+				UPDATETIME = sysdate,
+				PURCHASENO = #{purchaseNo,jdbcType=VARCHAR},
+				NOTE = #{note,jdbcType=VARCHAR},
+				totalCount = #{totalCount,jdbcType=NUMERIC},
+				totalWt = #{totalWt,jdbcType=NUMERIC},
+				basicCost = #{sumBasicCost,jdbcType=NUMERIC},
+				addCost = #{sumAddCost,jdbcType=NUMERIC},
+				otherCost = #{sumOtherCost,jdbcType=NUMERIC}
+			where id = #{id,jdbcType=VARCHAR}
+	</update>
+	
+	<update id="updateDetail" parameterType="java.util.List">
+		<foreach collection="list" item="item" index="index" open="begin" close=";end;" separator=";">
+			update jy_scm_flow_noticedetail set
+				goldtype = #{item.goldType,jdbcType=VARCHAR},
+				goldtypename = #{item.goldTypeName,jdbcType=VARCHAR},
+				count = #{item.count,jdbcType=NUMERIC},
+				requirewt = #{item.requireWt,jdbcType=NUMERIC},
+				actualwt = #{item.actualWt,jdbcType=NUMERIC},
+				cost_price = #{item.costPrice,jdbcType=NUMERIC},
+				basiccost = #{item.basicCost,jdbcType=NUMERIC},
+				addcost = #{item.addCost,jdbcType=NUMERIC},
+				othercost = #{item.otherCost,jdbcType=NUMERIC},
+				goldwt = #{item.goldWt,jdbcType=NUMERIC},
+				stonewt = #{item.stoneWt,jdbcType=NUMERIC},
+				remainCount = #{item.remainCount,jdbcType=NUMERIC},
+				remainWt = #{item.remainWt,jdbcType=NUMERIC}
+			where id = #{item.detailId,jdbcType=VARCHAR}
+		</foreach>
+	</update>
+	
+	<update id="updateStatus" parameterType="materialcome">
+		update jy_scm_flow_noticeorder n set
+			n.checkuser = #{checkUser,jdbcType=VARCHAR},
+		    n.checktime = sysdate,
+		    n.causes = #{causes,jdbcType=VARCHAR},
+		    n.checkuser = #{checkUser,jdbcType=VARCHAR},
+		    n.checktime = sysdate
+		    n.updateuser = #{updateUser,jdbcType=VARCHAR},
+		    n.updatetime = sysdate
+		where n.id = #{id,jdbcType=VARCHAR}
+	</update>
+	
+	<update id="updateDelflag">
+		update jy_scm_flow_noticeorder n set
+			n.updateuser = #{materialcome.updateUser,jdbcType=VARCHAR},
+			n.updatetime = sysdate,
+			n.status = #{materialcome.status,jdbcType=VARCHAR}
+		where n.id in
+		<foreach collection="list" item="item" open="(" separator="," close=")">
+			#{item.id}
+		</foreach>
+	</update>
+	
+	<delete id="deleteDetail">
+		delete jy_scm_flow_noticedetail where noticeid in
+		<foreach collection="list" item="item" open="(" separator="," close=")">
+			#{item.id}
+		</foreach>
+	</delete>
+	
+	<delete id="deleteDetailById">
+		delete jy_scm_flow_noticedetail where id in
+		<foreach collection="list" item="item" open="(" separator="," close=")">
+			#{item.id}
+		</foreach>
+	</delete>
+	
+	<select id="findDetail" resultMap="base">
+		select
+		   n1.id id,
+           n.noticeno noticeNo,
+           n1.noticeid noticeId,
+           n.purchaseno purchaseNo,
+           (select o1.name from jy_base_org o1 where o1.id = n.orgid) orgName,
+           n1.count count,
+           n1.requirewt requireWt,
+           n1.actualwt actualWt,
+           n1.basiccost basicCost,
+           n1.addcost addCost,
+           n1.othercost otherCost,
+           n1.cost_price costPrice,
+           n.surpplyid surpplyId,
+           (select f.name from jy_base_franchisee f where id = (select o.franchiseeid from jy_scm_pur_order o where o.orderno=n.purchaseno))surpplyName,
+           n.operator operator,
+           n.status status,
+           (select a.name from jy_base_account a where a.id = n.createuser) createUser,
+           n.createtime createTime,
+           (select a.name from jy_base_account a where a.id = n.checkuser) checkUser,
+           n.checktime checkTime,
+           n1.goldtype goldType,
+           n1.goldtypename goldTypeName,
+           (select a.name from jy_base_account a where a.id = n.updateuser) updateUser,
+           n.updatetime updateTime,
+           n1.name name,
+           n1.goldwt goldWt,
+           n1.stonewt stoneWt,
+           n.note note,
+           n.causes causes,
+           n.receiverId receiverId,
+           (select name from jy_base_account where id =n.receiverId)receiverName
+      from jy_scm_flow_noticeorder  n,
+           jy_scm_flow_noticedetail n1
+     where  n1.noticeid = n.id
+         and n1.noticeid = #{id,jdbcType=VARCHAR}
+	</select>
+	
+	<delete id="deleteBatch">
+		delete jy_scm_flow_noticeorder where id in
+		<foreach collection="list" item="item" open="(" separator="," close=")">
+			#{item.id}
+		</foreach>
+	</delete>
+	
+	<update id="aduit">
+		update jy_scm_flow_noticeorder s set 
+	       s.checkuser = #{checkUser,jdbcType=VARCHAR},
+	       s.checktime = sysdate,
+	       s.causes = #{causes,jdbcType=VARCHAR},
+	       s.status = #{status,jdbcType=VARCHAR},
+	       s.note	= #{note,jdbcType=VARCHAR}
+	    where s.id = #{id,jdbcType=VARCHAR}
+	</update>
+	
+	<select id="getFranchisee" resultMap="base" parameterType="materialcome">
+		select f.name franchiseeName,f.id surpplyId from jy_base_franchisee f where id = (select o.franchiseeid from jy_scm_pur_order o where o.orderno=#{purchaseNo,jdbcType=VARCHAR})
+	</select>
+	
+	<select id="getReceiver" resultType="SelectData" parameterType="String">
+    	select id key,name value from jy_base_account where orgid =#{orgid}
+    </select>
+    
+    <select id="getOperator" resultMap="base" parameterType="materialcome">
+    	select o.operatorid operatorId,o.operatorname operator from jy_scm_pur_order o where o.orderno=#{purchaseNo,jdbcType=VARCHAR}
+    </select>
+    
+    <select id="getMaterial" resultMap="base">
+    	select n.noticeno noticeNo,
+	       n.purchaseno purchaseNo,
+	       (select name from jy_base_account where id = n.receiverId) receiverName,
+	       (select o1.name from jy_base_org o1 where o1.id = n.orgid) orgName,
+	       (select f.name from jy_base_franchisee f where f.id = n.surpplyid) surpplyName,
+	       (select f.longname from jy_base_franchisee f where f.id = n.surpplyid) surpplyFullName,
+	       n.status status,
+           (select name from jy_base_account where id=n.createuser)createUser,
+           to_char(n.createtime,'yyyy-MM-dd') crTime,
+           (select name from jy_base_account where id=n.checkuser)checkUser,
+           to_char(n.checktime,'yyyy-MM-dd') cTime,
+           (select name from jy_base_account where id=n.updateuser)updateUser,
+           to_char(n.updatetime,'yyyy-MM-dd') uTime,
+           (select sum(n2.count) from jy_scm_flow_noticedetail n2 where n2.noticeid = n.id)count,
+           (select sum(n2.requirewt) from jy_scm_flow_noticedetail n2 where n2.noticeid = n.id)requireWt,
+           (select sum(n2.actualwt) from jy_scm_flow_noticedetail n2 where n2.noticeid = n.id)actualWt,
+           (select sum(n2.stonewt) from jy_scm_flow_noticedetail n2 where n2.noticeid = n.id)stoneWt,
+           (select sum(n2.goldwt) from jy_scm_flow_noticedetail n2 where n2.noticeid = n.id)goldWt,
+            n.basicCost basicCost,
+           n.addcost addCost,
+           n.othercost otherCost,
+           (select sum(n2.cost_price) from jy_scm_flow_noticedetail n2 where n2.noticeid = n.id)costPrice,
+           (select stoneunit from jy_scm_flow_noticedetail n2 where n2.noticeid = n.id and rownum=1)stoneUnit,
+           n.note note
+		from jy_scm_flow_noticeorder n
+		where n.id=#{id,jdbcType=VARCHAR}
+    </select>
+    
+    <delete id="deleteMaterial">
+    	delete jy_scm_flow_noticeorder where id in
+    	<foreach collection="list" item="item" open="(" separator="," close=")">
+			#{item.id}
+		</foreach>
+    </delete>
+    
+    <select id="getDelete" resultMap="base" parameterType="java.util.List">
+    	select * from jy_scm_flow_noticedetail where id not in
+    	<foreach collection="list" item="item" open="(" separator="," close=")">
+			#{item.detailId,jdbcType=VARCHAR}
+		</foreach>
+		and noticeid=#{noticeId,jdbcType=VARCHAR}
+    </select>
+    
+    <select id="getDelete1" resultMap="base" parameterType="java.util.List">
+    	select * from jy_scm_flow_noticedetail where noticeid=#{noticeId,jdbcType=VARCHAR}
+    </select>
+    
+    <select id="findPurchaseNo" resultMap="base">
+    	select o.orderno purchaseNo,
+			   (select f.id from jy_base_franchisee f where id =(select o.franchiseeid from jy_scm_pur_order o where o.orderno=#{code,jdbcType=VARCHAR}))surpplyId,
+			   (select f.name from jy_base_franchisee f where id =(select o.franchiseeid from jy_scm_pur_order o where o.orderno=#{code,jdbcType=VARCHAR}))surpplyName
+		from jy_scm_pur_order o where o.orderno=#{code,jdbcType=VARCHAR}
+    </select>
+    
+    <select id="getOrg" resultMap="base">
+    	select o1.name orgName,o1.id orgId from jy_base_org o1 where o1.id = #{orgId,jdbcType=VARCHAR} 
+    </select>
+</mapper>

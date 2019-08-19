@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.jy.dao.pos.payments.PaymentBillDao">
+
+    <resultMap id="base" type="posPaymentBill">
+    </resultMap>
+
+    <insert id="insert"  parameterType="posPaymentBill">
+        <![CDATA[
+        insert into jy_crm_bills
+        (
+        id,
+        memberId,
+        orderNo,
+        status,
+        payAmount,
+        createTime,
+        types,
+        payIntegral,
+        getIntegral,
+        delFalg
+        )
+        values
+        (
+        #{id, jdbcType=VARCHAR},
+        #{memberId, jdbcType=VARCHAR},
+        #{orderNo, jdbcType=VARCHAR},
+        #{status, jdbcType=VARCHAR},
+        #{payAmount, jdbcType=DECIMAL},
+        sysdate,
+        #{types, jdbcType=VARCHAR},
+        #{payIntegral, jdbcType=NUMERIC},
+        #{getIntegral, jdbcType=NUMERIC},
+        '0'
+        )
+        ]]>
+    </insert>
+
+
+</mapper>

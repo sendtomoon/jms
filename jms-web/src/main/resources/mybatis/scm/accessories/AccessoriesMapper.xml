@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.dao.scm.accessories.AccessoriesDao">
+	<resultMap id="accessories" type="baseAccessories"></resultMap>
+
+	<select id="find" resultMap="accessories" parameterType="baseAccessories">
+		select jsa.id as id,jsa.productid as productid,jsa.sort as sort,jsa.status as status,
+		jsa.stonecode as stonecode, jsa.stonename as stonename,jsa.stoneflag as stoneflag,
+		jsa.stoneweight as stoneweight,jsa.stonecount as stonecount,jsa.purprice as purprice,
+		jsa.purcal as purcal,jsa.costprice as costprice,jsa.costcal as costcal,jsa.formula as formula,jsa.jeweler as jeweler,
+		jsa.description as description,jsa.stoneunit as stoneunit ,jsa.formula as formula,jsa.stoneshape as stoneshape,
+		jsa.stoneWeightarea as stoneWeightarea,jsa.clarity as clarity,jsa.color as color,jsa.cut as cut,jsa.stonepkgno as stonepkgno
+		from JY_SCM_IMS_ACCESSORIES jsa where 1=1	
+		<if test="stoneName != null and stoneName !='' ">
+			and jsa.stoneName=#{stoneName}
+		</if>
+		<if test="id != null and id !='' ">
+			and jsa.id=#{id}
+		</if>
+	</select>
+
+	<select id="findByproductId" resultMap="accessories" parameterType="baseAccessories">
+			select jsa.id as id,jsa.productid as productid,jsa.sort as sort,jsa.status as status,
+		jsa.stonecode as stonecode, jsa.stonename as stonename,jsa.stoneflag as stoneflag,
+		jsa.stoneweight as stoneweight,jsa.stonecount as stonecount,jsa.purprice as purprice,
+		jsa.purcal as purcal,jsa.costprice as costprice,jsa.costcal as costcal,jsa.formula as formula,jsa.jeweler as jeweler,
+		jsa.description as description,(select b.name from JY_DATA_DICT d join JY_DATA_DICT_ITEM b on b.dictid=d.id where d.datakey='SCM_DATA_STONEUNIT' and b.value=jsa.stoneunit) as stoneunitName,
+		 jsa.formula as formula,jsa.stoneshape as stoneshape,
+		jsa.stoneWeightarea as stoneWeightarea,jsa.clarity as clarity,jsa.color as color,jsa.cut as cut,jsa.stonepkgno as stonepkgno
+		from JY_SCM_IMS_ACCESSORIES jsa where jsa.productid=#{productId}
+			
+	</select>
+	<select id="count" resultType="int" parameterType="baseAccessories">
+		SELECT count(*) FROM JY_SCM_IMS_ACCESSORIES jsa WHERE jsa.id=#{id}
+	</select>
+
+	<insert id="insert" parameterType="baseAccessories">	
+ 	<![CDATA[
+		insert into JY_SCM_IMS_ACCESSORIES(id,PRODUCTID,SORT,STATUS,STONECODE,STONENAME,STONEFLAG,STONEWEIGHT,STONEUNIT,STONECOUNT,PURPRICE,PURCAL,COSTPRICE,COSTCAL,FORMULA,JEWELER,STONESHAPE,stoneweightarea,CLARITY,COLOR,CUT,STONEPKGNO,DESCRIPTION,CREATETIME,CREATEUSER)
+		values(#{id},#{productId},#{sort},#{status},#{stoneCode},#{stoneName},#{stoneFlag},#{stoneWeight},#{stoneUnit},#{stoneCount},#{purPrice},#{purcal},#{costPrice},#{costCal},#{formula},#{jeweler},#{stoneShape},#{stoneWeightarea},#{clarity},#{color},#{cut},#{stonePkgno},#{description},#{createTime},#{createUser})
+	]]>
+	</insert>
+	<delete id="delete" parameterType="baseAccessories">
+		UPDATE JY_SCM_IMS_ACCESSORIES SET STATUS=#{status} WHERE id=#{id}
+	</delete>
+	<delete id="deleteBatch" parameterType="java.util.List">
+	UPDATE JY_SCM_IMS_ACCESSORIES SET STATUS=#{status} WHERE id in(
+		<foreach item="d" collection="list" open="" separator=","
+			close="">
+			#{id}
+		</foreach>
+		)
+	</delete>
+	<update id="update" parameterType="baseAccessories">
+		update JY_SCM_IMS_ACCESSORIES
+		 set 
+		 sort=#{sort},
+		 status=#{status},
+		 stoneCode=#{stoneCode},
+		 stoneName=#{stoneName},
+		 stoneFlag=#{stoneFlag},
+		 stoneWeight=#{stoneWeight},
+		 stoneCount=#{stoneCount},
+		 purPrice=#{purPrice},
+		 purcal=#{purcal},
+		 costPrice=#{costPrice},
+		 costCal=#{costCal},
+		 formula=#{formula},
+		 jeweler=#{jeweler},
+		 description=#{description},
+		 stoneUnit=#{stoneUnit},
+		 stoneShape=#{stoneShape},
+		 stoneweightarea=#{stoneWeightarea},
+		 clarity=#{clarity},
+		 color=#{color},
+		 cut=#{cut},
+		 stonePkgno=#{stonePkgno}
+		 WHERE id=#{id}
+	</update>
+	<select id="getaccessoriesByStatus" resultMap="accessories" parameterType="baseAccessories">
+		select status from JY_SCM_IMS_ACCESSORIES where id=#{id}
+	</select>
+	
+	<select id="findByStonflag" resultType="int" parameterType="baseAccessories" >
+		select count(*) from jy_scm_ims_accessories  where  stoneflag ='1' AND productid=#{productId}
+	</select>
+	<select id="findById" parameterType="String" resultType="baseAccessories">
+		SELECT a.* FROM JY_SCM_IMS_ACCESSORIES a WHERE a.productid=#{productId}
+	</select>
+	
+	<insert id="batchAccessories" parameterType="java.util.List">
+		<foreach collection="list" item="item" index="index" open="begin" close=";end;" separator=";">
+			insert into JY_SCM_IMS_ACCESSORIES(id,PRODUCTID,SORT,STATUS,STONECODE,STONENAME,STONEFLAG,STONEWEIGHT,STONEUNIT,STONECOUNT,PURPRICE,PURCAL,COSTPRICE,COSTCAL,FORMULA,JEWELER,STONESHAPE,stoneweightarea,CLARITY,COLOR,CUT,STONEPKGNO,DESCRIPTION,CREATETIME,CREATEUSER)
+		values(#{item.id,jdbcType=VARCHAR},#{item.productId,jdbcType=VARCHAR},#{item.sort,jdbcType=VARCHAR},#{item.status,jdbcType=VARCHAR},#{item.stoneCode,jdbcType=VARCHAR},#{item.stoneName,jdbcType=VARCHAR},#{item.stoneFlag,jdbcType=VARCHAR},#{item.stoneWeight,jdbcType=NUMERIC},#{item.stoneUnit,jdbcType=VARCHAR},#{item.stoneCount,jdbcType=VARCHAR},#{item.purPrice,jdbcType=NUMERIC},#{item.purcal},#{item.costPrice,jdbcType=NUMERIC},#{item.costCal,jdbcType=NUMERIC},#{item.formula,jdbcType=VARCHAR},#{item.jeweler,jdbcType=VARCHAR},#{item.stoneShape,jdbcType=VARCHAR},#{item.stoneWeightarea,jdbcType=VARCHAR},#{item.clarity,jdbcType=VARCHAR},#{item.color,jdbcType=VARCHAR},#{item.cut,jdbcType=VARCHAR},#{item.stonePkgno,jdbcType=VARCHAR},#{item.description,jdbcType=VARCHAR},#{item.createTime,jdbcType=DATE},#{item.createUser,jdbcType=VARCHAR})
+		</foreach>
+	</insert>
+	<select id="findMax" resultType="int">
+		select nvl(max(sort),0) from jy_scm_ims_accessories
+	</select>
+</mapper>

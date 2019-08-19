@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.dao.scm.materialin.PurenteryDao">
+	<resultMap id="base" type="purentery" ></resultMap>
+	<insert id="insert" parameterType="purentery">
+		insert into JY_SCM_IMS_PURENTERY(id, enteryno, status, type, purno, totalnum, totalcount, purcost, checkcost, finacost, totalprice, diffweight, orgid,warehouseid,locationid,description,
+		remarks,createtime,createUser,createorgid,feeType)
+	    values
+		(#{id,jdbcType=VARCHAR}, #{ enteryno,jdbcType=VARCHAR}, #{ status,jdbcType=VARCHAR}, #{ type,jdbcType=VARCHAR},#{ purno,jdbcType=VARCHAR} , #{ totalnum,jdbcType=NUMERIC}, 
+		    #{ totalcount,jdbcType=NUMERIC}, #{ purcost,jdbcType=NUMERIC}, #{ checkcost,jdbcType=NUMERIC}, #{ finacost,jdbcType=NUMERIC}, #{ totalprice,jdbcType=NUMERIC}, 
+		    #{ diffweight,jdbcType=NUMERIC}, #{ orgId,jdbcType=VARCHAR}, #{ warehouseid,jdbcType=VARCHAR}, #{ locationid,jdbcType=VARCHAR}, #{ description,jdbcType=VARCHAR}, #{ remarks,jdbcType=VARCHAR}, 
+		    sysdate, #{ createUser,jdbcType=VARCHAR}, #{ createorgid,jdbcType=VARCHAR},#{feeType,jdbcType=VARCHAR})
+    </insert>
+    
+    <select id="findByPage" resultType="purentery" parameterType="purentery">
+	       select o.name as orgName,t.id as id, t.enteryno as enteryno, t.status as status, t.type as type, t.purno as purno, t.totalnum as totalnum, t.totalcount as totalcount, t.purcost as purcost, 
+	      t.checkcost as checkcost, t.finacost as finacost, t.totalprice as totalprice, t.diffweight as diffweight, t.orgid as orgId,t.warehouseid as warehouseid,t.locationid as locationid,
+	      t.createtime as createTime,(select sum(weight) from JY_SCM_IMS_PURENTERYDETAIL d where d.enteryno=t.enteryno) as totalWeight,(select sum(saleprice) from JY_SCM_IMS_PURENTERYDETAIL d where d.enteryno=t.enteryno) as saleprice
+	      from JY_SCM_IMS_PURENTERY t 
+	      left join jy_base_org o on o.id=t.orgid
+	      where 1=1
+    	<if test='param.status != null and param.status != ""'>
+		     and t.status=#{param.status}
+		</if>
+		<if test='param.enteryno != null and param.enteryno != ""'>
+		     and t.enteryno like '%'||#{param.enteryno}||'%'
+		</if>
+		<if test='param.purno != null and param.purno != ""'>
+		     and t.purno like '%'||#{param.purno}||'%'
+		</if>
+		<if test='param.type != null and param.type != ""'>
+		     and t.type=#{param.type}
+		</if> 
+		<if test='param.orgId != null and param.orgId != ""'>
+			and t.orgid=#{param.orgId}
+			<!-- and (t.orgid in (select o.id from jy_base_org o where o.companyid=#{param.orgId,jdbcType=VARCHAR} and o.orggrade != '4') or t.orgid=#{param.orgId,jdbcType=VARCHAR}) -->
+		</if> 
+		order by t.createtime desc
+	</select>
+	
+	<select id="find" resultMap="base" parameterType="purentery">
+		select t.*,
+		(select u.name from jy_base_account u where t.createuser=u.id) as createName,
+    	(select u.name from jy_base_account u where t.updateUser=u.id) as updateName,
+    	(select u.name from jy_base_account u where t.checkUser=u.id) as checkName,
+    	to_char(T.createtime,'yyyy-MM-dd') printCreate, to_char(T.updatetime,'yyyy-MM-dd') printUpdate, to_char(T.checktime,'yyyy-MM-dd') printCheck,
+    	(select sum(num) from JY_SCM_IMS_PURENTERYDETAIL d where d.enteryno=t.enteryno) as totalNums,
+    	(select sum(weight) from JY_SCM_IMS_PURENTERYDETAIL d where d.enteryno=t.enteryno) as totalWeight,w.name as warehouseName,l.name as locationName
+		from JY_SCM_IMS_PURENTERY t 
+		left join jy_scm_warehouse w on w.id= t.warehouseid  
+        left join jy_scm_warehouse_location l on l.id=t.locationid  
+		where 1=1
+		<if test='id != null and id != ""'>
+		     and t.id=#{id,jdbcType=VARCHAR}
+		</if>
+		<if test='enteryno != null and enteryno != ""'>
+		     and t.enteryno =#{enteryno,jdbcType=VARCHAR}
+		</if>
+	</select>
+	
+	<update id="update" parameterType="purentery">
+		update JY_SCM_IMS_PURENTERY set enteryno=#{ enteryno,jdbcType=VARCHAR}, status=#{ status,jdbcType=VARCHAR}, type=#{ type,jdbcType=VARCHAR}, purno=#{ purno,jdbcType=VARCHAR}, 
+		totalnum=#{ totalnum,jdbcType=NUMERIC}, totalcount=#{ totalcount,jdbcType=NUMERIC}, purcost=#{ purcost,jdbcType=NUMERIC}, checkcost=#{ checkcost,jdbcType=NUMERIC}, finacost=#{ finacost,jdbcType=NUMERIC}, 
+		totalprice=#{ totalprice,jdbcType=NUMERIC}, diffweight=#{ diffweight,jdbcType=NUMERIC}, orgid=#{ orgId,jdbcType=VARCHAR},warehouseid=#{ warehouseid,jdbcType=VARCHAR},locationid=#{ locationid,jdbcType=VARCHAR},
+		description=#{ description,jdbcType=VARCHAR},remarks=#{ remarks,jdbcType=VARCHAR},updatetime=sysdate,updateuser=#{updateUser,jdbcType=VARCHAR},checktime=#{checkTime,jdbcType=DATE},checkuser=#{ checkUser,jdbcType=VARCHAR},
+		checkorgid=#{ checkorgid,jdbcType=VARCHAR},feeType=#{feeType,jdbcType=VARCHAR} where id=#{ id,jdbcType=VARCHAR}
+	</update>
+	
+	<delete id="delete" parameterType="purentery">
+		delete JY_SCM_IMS_PURENTERY where id=#{id,jdbcType=VARCHAR}
+	</delete>
+	
+	
+	<update id="updateCheck" parameterType="purentery">
+		update JY_SCM_IMS_PURENTERY set  status=#{ status,jdbcType=VARCHAR},totalnum=#{ totalnum,jdbcType=NUMERIC}, totalcount=#{ totalcount,jdbcType=NUMERIC}, purcost=#{ purcost,jdbcType=NUMERIC}, checkcost=#{ checkcost,jdbcType=NUMERIC}, 
+		finacost=#{ finacost,jdbcType=NUMERIC}, totalprice=#{ totalprice,jdbcType=NUMERIC}, diffweight=#{ diffweight,jdbcType=NUMERIC},checktime=sysdate,checkuser=#{ checkUser,jdbcType=VARCHAR},checkorgid=#{ checkorgid,jdbcType=VARCHAR},
+		description=#{description,jdbcType=VARCHAR} where id=#{ id,jdbcType=VARCHAR}
+	</update>
+</mapper>

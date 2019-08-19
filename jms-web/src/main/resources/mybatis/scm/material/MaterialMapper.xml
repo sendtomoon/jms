@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.dao.scm.material.MaterialDao">
+	<resultMap id="material" type="ScmMaterial"></resultMap>
+
+	<select id="findByPage" resultMap="material" parameterType="ScmMaterial">
+		SELECT F.ID,F.NAME,F.CODE,F.TYPE,F.MOUDLECODE,F.CREATETIME,F.STATUS,
+		(select t.name from JY_DATA_DICT d join JY_DATA_DICT_ITEM t on
+		t.dictid=d.id where d.datakey='SCM_DATA_COLOR' and t.value=f.color) as
+		color ,
+		(select t.name from JY_DATA_DICT d join JY_DATA_DICT_ITEM t on t.dictid=d.id
+		where d.datakey='SCM_DATA_CLARITY' and t.value=f.clartity) AS
+		clartity,
+		(select t.name from JY_DATA_DICT d join JY_DATA_DICT_ITEM t on t.dictid=d.id
+		where d.datakey='SCM_DATA_CUT' and t.value=f.cut) AS cut
+		FROM JY_SCM_IMS_MATERIAL F
+		WHERE 1=1
+		<if test='param.status != null and param.status != ""'>
+			AND F.STATUS=#{param.status}
+		</if>
+		<if test='param.code != null and param.code != ""'>
+			AND upper(F.CODE) like '%'||upper(#{param.code})||'%'
+		</if>
+		<if test='param.name != null and param.name != ""'>
+			AND upper(F.NAME) like '%'||upper(#{param.name})||'%'
+		</if>
+		<if test='param.moudleCode != null and param.moudleCode != ""'>
+			AND upper(F.MOUDLECODE) like '%'||upper(#{param.moudleCode})||'%'
+		</if>
+		<if test='param.createTime != null and param.createTime != ""'>
+			AND F.createTime &gt;= #{param.createTime}
+		</if>
+		<if test='param.createTimeEnd != null and param.createTimeEnd != ""'>
+			AND F.createTime &lt;= #{param.createTimeEnd}
+		</if>
+		ORDER BY F.CREATETIME DESC
+	</select>
+
+
+	<select id="findCode" resultMap="material" parameterType="String">
+		SELECT
+		F.CODE AS MOUDLECODE FROM JY_SCM_MOUDLE F
+		WHERE F.CODE like '%'||#{param.code}||'%'
+	</select>
+
+	<delete id="delete" parameterType="ScmMaterial">
+		UPDATE JY_SCM_IMS_MATERIAL SET
+		STATUS=#{status,jdbcType=VARCHAR} WHERE ID=#{id,jdbcType=VARCHAR}
+	</delete>
+
+	<select id="getByMaterialStatus" resultMap="material"
+		parameterType="ScmMaterial">
+		SELECT STATUS FROM JY_SCM_IMS_MATERIAL WHERE
+		ID=#{id,jdbcType=VARCHAR}
+	</select>
+
+	<insert id="insert" parameterType="ScmMaterial">
+	    <![CDATA[
+	    INSERT INTO JY_SCM_IMS_MATERIAL (id,name,code,type,status,moudlecode,cateid,feetype,color,cut,clartity,cernum,stoneshape,polish,symmety,fluorescence,pwidth,pdeep,materialsize,batchnum,price,remarks,description,createtime,createuser,certype)
+        VALUES(#{id,jdbcType=VARCHAR},#{name,jdbcType=VARCHAR},#{code,jdbcType=VARCHAR},#{type,jdbcType=VARCHAR},#{status,jdbcType=VARCHAR},#{moudleCode,jdbcType=VARCHAR},#{cateId,jdbcType=VARCHAR},#{feeType,jdbcType=VARCHAR},#{color,jdbcType=VARCHAR},#{cut,jdbcType=VARCHAR},#{clartity,jdbcType=VARCHAR},#{cerNum,jdbcType=VARCHAR},#{stoneShape,jdbcType=VARCHAR},#{polish,jdbcType=VARCHAR},#{symmety,jdbcType=VARCHAR},
+        #{fluoreScence,jdbcType=VARCHAR},#{pwidth,jdbcType=VARCHAR},#{pdeep,jdbcType=VARCHAR},#{materialSize,jdbcType=VARCHAR},#{batchNum,jdbcType=VARCHAR},#{price,jdbcType=NUMERIC},#{remarks,jdbcType=VARCHAR},#{description,jdbcType=VARCHAR},#{createTime,jdbcType=VARCHAR},#{createUser,jdbcType=VARCHAR},#{cerType,jdbcType=VARCHAR})
+		]]>
+	</insert>
+
+	<select id="find" resultMap="material" parameterType="ScmMaterial">
+		SELECT F.ID AS ID,F.NAME AS NAME,C.NAME AS cateName ,F.CODE AS
+		CODE,F.TYPE AS TYPE,F.STATUS AS STATUS,F.MOUDLECODE AS
+		MOUDLECODE,F.CATEID AS CATEID,
+		F.FEETYPE AS FEETYPE,F.COLOR AS COLOR,F.CUT AS CUT,F.CLARTITY AS
+		CLARTITY,F.CERNUM AS CERNUM,F.STONESHAPE AS STONESHAPE,F.POLISH AS
+		POLISH,F.SYMMETY AS SYMMETY,
+		F.FLUORESCENCE AS FLUORESCENCE,F.PWIDTH AS PWIDTH,F.PDEEP AS PDEEP,F.BATCHNUM AS
+		BATCHNUM,F.PRICE AS PRICE,F.REMARKS AS REMARKS,F.DESCRIPTION AS
+		DESCRIPTION,F.MATERIALSIZE AS MATERIALSIZE,F.CREATETIME AS
+		CREATETIME,F.CERTYPE AS CERTYPE
+		FROM JY_SCM_IMS_MATERIAL F LEFT JOIN JY_SCM_CATEGORY C ON F.CATEID=C.ID
+		WHERE 1=1
+		<if test="id != null and id !='' ">
+			AND F.ID=#{id}
+		</if>
+
+	</select>
+	<update id="update" parameterType="ScmMaterial">
+		UPDATE JY_SCM_IMS_MATERIAL
+		SET
+		NAME=#{name,jdbcType=VARCHAR},
+		CODE=#{code,jdbcType=VARCHAR},
+		TYPE=#{type,jdbcType=VARCHAR},
+		STATUS=#{status,jdbcType=VARCHAR},
+		MOUDLECODE=#{moudleCode,jdbcType=VARCHAR},
+		CATEID=#{cateId,jdbcType=VARCHAR},
+		FEETYPE=#{feeType,jdbcType=VARCHAR},
+		COLOR=#{color,jdbcType=VARCHAR},
+		CUT=#{cut,jdbcType=VARCHAR},
+		CLARTITY=#{clartity,jdbcType=VARCHAR},
+		PDEEP=#{pdeep,jdbcType=VARCHAR},
+		CERNUM=#{cerNum,jdbcType=VARCHAR},
+		STONESHAPE=#{stoneShape,jdbcType=VARCHAR},
+		POLISH=#{polish,jdbcType=VARCHAR},
+		SYMMETY=#{symmety,jdbcType=VARCHAR},
+		FLUORESCENCE=#{fluoreScence,jdbcType=VARCHAR},
+		PWIDTH=#{pwidth,jdbcType=VARCHAR},
+		MATERIALSIZE=#{materialSize,jdbcType=VARCHAR},
+		BATCHNUM=#{batchNum,jdbcType=VARCHAR},
+		PRICE=#{price,jdbcType=NUMERIC},
+		REMARKS=#{remarks,jdbcType=VARCHAR},
+		DESCRIPTION=#{description,jdbcType=VARCHAR},
+		UPDATEUSER=#{updateUser,jdbcType=VARCHAR},
+		UPDATETIME=#{updateTime,jdbcType=DATE},
+		CERTYPE=#{cerType,jdbcType=VARCHAR}
+		WHERE ID=#{id}
+	</update>
+	<select id="queryByCode" resultType="MaterialVO" parameterType="String">
+		select StoneShape as stoneshape, CLARTITY as clartity, Color as color,
+		Cut as cut, weight as weight, purcost as purcost,
+		certype as certype,cernum as cernum from jy_scm_ims_material m
+		left join jy_scm_ims_materialin ml
+		on m.code = ml.code where m.code=#{code}
+	</select>
+</mapper>

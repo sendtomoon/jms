@@ -1,0 +1,410 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.dao.scm.purorder.OrderDetailDao">
+
+	<resultMap id="base" type="ScmOrderDetail">
+		<collection property="list" column="orderDetailId" ofType="ScmOrderSplit" select="getItem"/>
+	</resultMap>
+    <resultMap id="baseItem" type="String" ></resultMap>
+    <select id="find" parameterType="ScmOrderDetail" resultType="ScmOrderDetail">
+    	select t.*,
+    	(select count(1) from JY_SCM_PUR_ORDERSPLIT where orderDetailId =t.id and status='0') as mateNum,
+	    (select count(1) from JY_SCM_PUR_ORDERSPLIT where orderDetailId =t.id and status='1') as okNum
+       from JY_SCM_PUR_ORDERDETAIL t 
+       where t.id = #{id}
+    </select>
+     <select id="findByPage"  resultMap="base" parameterType="ScmOrderDetail">
+        select  t.*,
+	        (select count(1) from JY_SCM_PUR_ORDERSPLIT where orderDetailId =t.id and status='0') as mateNum,
+	    	(select count(1) from JY_SCM_PUR_ORDERSPLIT where orderDetailId =t.id and status='1') as okNum,
+	        t.id as orderDetailId
+        		from JY_SCM_PUR_ORDERDETAIL  t 
+		 where 1=1
+		 <if test="param.orderId != null and param.orderId !='' ">
+		 	and t.orderId=#{param.orderId}
+		 </if>
+    </select>
+    <select id="findOrder" parameterType="ScmOrderDetail" resultMap="base">
+    	select t.*,
+		       (select count(1)
+		          from JY_SCM_PUR_ORDERSPLIT
+		         where orderDetailId = t.id
+		           and status = '0') 
+		           as mateNum,
+		       
+		       (select count(1)
+		          from JY_SCM_PUR_ORDERSPLIT
+		         where orderDetailId = t.id
+		           and status = '1') 
+		       as okNum,
+	    	(select jbf.name from jy_base_franchisee jbf where jbf.id =t.franchiseeId) as franchiseeName,
+	    	(select jsm.suppmoucode from jy_scm_moudledetail jsm where jsm.id =t.mdtlCode) as mdtlCodeName,
+	    	(select count(1) from jy_scm_ims_product p inner join jy_scm_moudle m on m.code=p.moucode where m.id=t.mdCode and p.status='B' and p.orgId in (select o.id from jy_base_org o where o.companyid=#{orgId} and o.orggrade != '4')) as stockNum,
+	    	t.id as orderDetailId
+	       from JY_SCM_PUR_ORDERDETAIL t left join jy_scm_moudle m on m.id=t.mdcode
+	       where t.orderId in(SELECT jspo.id FROM JY_SCM_PUR_ORDER jspo start with jspo.id=#{orderId} connect by prior jspo.id = jspo.pid) 
+    </select>
+    <select id="findOrderMateriel" parameterType="ScmOrderDetail" resultMap="base">
+    	select t.*,
+	       (select count(1)
+	          from JY_SCM_PUR_ORDERSPLIT
+	         where orderDetailId = t.id
+	           and status = '0') as mateNum,
+	       (select case
+	                 when p.feetype = '1' then
+	                  (select sum(mi.availweight)
+	                     from JY_SCM_IMS_MATERIALIN mi
+	                    where p.code = mi.code
+	                      and mi.orgid in (select o.id
+	                                         from jy_base_org o
+	                                        where o.companyid = #{orgId}
+	                                          and o.orggrade != '4'))
+	                 else
+	                  (select sum(mi.availweight)
+	                     from JY_SCM_IMS_MATERIALIN mi
+	                    where p.code = mi.code
+	                      and mi.orgid in (select o.id
+	                                         from jy_base_org o
+	                                        where o.companyid = #{orgId}
+	                                          and o.orggrade != '4'))
+		               end numbers
+		          from JY_SCM_IMS_MATERIAL p
+		         inner join jy_scm_moudle m
+		            on m.code = p.moudlecode
+		         where m.id = t.mdcode) stockNum,
+	       (select count(1)
+	          from JY_SCM_PUR_ORDERSPLIT
+	         where orderDetailId = t.id
+	           and status = '1') as okNum,
+	       (select jbf.name
+	          from jy_base_franchisee jbf
+	         where jbf.id = t.franchiseeId) as franchiseeName,
+	       (select jsm.suppmoucode
+	          from jy_scm_moudledetail jsm
+	         where jsm.id = t.mdtlCode) as mdtlCodeName,
+	       
+	       t.id as orderDetailId
+	  from JY_SCM_PUR_ORDERDETAIL t
+	  left join jy_scm_moudle m
+	    on m.id = t.mdcode
+    	where t.orderId in(SELECT jspo.id FROM JY_SCM_PUR_ORDER jspo start with jspo.id=#{orderId} connect by prior jspo.id = jspo.pid) 
+    </select>
+    <select id="findOrderId"  parameterType="ScmOrderDetail" resultMap="base">
+    	select t.* from JY_SCM_PUR_ORDERDETAIL t where t.orderId=#{orderId}
+    </select>
+    <select id="getItem" parameterType="ScmOrderSplit" resultMap="baseItem">
+    	select jo.PRODUCTID
+       from JY_SCM_PUR_ORDERSPLIT jo
+       where jo.status='0' and jo.orderDetailId = #{orderDetailId}
+    </select>
+    <insert id="insert"  parameterType="ScmOrderDetail">	
+		insert into JY_SCM_PUR_ORDERDETAIL
+		  (id,
+		  orderId,
+		  mdCode,
+		  gMaterial,
+		  gWeight,
+		  dWeight,
+		  dClarity,
+		  dColor,
+		  weight,
+		  numbers,
+		  feeType,
+		  basicCost,
+		  additionCost,
+		  otherCost,
+		  unitprice,
+		  totalFee,
+		  status,
+		  circel,
+		  cut,
+		  description
+		  )
+		values
+		  (#{id},
+		   #{orderId},
+		   #{mdCode},
+		   #{gMaterial},
+		   #{gWeight},
+		   #{dWeight},
+		   #{dClarity},
+		   #{dColor},
+		   #{weight},
+		   #{numbers},
+		   #{feeType},
+		   #{basicCost},
+		   #{additionCost},
+		   #{otherCost},
+		   #{unitprice},
+		   #{totalFee},
+		   #{status},
+		   #{circel},
+		   #{cut},
+		   #{description}
+		   )
+	</insert>
+    
+    <update id="update" parameterType="ScmOrderDetail">
+    	update JY_SCM_PUR_ORDERDETAIL
+	       set 
+	       	gMaterial = #{gMaterial},
+		 	gWeight = #{gWeight},
+			dWeight = #{dWeight},
+			dClarity = #{dClarity},
+			dColor = #{dColor},
+			weight = #{weight},
+			numbers = #{numbers},
+			feeType = #{feeType},
+			basicCost = #{basicCost},
+			additionCost = #{additionCost},
+			otherCost = #{otherCost},
+			unitprice = #{unitprice},
+			totalFee = #{totalFee},
+			status = #{status},
+			circel = #{circel},
+			cut = #{cut},
+			description = #{description}
+	     where id = #{id}
+	    
+    </update>
+	<delete id="delete" parameterType="ScmOrderDetail">
+		delete from JY_SCM_PUR_ORDERDETAIL  
+		WHERE id=#{id}
+	</delete>
+	<delete id="deleteBatch" parameterType ="java.util.List">
+	DELETE FROM JY_SCM_PUR_ORDERDETAIL WHERE id in(
+		<foreach item="item" collection="list" open="" separator="," close="" >
+			#{item.id}
+		</foreach>
+		)
+	</delete>
+	<select id="finds" parameterType ="java.util.List" resultType="ScmOrderDetail">
+    	select t.*,
+    	(select count(1) from JY_SCM_PUR_ORDERSPLIT where orderDetailId =t.id and status='0') as mateNum,
+	    (select count(1) from JY_SCM_PUR_ORDERSPLIT where orderDetailId =t.id and status='1') as okNum
+       from JY_SCM_PUR_ORDERDETAIL t 
+       WHERE id in
+		<foreach item="item" collection="list" open="(" separator="," close=")" >
+			#{item.id}
+		</foreach>
+    </select>
+	<delete id="deleteBatchOrderId" parameterType ="java.util.List">
+	DELETE FROM JY_SCM_PUR_ORDERDETAIL WHERE orderId in(
+		<foreach item="item" collection="list" open="" separator="," close="" >
+			#{item.orderId}
+		</foreach>
+		)
+	</delete>
+	<delete id="deleteByOrderId" parameterType="ScmOrderDetail">
+		delete from JY_SCM_PUR_ORDERDETAIL  
+		WHERE orderId=#{orderId}
+	</delete>
+	<insert id="insertBatch" parameterType="java.util.List">
+    	<foreach collection="list" item="item" index="index" open="begin" close=";end;" separator=";">
+	    	insert into JY_SCM_PUR_ORDERDETAIL
+			  (id, orderId, mdCode, gMaterial,gWeight, dWeight, dClarity, dColor,weight,numbers,feeType,basicCost,additionCost, otherCost, unitprice,totalFee, description,status,franchiseeId,mdtlCode,circel,cut,beforeId)
+			values
+			  (#{item.id,jdbcType=VARCHAR},#{item.orderId,jdbcType=VARCHAR},#{item.mdCode,jdbcType=VARCHAR},#{item.gMaterial,jdbcType=VARCHAR},#{item.gWeight,jdbcType=VARCHAR},
+			  #{item.dWeight,jdbcType=VARCHAR},#{item.dClarity,jdbcType=VARCHAR},#{item.dColor,jdbcType=VARCHAR}, #{item.weight,jdbcType=VARCHAR},#{item.numbers,jdbcType=NUMERIC},
+			  #{item.feeType,jdbcType=VARCHAR},#{item.basicCost,jdbcType=NUMERIC},#{item.additionCost,jdbcType=NUMERIC},#{item.otherCost,jdbcType=NUMERIC}, #{item.unitprice,jdbcType=VARCHAR},
+			  #{item.totalFee,jdbcType=VARCHAR},#{item.description,jdbcType=VARCHAR},#{item.status,jdbcType=VARCHAR},#{item.franchiseeId,jdbcType=VARCHAR},#{item.mdtlCode,jdbcType=VARCHAR},
+			  #{item.circel,jdbcType=VARCHAR},#{item.cut,jdbcType=VARCHAR},#{item.beforeId,jdbcType=VARCHAR})
+         </foreach>
+    </insert>
+     <update id="updateBatch"  parameterType="java.util.List">
+	   <foreach collection="list" item="item" index="index" open="begin" close=";end;" separator=";">
+				update JY_SCM_PUR_ORDERDETAIL
+			       set 
+			       	mdCode= #{item.mdCode,jdbcType=VARCHAR},
+			       	gMaterial = #{item.gMaterial,jdbcType=VARCHAR},
+				 	gWeight = #{item.gWeight,jdbcType=VARCHAR},
+					dWeight = #{item.dWeight,jdbcType=VARCHAR},
+					dClarity = #{item.dClarity,jdbcType=VARCHAR},
+					dColor = #{item.dColor,jdbcType=VARCHAR},
+					weight = #{item.weight,jdbcType=VARCHAR},
+					numbers = #{item.numbers,jdbcType=NUMERIC},
+					feeType = #{item.feeType,jdbcType=VARCHAR},
+					basicCost = #{item.basicCost,jdbcType=NUMERIC},
+					additionCost = #{item.additionCost,jdbcType=NUMERIC},
+					otherCost = #{item.otherCost,jdbcType=NUMERIC},
+					unitprice = #{item.unitprice,jdbcType=VARCHAR},
+					totalFee = #{item.totalFee,jdbcType=VARCHAR},
+					status = #{item.status,jdbcType=VARCHAR},
+					franchiseeId = #{item.franchiseeId,jdbcType=VARCHAR},
+					mdtlCode = #{item.mdtlCode,jdbcType=VARCHAR},
+					beforeId = #{item.beforeId,jdbcType=VARCHAR},
+					circel = #{item.circel,jdbcType=VARCHAR},
+					cut = #{item.cut,jdbcType=VARCHAR},
+					description = #{item.description,jdbcType=VARCHAR}
+			     where id = #{item.id}
+	   </foreach>
+    </update>
+    
+     <select id="findLackNum" parameterType="ScmOrderDetail" resultType="ScmOrderDetail">
+		select od.mdcode, sum(od.numbers) as numbers, sum(od.q) as lackNum
+			from (select t.mdcode,numbers,
+	                  (select count(1)
+	                     from jy_scm_pur_ordersplit t1
+	                    where t1.orderdetailid = t.id) as q
+	             from jy_scm_pur_orderdetail t
+	            where t.orderid in
+	                  (select id from jy_scm_pur_order o where o.ordertype = '0')) od
+	    group by od.mdcode
+    </select>
+    <select id="findOkNum" parameterType="ScmOrderDetail" resultType="ScmOrderDetail">
+		 select od.mdcode, sum(numbers) as numbers
+		  	from jy_scm_pur_orderdetail od
+		 	where od.orderid in
+		       (select id from jy_scm_pur_order o where o.ordertype = '1')
+		 group by od.mdcode
+    </select>
+    <select id="findLackDetail" parameterType="ScmOrderDetail" resultType="ScmOrderDetail">
+    	select t.mdCode,
+	       m.code as mdCodeName,
+	       md.id as mdtlCode,
+	       md.suppmoucode as mdtlCodeName,
+	       f.id as franchiseeId,
+	       f.name as franchiseeName,
+	       t.gMaterial,
+	       t.gWeight,
+	       t.dWeight,
+	       t.dClarity,
+	       t.dColor,
+	       t.weight,
+	       t.feeType,
+	       t.status,
+	       t.basicCost,
+	       t.additionCost,
+	       t.otherCost,
+	       t.unitprice,
+	       t.totalFee,
+	       t.description,
+	       t.id as beforeId,
+	       t.circel,
+	       t.cut,
+	       (select count(1)
+	          from jy_scm_ims_product p
+	         inner join jy_scm_moudle m
+	            on m.code = p.moucode
+	         where m.id = t.mdCode
+	           and p.status = 'B'
+	           and p.orgId in (select o.id
+	                             from jy_base_org o
+	                            where o.companyid = '1'
+	                              and o.orggrade != '4')) as stockNum,
+	       (t.numbers - (select count(1)
+	                       from jy_scm_pur_ordersplit t1
+	                      where t1.orderdetailid = t.id)) as numbers
+	  from jy_scm_pur_orderdetail t
+	  left join jy_scm_moudle m
+	    on t.mdcode = m.id
+	    left join jy_scm_moudledetail md
+	    on md.moudleid=m.id and md.majorflag='1' and rownum = 1 
+	    left join jy_base_franchisee f on f.id=md.suppliercode
+	 where t.orderid in
+	       (select id from jy_scm_pur_order o where o.ordertype = #{orderType} and o.status='2' and o.label='2'
+<!-- 	       	<if test="orgId != null and orgId !='' "> -->
+<!-- 	       		and o.orgId in(select jbo.id from jy_base_org jbo where jbo.pid =#{orgId}) -->
+<!-- 	       	</if> -->
+	       )
+			<if test="term != null and term !=''">
+				and substr(m.code,0,1) =#{term}
+			</if>
+	       	<if test="cate != null and cate !=''">
+				and substr(m.code,2,1)=#{cate}
+			</if>
+			<if test="group != null and group !=''">
+				and substr(m.code,3,2)=#{group}
+			</if>
+<!-- 	   and t.beforeId is null -->
+	   and t.status='1'
+    </select>
+    <select id="findPoolDetail" parameterType="ScmOrderDetail" resultType="ScmOrderDetail">
+    	select t.mdCode,
+	       t.mdtlCode,
+	       t.gMaterial,
+	       t.gWeight,
+	       t.dWeight,
+	       t.dClarity,
+	       t.dColor,
+	       t.weight,
+	       t.feeType,
+	       t.status,
+	       t.basicCost,
+	       t.additionCost,
+	       t.otherCost,
+	       t.unitprice,
+	       t.totalFee,
+	       t.description,
+	       t.id as beforeId,
+	       (t.numbers - (select count(1)
+	                       from jy_scm_pur_ordersplit t1
+	                      where t1.orderdetailid = t.id)) as numbers
+	  from jy_scm_pur_orderdetail t
+	 where 
+	 		t.orderid in
+	       	<foreach collection="list" item="item" open="(" separator="," close=")">
+			    #{item.id}
+		   	</foreach>
+	   and t.status='1'
+    </select>
+    <update id ="updateStatusByBefore" parameterType="java.util.List">
+    	update jy_scm_pur_orderdetail
+	        set 
+	        status=#{o.status}
+		    where id in
+		    <foreach collection="list" item="item" open="(" separator="," close=")">
+		    	#{item.beforeId}
+	   		</foreach>
+    </update>
+    <select id="findBefore"  parameterType="java.util.List" resultType="int">
+    	select count(1) from  jy_scm_pur_orderdetail where status!=1 and id in
+    	<foreach collection="list" item="item" open="(" separator="," close=")">
+		    #{item.beforeId}
+	   	</foreach>
+    </select>
+    <select id="findPrint" parameterType="ScmOrderDetail" resultType="ScmOrderDetail">
+    	select t.id,
+		       (select di.name
+		          from jy_data_dict_item di
+		         where di.dictid =
+		               (select id
+		                  from jy_data_dict
+		                 where datakey = 'SCM_PRO_GOLD_TYPE')
+		           and di.value = t.gMaterial) as gMaterial,
+		       (select di.name
+		          from jy_data_dict_item di
+		         where di.dictid =
+		               (select id
+		                  from jy_data_dict
+		                 where datakey = 'SCM_ATTR_GOLDWEIGHT')
+		           and di.value = t.gWeight) as gWeight,
+		       (select di.name
+		          from jy_data_dict_item di
+		         where di.dictid =
+		               (select id from jy_data_dict where datakey = 'stoneSize')
+		           and di.value = t.dWeight) as dWeight,
+		       t.dClarity,
+		       t.dColor,
+		       t.numbers,
+		       t.circel,
+		       t.cut,
+		       t.basiccost,
+		       t.additioncost,
+		       t.othercost,
+		       t.mdCode,
+		       t.mdtlCode,
+		       t.description,
+		       m.code as mdCodeName,
+		       (select jbf.name
+		          from jy_base_franchisee jbf
+		         where jbf.id = t.franchiseeId) as franchiseeName,
+		       (select jsm.suppmoucode
+		          from jy_scm_moudledetail jsm
+		         where jsm.id = t.mdtlCode) as mdtlCodeName
+		  from JY_SCM_PUR_ORDERDETAIL t
+		 inner join jy_scm_moudle m
+		    on t.mdcode = m.id
+		    where t.orderId=#{orderId}
+    </select>
+</mapper>

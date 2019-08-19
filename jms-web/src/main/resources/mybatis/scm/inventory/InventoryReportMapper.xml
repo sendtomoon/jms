@@ -1,0 +1,93 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.dao.scm.inventory.InventoryReportDao">
+
+	<resultMap id="base" type="ScmInventoryReport">
+	</resultMap>
+    
+    <select id="find" parameterType="ScmInventoryReport" resultMap="base">
+		select t.* from JY_SCM_IMS_INVENTORY_REPORT t where 1 = 1
+		<if test='id != null and id != ""'>
+		     and t.id = #{id}
+		</if>
+    </select>
+    
+    <insert id="insert"  parameterType="ScmInventoryReport">	
+		insert into JY_SCM_IMS_INVENTORY_REPORT
+		  (
+			id,
+			inventoryId,
+			inventoryNo,
+			status,
+			content,
+			createuser,
+			createtime,
+			remark
+		  )
+		values
+		  (
+		   #{id, jdbcType=VARCHAR},
+		   #{inventoryId, jdbcType=VARCHAR},
+		   #{inventoryNo, jdbcType=VARCHAR},
+		   #{status, jdbcType=VARCHAR},
+		   #{content, jdbcType=VARCHAR},
+		   #{createUser, jdbcType=VARCHAR},
+		   sysdate,
+		   #{remark, jdbcType=VARCHAR}
+		  )
+	</insert>
+    
+	<select id="findByPage"  resultMap="base" parameterType="ScmInventoryReport">
+        select  t.*,
+        	(select o.name from JY_BASE_ORG o where i.orgid = o.id) as orgName,
+		    (select w.name from JY_SCM_WAREHOUSE w where i.whouseid = w.id) as whouseName,
+		    (select l.name from JY_SCM_WAREHOUSE_LOCATION l where i.locationid = l.id) as locationName,
+		    (select a.name from jy_base_account a where a.id=t.createuser) as createName,
+		    (select a.name from jy_base_account a where a.id=t.updateuser) as updateName,
+		    (select a.name from jy_base_account a where a.id=t.checkuser) as checkName 
+		from JY_SCM_IMS_INVENTORY_REPORT t inner join JY_SCM_IMS_INVENTORY i on t.inventoryid=i.id
+		where 1 = 1 and t.delflag != '1'
+		<if test='param.status != null and param.status != ""'>
+			AND t.status=#{param.status}
+		</if> 
+		<if test='param.inventoryNo != null and param.inventoryNo != ""'>
+			AND t.inventoryno like '%'||#{param.inventoryNo}||'%'
+		</if>
+		<if test='param.orgId != null and param.orgId != ""'>
+			AND i.orgid IN (SELECT jbg.id FROM jy_base_org jbg start with jbg.id=#{param.orgId} connect by prior jbg.id = jbg.pid)
+		</if>
+		order by t.createtime desc
+    </select>
+    
+    <update id="updateStatus" parameterType="ScmInventoryReport">
+		update JY_SCM_IMS_INVENTORY_REPORT
+			set 
+				<if test='status != null and status != ""'>
+					status = #{status, jdbcType=VARCHAR},
+				</if> 
+				<if test='updateUser != null and updateUser != ""'>
+					updateuser = #{updateUser, jdbcType=VARCHAR},
+					updatetime = sysdate,
+				</if> 
+				<if test='checkUser != null and checkUser != ""'>
+					checkuser = #{checkUser, jdbcType=VARCHAR},
+					checktime = sysdate,
+				</if>
+				content = #{content, jdbcType=VARCHAR}
+		where id = #{id, jdbcType=VARCHAR}
+    </update>
+
+	<update id="deleteById" parameterType="String">
+		update jy_scm_ims_inventory_report set delflag = '1'
+		WHERE id = #{id}
+	</update>
+	
+	<update id="batchDeleteById" parameterType="java.util.List">
+		update jy_scm_ims_inventory_report set delflag = '1' 
+		where id in
+		<foreach collection="list" item="item" open="(" separator="," close=")">
+		    #{item}
+	    </foreach>
+	</update>
+   
+</mapper>

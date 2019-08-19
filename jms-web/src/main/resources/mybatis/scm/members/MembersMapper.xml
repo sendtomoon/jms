@@ -1,0 +1,134 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.dao.crm.members.MembersDao">
+
+	<resultMap id="base" type="scmMembers">
+	</resultMap>
+    <select id="find" parameterType="scmMembers" resultType="scmMembers">
+    	select t.*,
+    	(select u.name from jy_base_account u where t.regUser=u.id) as regUserName,
+    	(select o.name from jy_base_org o where t.regOrg=o.id) as regOrgName
+       from JY_CRM_MEMBERS t 
+       where 1=1
+        <if test="id != null and id !='' ">
+        	and t.id = #{id}
+        </if>
+        <if test="cardNo != null and cardNo !='' ">
+        	and t.cardNo = #{cardNo}
+        </if>
+        <if test="mobile != null and mobile !='' ">
+		 	and t.mobile=#{mobile}
+		</if>
+    </select>
+     <select id="findByPage"  resultMap="base" parameterType="scmMembers">
+        select  t.*
+        		from JY_CRM_MEMBERS  t 
+		 where 1=1
+		 <if test="param.mobile != null and param.mobile !='' ">
+		 	and t.mobile=#{param.mobile}
+		 </if>
+    </select>
+    <insert id="insert"  parameterType="scmMembers">	
+		insert into JY_CRM_MEMBERS
+		  (id,
+		  cardNo,
+		  name,
+		  nickName,
+		  sex,
+		  pwd,
+		  mobile,
+		  email,
+		  birthday,
+		  regTime,
+		  regType,
+		  regOrg,
+		  regUser,
+		  flagLock,
+		  flagActive,
+		  flagLimit,
+		  address,
+		  picpath,
+		  grade,
+		  openId,
+		  reference,
+		  province,
+		  regip,
+		  remark
+		  )
+		values
+		  (#{id,jdbcType=VARCHAR},
+		   #{cardNo,jdbcType=VARCHAR},
+		   #{name,jdbcType=VARCHAR},
+		   #{nickName,jdbcType=VARCHAR},
+		   #{sex,jdbcType=VARCHAR},
+		   #{pwd,jdbcType=VARCHAR},
+		   #{mobile,jdbcType=VARCHAR},
+		   #{email,jdbcType=VARCHAR},
+		   #{birthday,jdbcType=VARCHAR},
+		   #{regTime,jdbcType=TIMESTAMP},
+		   #{regType,jdbcType=VARCHAR},
+		   #{regOrg,jdbcType=VARCHAR},
+		   #{regUser,jdbcType=VARCHAR},
+		   #{flagLock,jdbcType=VARCHAR},
+		   #{flagActive,jdbcType=VARCHAR},
+		   #{flagLimit,jdbcType=VARCHAR},
+		   #{address,jdbcType=VARCHAR},
+		   #{picpath,jdbcType=VARCHAR},
+		   #{grade,jdbcType=VARCHAR},
+		   #{openId,jdbcType=VARCHAR},
+		   #{reference,jdbcType=VARCHAR},
+		   #{province,jdbcType=VARCHAR},
+		   #{regip,jdbcType=VARCHAR},
+		   #{remark,jdbcType=VARCHAR}
+		   )
+	</insert>
+    
+    <update id="update" parameterType="scmMembers">
+    	update JY_CRM_MEMBERS
+	       set 
+	       	cardNo = #{cardNo,jdbcType=VARCHAR},
+		 	name = #{name,jdbcType=VARCHAR},
+			nickName = #{nickName,jdbcType=VARCHAR},
+			sex = #{sex,jdbcType=VARCHAR},
+<!-- 			pwd = #{pwd,jdbcType=VARCHAR}, -->
+<!-- 			mobile = #{mobile,jdbcType=VARCHAR}, -->
+			email = #{email,jdbcType=VARCHAR},
+			birthday= #{birthday,jdbcType=VARCHAR},
+<!-- 			regTime = #{regTime,jdbcType=TIMESTAMP}, -->
+			regType = #{regType,jdbcType=VARCHAR},
+			regOrg = #{regOrg,jdbcType=VARCHAR},
+			regUser=#{regUser,jdbcType=VARCHAR},
+			flagLock = #{flagLock,jdbcType=VARCHAR},
+			flagActive = #{flagActive,jdbcType=VARCHAR},
+			flagLimit = #{flagLimit,jdbcType=VARCHAR},
+			address = #{address,jdbcType=VARCHAR},
+			picpath = #{picpath,jdbcType=VARCHAR},
+			grade = #{grade,jdbcType=VARCHAR},
+			openId = #{openId,jdbcType=VARCHAR},
+<!-- 			lastLoginTime=#{lastLoginTime,jdbcType=TIMESTAMP}, -->
+			remark = #{remark,jdbcType=VARCHAR}
+	     where id = #{id}
+	    
+    </update>
+     <update id="updatePwd" parameterType="scmMembers">
+    	update JY_CRM_MEMBERS
+	       set 
+			pwd = #{pwdNew,jdbcType=VARCHAR}
+	     where id = #{id}
+	    
+    </update>
+	<delete id="delete" parameterType="scmMembers">
+		delete from JY_CRM_MEMBERS  
+		WHERE id=#{id}
+	</delete>
+	<delete id="deleteBatch" parameterType ="java.util.List">
+		DELETE FROM JY_CRM_MEMBERS WHERE id in(
+		<foreach item="item" collection="list" open="" separator="," close="" >
+			#{item.id}
+		</foreach>
+		)
+	</delete>
+	<select id="findMobile" parameterType="scmMembers" resultType="int">
+    	select count(1) from JY_CRM_MEMBERS where mobile=#{mobile} 
+    </select>
+</mapper>

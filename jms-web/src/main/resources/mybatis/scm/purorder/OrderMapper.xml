@@ -1,0 +1,257 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.dao.scm.purorder.OrderDao">
+
+	<resultMap id="base" type="ScmOrder">
+<!-- 		<collection property="items" column="orderId" ofType="scmOrderDetail" select="getItem"/>  -->
+	</resultMap>
+<!-- 	<resultMap id="baseItem" type="scmOrderDetail" ></resultMap> -->
+    <select id="find" parameterType="ScmOrder" resultMap="base">
+    	select t.*,t.id as orderId, o.name as orgName,o.longname as orgLongName,
+    	(select u.name from jy_base_account u where t.createuser=u.id) as createName,
+    	(select u.name from jy_base_account u where t.updateUser=u.id) as updateName,
+    	(select u.name from jy_base_account u where t.checkUser=u.id) as checkName,jbf.name as franchiseeName
+       from JY_SCM_PUR_ORDER t  left join jy_base_franchisee jbf on t.franchiseeid=jbf.id left join jy_base_org o on o.id=t.orgid
+       where t.id = #{id}
+    </select>
+<!--     <select id="getItem"  resultMap="baseItem" parameterType="scmOrderDetail"> -->
+<!--     	select *  -->
+<!--     	from JY_SCM_PUR_ORDERDETAIL jsp  -->
+<!--     	where jsp.orderId=#{orderId} -->
+<!--     </select> -->
+    <insert id="insert"  parameterType="ScmOrder">	
+		insert into JY_SCM_PUR_ORDER
+		  (
+		  id,
+		  orderNo,
+		  orgId,
+		  status,
+		  label,
+		  totalNum,
+		  weight,
+		  totalFee,
+		  arrivalDate,
+		  createTime,
+		  createUser,
+		  orderType,
+		  description,
+		  source,
+		  sourceNO
+		  )
+		values
+		  (
+		    #{id,jdbcType=VARCHAR},
+			#{orderNo,jdbcType=VARCHAR},
+			#{orgId,jdbcType=VARCHAR},
+			#{status,jdbcType=VARCHAR},
+			#{label,jdbcType=VARCHAR},
+			#{totalNum,jdbcType=NUMERIC},
+			#{weight,jdbcType=VARCHAR},
+			#{totalFee,jdbcType=VARCHAR},
+			#{arrivalDate,jdbcType=DATE},
+			#{createTime,jdbcType=TIMESTAMP},
+			#{createUser,jdbcType=VARCHAR},
+			#{orderType,jdbcType=VARCHAR},
+			#{description,jdbcType=VARCHAR},
+			#{source,jdbcType=VARCHAR},
+			#{sourceNo,jdbcType=VARCHAR}
+		   )
+	</insert>
+	<insert id="batchInsert">
+ 		<foreach collection="list" item="item" index="index" open="begin" close=";end;" separator=";">	
+ 		insert into JY_SCM_PUR_ORDER
+			  (
+			  id,
+			  pId,
+			  orderNo,
+			  orgId,
+			  status,
+			  label,
+			  totalNum,
+			  weight,
+			  totalFee,
+			  arrivalDate,
+			  createTime,
+			  createUser,
+			  franchiseeId,
+			  orderType,
+			  description,
+			  source,
+		  	  sourceNo
+			  )
+			values
+			  (
+			  #{item.id,jdbcType=VARCHAR},
+			  #{item.pId,jdbcType=VARCHAR},
+			  #{item.orderNo,jdbcType=VARCHAR},
+			  #{item.orgId,jdbcType=VARCHAR},
+			  #{item.status,jdbcType=VARCHAR},
+			  #{item.label,jdbcType=VARCHAR},
+			  #{item.totalNum,jdbcType=NUMERIC},
+			  #{item.weight,jdbcType=VARCHAR},
+			  #{item.totalFee,jdbcType=VARCHAR},
+			  #{item.arrivalDate,jdbcType=DATE},
+			  #{item.createTime,jdbcType=TIMESTAMP},
+			  #{item.createUser,jdbcType=VARCHAR},
+			  #{item.franchiseeId,jdbcType=VARCHAR},
+			  #{item.orderType,jdbcType=VARCHAR},
+			  #{item.description,jdbcType=VARCHAR},
+			  #{item.source,jdbcType=VARCHAR},
+			  #{item.sourceNo,jdbcType=VARCHAR}
+			  )
+		</foreach>
+
+	</insert>
+    
+    
+    <select id="findByPage"  resultMap="base" parameterType="ScmOrder">
+        select  t.* ,jspo.orderno as pNo,jbo.name as orgName,
+        		(select u.name from jy_base_account u where t.createuser=u.id) as createName,
+        		(select u.name from jy_base_account u where t.checkUser=u.id) as checkName,
+        		(select count(1) from jy_scm_pur_ordersplit jpos where jpos.orderdetailid in (select id from jy_scm_pur_orderdetail jpod where jpod.orderid =t.id)) as match,
+        		(select count(1)from jy_scm_ims_product p  where p.PURCHASENUM = t.orderno and p.status not in('0','1','A','F')) as collect,
+        		(select jbf.name from jy_base_franchisee jbf where jbf.id =t.franchiseeId) as franchiseeName
+        		from JY_SCM_PUR_ORDER t left join JY_SCM_PUR_ORDER jspo on t.pid=jspo.id  left join jy_base_org jbo on t.orgid =jbo.id
+		 where 1=1 
+		<if test='param.orgPlace != null and param.orgPlace != "" and param.createUser != null and param.createUser != ""'>
+			   AND (t.orgId = #{param.orgPlace}
+       	<if test='param.company != null and param.company != ""'>
+		       or (t.orgId in (SELECT id FROM jy_base_org o start with o.id =  #{param.company} connect by prior o.id = o.pid) and
+			       t.status = '2'
+<!-- 		<if test='param.range != null and param.range != ""'> -->
+<!-- 			       and jbo.orggrade !=#{param.range} -->
+<!-- 		</if> -->
+			       ) 
+		
+		 </if>    
+		       or t.createUser = #{param.createUser})
+		</if>
+		<if test='param.orgId != null and param.orgId != ""'>
+			 and t.orgId = #{param.orgId}
+		</if>
+		<if test='param.pId == null or param.pId == ""'>
+			AND t.pId is null
+       </if> 
+       <if test='param.pId != null and param.pId != ""'>
+			AND t.pId =#{param.pId}
+       </if> 
+       <if test='param.status != null and param.status != ""'>
+        	AND t.status=#{param.status}
+       </if> 
+       <if test='param.orderNo != null and param.orderNo != ""'>
+        	AND t.orderNo=#{param.orderNo}
+       </if>
+       <if test='param.arrivalDate != null and param.arrivalDate != ""'>
+        	AND t.arrivalDate &gt;= #{param.arrivalDate}
+       </if>
+       <if test='param.arrivalDateEnd != null and param.arrivalDateEnd != ""'>
+        	AND t.arrivalDate &lt;= #{param.arrivalDateEnd}
+       </if>
+       <if test='param.orderType != null and param.orderType != ""'>
+        	AND t.orderType = #{param.orderType}
+       </if>
+       <if test='param.label != null and param.label != ""'>
+        	AND t.label = #{param.label}
+       </if>
+       
+        ORDER BY t.status,t.label,t.createTime
+    </select>
+	<select id="findOrderByids"  resultMap="base"  parameterType="java.util.List">
+		select * from  JY_SCM_PUR_ORDER
+		 where id in
+		    <foreach collection="list" item="item" open="(" separator="," close=")">
+		    		#{item.id}
+	   		</foreach>
+	</select>
+    
+    <select id="findScmOrderRecordByCode" parameterType="String" resultType="int">
+    	select count(1) from JY_SCM_PUR_ORDER where code=#{code}
+    </select>
+    
+    
+    
+    <update id="update" parameterType="ScmOrder">
+    	update JY_SCM_PUR_ORDER
+	       set 
+			  totalNum= #{totalNum,jdbcType=NUMERIC},
+			  orgId=#{orgId,jdbcType=VARCHAR},
+			  weight= #{weight,jdbcType=VARCHAR},
+			  totalFee= #{totalFee,jdbcType=VARCHAR},
+			  arrivalDate= #{arrivalDate,jdbcType=DATE},
+	          description = #{description,jdbcType=VARCHAR},
+	          status = #{status,jdbcType=VARCHAR},
+	          updateTime = #{updateTime,jdbcType=TIMESTAMP},
+	          updateUser = #{updateUser,jdbcType=VARCHAR}
+	     where id = #{id}
+	    
+    </update>
+    <update id="updateScmOrderState" parameterType="ScmOrder">
+		UPDATE JY_SCM_PUR_ORDER
+			SET   	
+				<if test='updateTime != null and updateTime != ""'>
+				    updateTime = #{updateTime},
+		          	updateUser = #{updateUser},
+	          	</if>
+	          	<if test='checkUser != null and checkUser != ""'>
+		        	checkUser=#{checkUser},
+		        	checkTime=#{checkTime},
+		        </if>	
+		        <if test='operatorId != null and operatorId != ""'>
+		        	operatorId= #{operatorId,jdbcType=VARCHAR},
+		        	operatorName=#{operatorName,jdbcType=VARCHAR},
+		        </if>
+	          	status = #{status}
+		WHERE id in (SELECT jbg.id FROM JY_SCM_PUR_ORDER jbg start with jbg.id = #{id} connect by prior jbg.id = jbg.pid and jbg.status = (SELECT jbg1.status FROM JY_SCM_PUR_ORDER jbg1 where jbg1.id= #{id}))
+	</update>
+	
+	
+	<update id="batchUpdateOrderState"  parameterType="java.util.List">  
+	        update JY_SCM_PUR_ORDER
+	        set 
+	        <if test='order.updateUser != null and order.updateUser != ""'>
+	        	updateuser=#{order.updateUser},
+	        	updatetime=#{order.updateTime},
+	        </if>
+	        <if test='order.checkUser != null and order.checkUser != ""'>
+	        	checkUser=#{order.checkUser},
+	        	checktime=#{order.checkTime},
+	        </if>
+	        status=#{order.status}
+		    where id in
+		    <foreach collection="list" item="item" open="(" separator="," close=")">
+		    		#{item.id}
+	   		</foreach>
+	</update>
+	<delete id="delete" parameterType="ScmOrder">
+	delete from JY_SCM_PUR_ORDER  
+	WHERE id in (SELECT jbg.id FROM JY_SCM_PUR_ORDER jbg start with jbg.id = #{id} connect by prior jbg.id = jbg.pid)
+	</delete>
+	<delete id="deleteBatch" parameterType ="java.util.List">
+	DELETE FROM JY_SCM_PUR_ORDER WHERE id in(
+		<foreach item="item" collection="list" open="" separator="," close="" >
+			#{item.id}
+		</foreach>
+		)
+	</delete>
+	<update id="split" parameterType="ScmOrder">
+    	update JY_SCM_PUR_ORDER
+	       set 
+			  label= #{label,jdbcType=VARCHAR},
+	          updateTime = #{updateTime,jdbcType=TIMESTAMP},
+	          updateUser = #{updateUser,jdbcType=VARCHAR}
+	     where id = #{id,jdbcType=VARCHAR}
+	    
+    </update>
+    <update id="updateLabelBatch" parameterType="ScmOrder">
+    	update JY_SCM_PUR_ORDER
+	       set 
+			  label= #{order.label,jdbcType=VARCHAR},
+	          updateTime = #{order.updateTime,jdbcType=TIMESTAMP},
+	          updateUser = #{order.updateUser,jdbcType=VARCHAR}
+	     where  id in
+		<foreach item="item" collection="list" open="(" separator="," close=")" >
+			#{item}
+		</foreach>
+    </update>
+   
+</mapper>

@@ -1,0 +1,901 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.dao.scm.product.ProductDao">
+   
+   <resultMap id="tempResult" type="productTemp">
+   </resultMap>
+   <parameterMap type="map" id="testParameterMap">  
+	   <parameter property="id" jdbcType="INTEGER" mode="IN"/>  
+	   <parameter property="orgid" jdbcType="INTEGER" mode="IN"/>   
+ 	</parameterMap>  
+   
+    <select id="dataFilter_findByPage" resultType="product" parameterType="product">
+		    select    p.id              as id,
+		              p.code            as code,
+		              p.cateid          as cateId,
+		              p.catejewelryid   as cateJewelryId,
+		              p.jewelrymode     as jewelryMode,
+		              p.count           as count,
+		              p.status          as status,
+		              p.warehouseid     as warehouseId,
+		              w.name            as warehouseName,
+		              p.locationid      as locationId,
+		              p.controltype     as controlType,
+		              p.orgid           as orgId,
+		              o.longname        as orgName,
+		              o.name 		 	as orgSimpleName,
+		              p.costpur         as costPur,
+		              p.costfin         as costFin,
+		              p.costchk         as costChk,
+		              p.costadd         as costAdd,
+		              p.wagemode        as wageMode,
+		              p.wagebasic       as wageBasic,
+		              p.wagesw          as wageSw,
+		              p.wageew          as wageEw,
+		              p.wagepw          as wagePw,
+		              p.wagecw          as wageCw,
+		              p.wageow          as wageOw,
+		              p.wagese          as wageSe,
+		              p.costse          as costSe,
+		              p.costcer         as costCer,
+		              p.totalweight     as totalWeight,
+		              p.goldtype        as goldType,
+		              p.goldcost        as goldCost,
+		              p.goldsell        as goldSell,
+		              p.goldvalue       as goldValue,
+		              p.goldcostlose    as goldCostLose,
+		              p.goldselllose    as goldSellLose,
+		              p.goldweight      as goldWeight,
+		              p.labeltype       as labelType,
+		              p.priceold        as priceOld,
+		              p.price           as price,
+		              p.pricesuggest    as priceSuggest,
+		              p.pricetrade      as pricetrade,
+		              p.inaccountdate   as inAccountDate,
+		              p.costdate        as costDate,
+		              p.rejectdate      as rejectDate,
+		              p.length          as length,
+		              p.width           as width,
+		              p.height          as height,
+		              p.circel          as circel,
+		              p.franchiseeid    as franchiseeId,
+		              f.name        as franchiseeName,
+		              p.moucode         as mouCode,
+		              p.moudtlcode      as moudtlCode,
+		              md.suppmoucode    as modelCode,
+		              p.name            as name,
+		              p.description     as description,
+		              p.costrange       as costRange,
+		              p.stoneshape      as stoneShape,
+		              p.stoneshaperange as stoneShapeRange,
+		              p.serialno        as serialNo,
+		              p.epc             as epc,
+		              p.fgoldweight     as fGoldWeight,
+		              p.inwarehousedate as inWarehouseDate,
+		              p.ccategoryid     as cCategoryId,
+		              p.fcategoryid     as fCategoryId,
+		              p.scategoryid     as sCategoryId,
+		              p.remarks         as remarks,
+		              p.createtime      as createTime,
+		              u.name	        as createUser,
+		              p.updatetime      as updateTime,
+		              p.updateuser      as updateUser,
+		              p.wageadd         as wageAdd,
+		              p.purchasenum		as purchaseNum,
+		              p.subcode			as subCode,
+			   	 	  p.cernum 			as cerNum,
+			   	 	  p.weightrange 	as weightRange,
+			   	 	  p.primarycode     as primarycode,
+			   	 	  p.noticeno        as noticeno,
+			   	 	  p.wholesale       as wholesale,
+			   	 	  p.stonesize       as stonesize
+		         from jy_scm_ims_product p
+		         left join jy_base_franchisee f
+		           on p.franchiseeid = f.id
+		         left join jy_base_org o
+		           on p.orgid = o.id
+		         left join jy_scm_moudledetail md
+		           on p.moudtlcode = md.id
+		         left join jy_base_account u
+		           on u.id = p.createuser
+		         left join jy_scm_warehouse w 
+		           on w.id=p.warehouseid
+			 where 1=1
+			 <if test='param.orgId != null and param.orgId != ""'>
+		         AND p.orgid=#{param.orgId}
+		     </if>
+		     <choose>  
+	            <when test='param.stockStatus != null and param.stockStatus != ""'>  
+	               AND p.status in (#{param.status},#{param.stockStatus},#{param.skStatus})
+	            </when >
+	            <when test='param.status != null and param.status != ""'>
+				         AND p.status = #{param.status}
+				</when>
+	             <when test='param.marking != null and param.marking != ""'>  
+	               AND p.status in ('0','A','1','E','9','F')
+	            </when > 
+	            <otherwise> 
+	            	<if test='param.status != null and param.status != ""'>
+				         AND p.status = #{param.status}
+				     </if>
+	            	 
+	            </otherwise>  
+	         </choose> 
+		     <if test='param.franchiseeId != null and param.franchiseeId != ""'>
+		         AND p.franchiseeid=#{param.franchiseeId}
+		     </if>
+		     
+			<if test='param.goldType != null and param.goldType != ""'>
+				AND p.goldType=#{param.goldType}
+			</if>
+			<if test='param.code != null and param.code != ""'>
+				AND upper(p.code) like '%'||upper(#{param.code})||'%'
+			</if>
+			<if test='param.inWarehouseNum != null and param.inWarehouseNum != ""'>
+				AND upper(p.inwarehousenum) like '%'||upper(#{param.inWarehouseNum})||'%'
+			</if>
+			<if test='param.cateId != null and param.cateId != ""'>
+        		AND p.cateId = #{param.cateId}
+      		</if>
+       		<if test='param.cateJewelryId != null and param.cateJewelryId != ""'>
+        		AND p.cateJewelryId = #{param.cateJewelryId}
+       		</if>
+			order by p.status ,p.createtime desc
+    </select>
+    
+	<select id="find" resultType="product">
+		select    p.id              as id,
+		          p.code            as code,
+		          p.cateid          as cateId,
+		          p.catejewelryid   as cateJewelryId,
+		          p.jewelrymode     as jewelryMode,
+		          p.count           as count,
+		          p.status          as status,
+		          p.warehouseid     as warehouseId,
+		          w.name            as warehouseName,
+		          p.locationid      as locationId,
+		          p.controltype     as controlType,
+		          p.orgid           as orgId,
+		          o.longname        as orgName,
+		          o.name 		 	as orgSimpleName,
+		          p.costpur         as costPur,
+		          p.costfin         as costFin,
+		          p.costchk         as costChk,
+		          p.costadd         as costAdd,
+		          p.wagemode        as wageMode,
+		          p.wagebasic       as wageBasic,
+		          p.wagesw          as wageSw,
+		          p.wageew          as wageEw,
+		          p.wagepw          as wagePw,
+		          p.wagecw          as wageCw,
+		          p.wageow          as wageOw,
+		          p.wagese          as wageSe,
+		          p.costse          as costSe,
+		          p.costcer         as costCer,
+		          p.totalweight     as totalWeight,
+		          p.goldtype        as goldType,
+		          p.goldcost        as goldCost,
+		          p.goldsell        as goldSell,
+		          p.goldvalue       as goldValue,
+		          p.goldcostlose    as goldCostLose,
+		          p.goldselllose    as goldSellLose,
+		          p.goldweight      as goldWeight,
+		          p.labeltype       as labelType,
+		          p.priceold        as priceOld,
+		          p.price           as price,
+		          p.pricesuggest    as priceSuggest,
+		          p.pricetrade      as pricetrade,
+		          p.inwarehousedate as inWarehouseDate,
+		          p.inaccountdate   as inAccountDate,
+		          p.costdate        as costDate,
+		          p.rejectdate      as rejectDate,
+		          p.length          as length,
+		          p.width           as width,
+		          p.height          as height,
+		          p.circel          as circel,
+		          p.franchiseeid    as franchiseeId,
+		          f.name        as franchiseeName,
+		          p.moucode         as mouCode,
+		          p.moudtlcode      as moudtlCode,
+		          md.suppmoucode    as modelCode,
+		          p.name            as name,
+		          p.description     as description,
+		          p.costrange       as costRange,
+		          p.stoneshape      as stoneShape,
+		          p.stoneshaperange as stoneShapeRange,
+		          p.serialno        as serialNo,
+		          p.epc             as epc,
+		          p.fgoldweight     as fGoldWeight,
+		          p.inwarehousenum  as inWarehouseNum,
+		          p.ccategoryid     as cCategoryId,
+		          p.fcategoryid     as fCategoryId,
+		          p.scategoryid     as sCategoryId,
+		          p.remarks         as remarks,
+		          p.createtime      as createTime,
+		          p.createuser      as createUser,
+		          p.updatetime      as updateTime,
+		          p.updateuser      as updateUser,
+		          p.wageadd         as wageAdd,
+		          p.purchasenum		as purchaseNum,
+		          p.subcode			as subCode,
+			   	  p.cernum 			as cerNum,
+			   	  p.weightrange 	as weightRange,
+			   	  p.primarycode     as primarycode,
+			   	  p.noticeno        as noticeno,
+			   	  p.wholesale       as wholesale,
+			   	  p.stonesize       as stonesize
+		     from jy_scm_ims_product p
+		     left join jy_base_franchisee f
+		       on p.franchiseeid = f.id
+		     left join jy_base_org o
+		       on p.orgid = o.id
+		     left join jy_scm_moudledetail md
+		           on p.moudtlcode = md.id
+		     left join jy_scm_warehouse w 
+		           on w.id=p.warehouseid
+			 where 1=1
+			 <if test='id != null and id != ""'>
+			 	and p.id=#{id}
+			 </if>
+			 <if test='code != null and code != ""'>
+			 	and p.code=#{code}
+			 </if>
+			 <if test='orgId != null and orgId != ""'>
+			 	and p.orgId=#{orgId}
+			 </if>
+			 <if test='status != null and status != ""'>
+			 	and p.status=#{status}
+			 </if>
+	</select>
+	
+	<update id="updateProductInfo"  parameterType="product">
+				update jy_scm_ims_product
+			     set   cateid=#{cateId,jdbcType=VARCHAR},
+					   catejewelryid=#{cateJewelryId,jdbcType=VARCHAR},
+					   count=#{count,jdbcType=NUMERIC},
+					   <if test="warehouseId!='' and warehouseId!=null">
+					   warehouseid=#{warehouseId,jdbcType=VARCHAR},
+					   </if>
+					   <if test="locationId!='' and locationId!=null">
+					   locationid=#{locationId,jdbcType=VARCHAR},
+					   </if>
+					   orgid=#{orgId,jdbcType=VARCHAR},
+					   controltype=#{controlType,jdbcType=VARCHAR},
+					   costpur=#{costPur,jdbcType=NUMERIC},
+					   wagemode=#{wageMode,jdbcType=VARCHAR},
+					   wagebasic=#{wageBasic,jdbcType=NUMERIC},
+					   wagesw=#{wageSw,jdbcType=NUMERIC},
+					   wageew=#{wageEw,jdbcType=NUMERIC},
+					   wagepw=#{wagePw,jdbcType=NUMERIC},
+					   wagecw=#{wageCw,jdbcType=NUMERIC},
+					   wageow=#{wageOw,jdbcType=NUMERIC},
+					   wagese=#{wageSe,jdbcType=NUMERIC},
+					   costcer=#{costCer,jdbcType=NUMERIC},
+					   totalweight=#{totalWeight,jdbcType=NUMERIC},
+					   goldtype=#{goldType,jdbcType=VARCHAR},
+					   goldcost=#{goldCost,jdbcType=NUMERIC},
+					   goldweight=#{goldWeight,jdbcType=NUMERIC},
+					   labeltype=#{labelType,jdbcType=VARCHAR},
+					   length=#{length,jdbcType=NUMERIC},
+					   width=#{width,jdbcType=NUMERIC},
+					   height=#{height,jdbcType=NUMERIC},
+					   circel=#{circel,jdbcType=VARCHAR},
+					   franchiseeid=#{franchiseeId,jdbcType=VARCHAR},
+					   moucode=#{mouCode,jdbcType=VARCHAR},
+					   moudtlcode=#{moudtlCode,jdbcType=VARCHAR},
+					   name=#{name,jdbcType=VARCHAR},
+					   description=#{description,jdbcType=VARCHAR},
+					   stoneshape=#{stoneShape,jdbcType=VARCHAR},
+					   serialno=#{serialNo,jdbcType=VARCHAR},
+					   epc=#{epc,jdbcType=VARCHAR},
+					   fgoldweight=#{fGoldWeight,jdbcType=NUMERIC},
+					   ccategoryid=#{cCategoryId,jdbcType=VARCHAR},
+					   fcategoryid=#{fCategoryId,jdbcType=VARCHAR},
+					   scategoryid=#{sCategoryId,jdbcType=VARCHAR},
+					   status=#{status,jdbcType=VARCHAR},
+					   remarks=#{remarks,jdbcType=VARCHAR},
+					   updatetime=sysdate,
+					   updateuser=#{updateUser,jdbcType=VARCHAR},
+					   wageadd=#{wageAdd,jdbcType=NUMERIC},
+					   purchasenum=#{purchaseNum,jdbcType=VARCHAR},
+					   subcode=#{subCode,jdbcType=VARCHAR},
+			   		   cernum=#{cerNum,jdbcType=VARCHAR},
+			   		   weightrange=#{weightRange,jdbcType=VARCHAR},
+			   		   primarycode=#{primarycode,jdbcType=VARCHAR},
+			   		   noticeno=#{noticeno,jdbcType=VARCHAR},
+			   		   wholesale=#{wholesale,jdbcType=NUMERIC},
+			   		   stonesize=#{stonesize,jdbcType=VARCHAR},
+			   		   costfin=#{costFin,jdbcType=NUMERIC},
+			   		   costchk=#{costChk,jdbcType=NUMERIC}
+				where id=#{id,jdbcType=VARCHAR}
+    </update>
+	
+	<update id="updateProductState">  
+	        update jy_scm_ims_product
+	       set  status=#{status,jdbcType=VARCHAR},
+	        	updateuser=#{updateUser,jdbcType=VARCHAR},
+	        	updatetime=sysdate
+		    where id = #{id,jdbcType=VARCHAR}
+	</update>
+	
+	<insert id="insert" parameterType="product">
+          insert into jy_scm_ims_product
+			  (id,
+			   code,
+			   cateid,
+			   catejewelryid,
+			   jewelrymode,
+			   count,
+			   status,
+			   warehouseid,
+			   locationid,
+			   controltype,
+			   orgid,
+			   costpur,
+			   wagemode,
+			   wagebasic,
+			   wagesw,
+			   wageew,
+			   wagepw,
+			   wagecw,
+			   wageow,
+			   wagese,
+			   costcer,
+			   totalweight,
+			   goldtype,
+			   goldcost,
+			   goldweight,
+			   labeltype,
+			   length,
+			   width,
+			   height,
+			   circel,
+			   franchiseeid,
+			   moucode,
+			   moudtlcode,
+			   name,
+			   description,
+			   stoneshape,
+			   serialno,
+			   epc,
+			   fgoldweight,
+			   inwarehousenum,
+			   ccategoryid,
+			   fcategoryid,
+			   scategoryid,
+			   remarks,
+			   createtime,
+			   createuser,
+			   wageadd,
+			   purchaseNum,
+			   subcode,
+			   cernum,
+			   weightrange,
+			   primarycode,
+			   noticeno,
+			   wholesale,
+			   stonesize,
+			   costfin)
+			values
+			  (#{id,jdbcType=VARCHAR},
+			   #{code,jdbcType=VARCHAR},
+			   #{cateId,jdbcType=VARCHAR},
+			   #{cateJewelryId,jdbcType=VARCHAR},
+			   #{jewelryMode,jdbcType=VARCHAR},
+			   #{count,jdbcType=NUMERIC},
+			   #{status,jdbcType=VARCHAR},
+			   #{warehouseId,jdbcType=VARCHAR},
+			   #{locationId,jdbcType=VARCHAR},
+			   #{controlType,jdbcType=VARCHAR},
+			   #{orgId,jdbcType=VARCHAR},
+			   #{costPur,jdbcType=NUMERIC},
+			   #{wageMode,jdbcType=VARCHAR},
+			   #{wageBasic,jdbcType=NUMERIC},
+			   #{wageSw,jdbcType=NUMERIC},
+			   #{wageEw,jdbcType=NUMERIC},
+			   #{wagePw,jdbcType=NUMERIC},
+			   #{wageCw,jdbcType=NUMERIC},
+			   #{wageOw,jdbcType=NUMERIC},
+			   #{wageSe,jdbcType=NUMERIC},
+			   #{costCer,jdbcType=NUMERIC},
+			   #{totalWeight,jdbcType=NUMERIC},
+			   #{goldType,jdbcType=VARCHAR},
+			   #{goldCost,jdbcType=NUMERIC},
+			   #{goldWeight,jdbcType=NUMERIC},
+			   #{labelType,jdbcType=VARCHAR},
+			   #{length,jdbcType=NUMERIC},
+			   #{width,jdbcType=NUMERIC},
+			   #{height,jdbcType=NUMERIC},
+			   #{circel,jdbcType=VARCHAR},
+			   #{franchiseeId,jdbcType=VARCHAR},
+			   #{mouCode,jdbcType=VARCHAR},
+			   #{moudtlCode,jdbcType=VARCHAR},
+			   #{name,jdbcType=VARCHAR},
+			   #{description,jdbcType=VARCHAR},
+			   #{stoneShape,jdbcType=VARCHAR},
+			   #{serialNo,jdbcType=VARCHAR},
+			   #{epc,jdbcType=VARCHAR},
+			   #{fGoldWeight,jdbcType=NUMERIC},
+			   #{inWarehouseNum,jdbcType=VARCHAR},
+			   #{cCategoryId,jdbcType=VARCHAR},
+			   #{fCategoryId,jdbcType=VARCHAR},
+			   #{sCategoryId,jdbcType=VARCHAR},
+			   #{remarks,jdbcType=VARCHAR},
+			   sysdate,
+			   #{createUser,jdbcType=VARCHAR},
+			   #{wageAdd,jdbcType=NUMERIC},
+			   #{purchaseNum,jdbcType=VARCHAR},
+			   #{subCode,jdbcType=VARCHAR},
+			   #{cerNum,jdbcType=VARCHAR},
+			   #{weightRange,jdbcType=VARCHAR},
+			   #{primarycode,jdbcType=VARCHAR},
+			   #{noticeno,jdbcType=VARCHAR},
+			   #{wholesale,jdbcType=NUMERIC},
+			   #{stonesize,jdbcType=VARCHAR},
+			   #{costFin,jdbcType=NUMERIC})
+    </insert>
+	
+	<update id="batchUpdateProductState">
+		update jy_scm_ims_product
+	        set status=#{product.status},
+	        updateuser=#{product.updateUser},
+	        updatetime=sysdate
+		    where status ='B' and id in
+		    <foreach collection="list" item="item" open="(" separator="," close=")">
+		    		#{item.id}
+	   		</foreach>
+	</update>
+    
+    <select id="queryLockedProdInList" resultType="product" parameterType="product">
+    	select id,name from jy_scm_ims_product where status='B' and id in
+    	<foreach collection="list" item="item" open="(" separator="," close=")">
+		    #{item.id}
+	   	</foreach>
+    </select>
+    <select id="queryLockedCodeInList" resultType="product" parameterType="product">
+    	select id,name,code from jy_scm_ims_product where status='B' and code in
+    	<foreach collection="list" item="item" open="(" separator="," close=")">
+		    #{item.code}
+	   	</foreach>
+    </select>
+    
+    <insert id="batchInsertProduct" parameterType="java.util.List">
+    	<foreach collection="list" item="item" index="index" open="begin" close=";end;" separator=";">
+	      insert into jy_scm_ims_product
+		    (id,
+			   code,
+			   cateid,
+			   catejewelryid,
+			   jewelrymode,
+			   count,
+			   status,
+			   warehouseid,
+			   locationid,
+			   controltype,
+			   orgid,
+			   costpur,
+			   wagemode,
+			   wagebasic,
+			   wagesw,
+			   wageew,
+			   wagepw,
+			   wagecw,
+			   wageow,
+			   wagese,
+			   costcer,
+			   totalweight,
+			   goldtype,
+			   goldcost,
+			   goldweight,
+			   labeltype,
+			   length,
+			   width,
+			   height,
+			   circel,
+			   franchiseeid,
+			   moucode,
+			   moudtlcode,
+			   name,
+			   description,
+			   stoneshape,
+			   serialno,
+			   epc,
+			   fgoldweight,
+			   inwarehousenum,
+			   ccategoryid,
+			   fcategoryid,
+			   scategoryid,
+			   remarks,
+			   createtime,
+			   createuser,
+			   wageadd,
+			   purchaseNum,
+			   subcode,
+			   cernum,
+			   weightrange,
+			   primarycode,
+			   noticeno,
+			   wholesale,
+			   stonesize,
+			   costChk,
+			   price,
+			   costfin)
+		  values
+		    (#{item.id,jdbcType=VARCHAR},
+			   #{item.code,jdbcType=VARCHAR},
+			   #{item.cateId,jdbcType=VARCHAR},
+			   #{item.cateJewelryId,jdbcType=VARCHAR},
+			   #{item.jewelryMode,jdbcType=VARCHAR},
+			   #{item.count,jdbcType=NUMERIC},
+			   #{item.status,jdbcType=VARCHAR},
+			   #{item.warehouseId,jdbcType=VARCHAR},
+			   #{item.locationId,jdbcType=VARCHAR},
+			   #{item.controlType,jdbcType=VARCHAR},
+			   #{item.orgId,jdbcType=VARCHAR},
+			   #{item.costPur,jdbcType=NUMERIC},
+			   #{item.wageMode,jdbcType=VARCHAR},
+			   #{item.wageBasic,jdbcType=NUMERIC},
+			   #{item.wageSw,jdbcType=NUMERIC},
+			   #{item.wageEw,jdbcType=NUMERIC},
+			   #{item.wagePw,jdbcType=NUMERIC},
+			   #{item.wageCw,jdbcType=NUMERIC},
+			   #{item.wageOw,jdbcType=NUMERIC},
+			   #{item.wageSe,jdbcType=NUMERIC},
+			   #{item.costCer,jdbcType=NUMERIC},
+			   #{item.totalWeight,jdbcType=NUMERIC},
+			   #{item.goldType,jdbcType=VARCHAR},
+			   #{item.goldCost,jdbcType=NUMERIC},
+			   #{item.goldWeight,jdbcType=NUMERIC},
+			   #{item.labelType,jdbcType=VARCHAR},
+			   #{item.length,jdbcType=NUMERIC},
+			   #{item.width,jdbcType=NUMERIC},
+			   #{item.height,jdbcType=NUMERIC},
+			   #{item.circel,jdbcType=VARCHAR},
+			   #{item.franchiseeId,jdbcType=VARCHAR},
+			   #{item.mouCode,jdbcType=VARCHAR},
+			   #{item.moudtlCode,jdbcType=VARCHAR},
+			   #{item.name,jdbcType=VARCHAR},
+			   #{item.description,jdbcType=VARCHAR},
+			   #{item.stoneShape,jdbcType=VARCHAR},
+			   #{item.serialNo,jdbcType=VARCHAR},
+			   #{item.epc,jdbcType=VARCHAR},
+			   #{item.fGoldWeight,jdbcType=NUMERIC},
+			   #{item.inWarehouseNum,jdbcType=VARCHAR},
+			   #{item.cCategoryId,jdbcType=VARCHAR},
+			   #{item.fCategoryId,jdbcType=VARCHAR},
+			   #{item.sCategoryId,jdbcType=VARCHAR},
+			   #{item.remarks,jdbcType=VARCHAR},
+			   sysdate,
+			   #{item.createUser,jdbcType=VARCHAR},
+			   #{item.wageAdd,jdbcType=NUMERIC},
+			   #{item.purchaseNum,jdbcType=VARCHAR},
+			   #{item.subCode,jdbcType=VARCHAR},
+			   #{item.cerNum,jdbcType=VARCHAR},
+			   #{item.weightRange,jdbcType=VARCHAR},
+			   #{item.primarycode,jdbcType=VARCHAR},
+			   #{item.noticeno,jdbcType=VARCHAR},
+			   #{item.wholesale,jdbcType=NUMERIC},
+			   #{item.stonesize,jdbcType=NUMERIC},
+			   #{item.costChk,jdbcType=NUMERIC},
+			   #{item.price,jdbcType=NUMERIC},
+			   #{item.costFin,jdbcType=NUMERIC})
+         </foreach>
+    </insert>
+    
+    <update id="batchUpdateProduct"  parameterType="java.util.List">
+	   <foreach collection="list" item="item" index="index" open="begin" close=";end;" separator=";">
+				update jy_scm_ims_product
+			     set 
+			         cateid=#{item.cateId,jdbcType=VARCHAR},
+					   catejewelryid=#{item.cateJewelryId,jdbcType=VARCHAR},
+					   count=#{item.count,jdbcType=NUMERIC},
+					   warehouseid=#{item.warehouseId,jdbcType=VARCHAR},
+					   locationid=#{item.locationId,jdbcType=VARCHAR},
+					   orgid=#{item.orgId,jdbcType=VARCHAR},
+					   controltype=#{item.controlType,jdbcType=VARCHAR},
+					   costpur=#{item.costPur,jdbcType=NUMERIC},
+					   wagemode=#{item.wageMode,jdbcType=VARCHAR},
+					   wagebasic=#{item.wageBasic,jdbcType=NUMERIC},
+					   wagesw=#{item.wageSw,jdbcType=NUMERIC},
+					   wageew=#{item.wageEw,jdbcType=NUMERIC},
+					   wagepw=#{item.wagePw,jdbcType=NUMERIC},
+					   wagecw=#{item.wageCw,jdbcType=NUMERIC},
+					   wageow=#{item.wageOw,jdbcType=NUMERIC},
+					   wagese=#{item.wageSe,jdbcType=NUMERIC},
+					   costcer=#{item.costCer,jdbcType=NUMERIC},
+					   totalweight=#{item.totalWeight,jdbcType=NUMERIC},
+					   goldtype=#{item.goldType,jdbcType=VARCHAR},
+					   goldcost=#{item.goldCost,jdbcType=NUMERIC},
+					   goldweight=#{item.goldWeight,jdbcType=NUMERIC},
+					   labeltype=#{item.labelType,jdbcType=VARCHAR},
+					   length=#{item.length,jdbcType=NUMERIC},
+					   width=#{item.width,jdbcType=NUMERIC},
+					   height=#{item.height,jdbcType=NUMERIC},
+					   circel=#{item.circel,jdbcType=VARCHAR},
+					   franchiseeid=#{item.franchiseeId,jdbcType=VARCHAR},
+					   moucode=#{item.mouCode,jdbcType=VARCHAR},
+					   moudtlcode=#{item.moudtlCode,jdbcType=VARCHAR},
+					   name=#{item.name,jdbcType=VARCHAR},
+					   description=#{item.description,jdbcType=VARCHAR},
+					   stoneshape=#{item.stoneShape,jdbcType=VARCHAR},
+					   serialno=#{item.serialNo,jdbcType=VARCHAR},
+					   epc=#{item.epc,jdbcType=VARCHAR},
+					   fgoldweight=#{item.fGoldWeight,jdbcType=NUMERIC},
+					   ccategoryid=#{item.cCategoryId,jdbcType=VARCHAR},
+					   fcategoryid=#{item.fCategoryId,jdbcType=VARCHAR},
+					   scategoryid=#{item.sCategoryId,jdbcType=VARCHAR},
+					   status=#{item.status,jdbcType=VARCHAR},
+					   remarks=#{item.remarks,jdbcType=VARCHAR},
+					   updatetime=sysdate,
+					   updateuser=#{item.updateUser,jdbcType=VARCHAR},
+					   wageadd=#{item.wageAdd,jdbcType=NUMERIC},
+					   purchasenum=#{item.purchaseNum,jdbcType=VARCHAR},
+					   subcode=#{item.subCode,jdbcType=VARCHAR},
+			   		   cernum=#{item.cerNum,jdbcType=VARCHAR},
+			   		   weightrange=#{item.weightRange,jdbcType=VARCHAR},
+			   		   primarycode=#{item.primarycode,jdbcType=VARCHAR},
+			   		   noticeno=#{item.noticeno,jdbcType=VARCHAR},
+			   		   wholesale=#{item.wholesale,jdbcType=NUMERIC},
+			   		   stonesize=#{item.stonesize,jdbcType=NUMERIC},
+			   		   costfin=#{item.costFin,jdbcType=NUMERIC},
+			   		   costChk=#{item.costChk,jdbcType=NUMERIC}
+				where id=#{item.id,jdbcType=VARCHAR}
+	   </foreach>
+    </update>
+    
+    
+    <delete id="batchDeleteProduct"  parameterType="java.util.List">  
+	        delete from  jy_scm_ims_product
+		    where  id in (
+			<foreach item="o" collection="list" open="" separator="," close="" >
+				#{o.id}
+			</foreach>
+		)
+	</delete>
+	
+	<select id="queryModelCode" parameterType="String" resultType="ScmMoudleDetail" >
+		  select d.suppmoucode as suppmouCode,d.id as id
+	         from jy_scm_moudledetail d
+	        where d.status='1'
+	          and d.suppmoucode like '%'||UPPER(#{code})||'%'
+	</select>
+	
+	<select id="findDefaultWarehouseByOrgId" parameterType="String" resultType="ScmWarehouseLocation">
+		select w.id as warehouseid,
+              l.id
+         from jy_scm_warehouse w
+         left join jy_scm_warehouse_location l
+           on w.id = l.warehouseid
+        where w.status = '1'
+          and l.status = '1'
+          and w.defaults = '1'
+          and l.defaults = '1'
+          and w.orgid=#{orgId}
+          and rownum=1
+	</select>
+	
+	<select id="getMoudIdAndCateId" parameterType="String" resultType="ScmMoudle">
+		select m.id ,m.categoryid
+         from jy_scm_moudledetail d
+         left join jy_scm_moudle m
+           on d.moudleid = m.id
+        where d.id=#{id}
+	</select>
+	<select id="findSplit" resultType="product" parameterType="java.util.List" >
+		select  
+			p.id,
+			p.name,
+			p.mouCode,
+			p.goldType,
+			p.fGoldWeight,
+			p.totalWeight,
+			p.circel,
+			a.stoneweight as stoneweight, 
+			a.clarity as clarity, 
+			a.color as color, 
+			a.cut as cut,
+			p.price 
+			from
+			JY_SCM_IMS_PRODUCT p left join jy_scm_ims_accessories a on a.productid = p.id and a.STONEFLAG=1
+			where 1=1
+			   	<if test='product.name != null and product.name != ""'>
+			        AND p.name like '%'||#{product.name}||'%'
+			   	</if>
+			    <if test='product.mouCode != null and product.mouCode != ""'>
+			         AND p.moucode=(select m.code from jy_scm_moudle m where m.id=#{product.mouCode})
+			    </if>
+			    <if test='product.orgId != null and product.orgId != ""'>
+			         AND p.orgId in (select o.id from jy_base_org o where o.companyid=#{product.orgId} and o.orggrade != '4')
+			    </if>
+			    <if test='product.goldType != null and product.goldType != ""'>
+			         AND p.goldType=#{product.goldType}
+			    </if>
+			    <if test='product.circel != null and product.circel != ""'>
+			         AND p.circel like '%'||#{product.circel}||'%'
+			    </if>
+			    <if test='product.clarity != null and product.clarity != ""'>
+			         AND a.clarity=#{product.clarity}
+			    </if>
+			    <if test='product.cut != null and product.cut != ""'>
+			         AND a.cut=#{product.cut}
+			    </if>
+			    <if test='product.color != null and product.color != ""'>
+			         AND a.color=#{product.color}
+			    </if>
+			    AND p.status=#{product.status} 
+				order by p.inwarehousedate asc
+	</select>
+	
+	<select id="findSplitOk" resultType="product" parameterType="java.util.List">
+		select 
+			p.id,
+			p.name,
+			p.mouCode,
+			p.goldType,
+			p.fGoldWeight,
+			p.stoneShapeRange,
+			p.totalWeight,
+			p.price 
+			from
+			JY_SCM_IMS_PRODUCT p
+			where 1=1
+				<if test='list.size &gt; 0'>
+					AND 
+					p.id in
+					<foreach collection="list" item="item" open="(" separator="," close=")">
+				    	#{item}
+			   		</foreach>
+				</if>
+		     order by p.createtime
+	</select>
+	<select id="findSplitU" resultType="product" parameterType="java.util.List">
+		select 
+			p.id,
+			p.mouCode,
+			p.goldType,
+			p.fGoldWeight,
+			p.stoneShapeRange,
+			p.totalWeight,
+			p.price 
+			from
+			JY_SCM_IMS_PRODUCT p
+			where p.id in
+					<foreach collection="list" item="item" open="(" separator="," close=")">
+			    		#{item}
+		   			</foreach>
+		     
+	</select>
+	<select id="fundSplitOut" resultType="product" parameterType="String" >
+		select 
+			   jp.id,
+		       jp.name,
+		       jp.mouCode,
+		       jp.goldType,
+		       jp.fGoldWeight,
+		       a.stoneweight as stoneweight, 
+		       jp.totalWeight,
+		       jp.circel,
+		       jp.price,
+		       jo.outboundno,
+		       jo.checkTime
+		  from JY_SCM_IMS_PRODUCT jp left join jy_scm_ims_accessories a on a.productid = jp.id and a.STONEFLAG=1
+		 inner join jy_scm_ims_outbounddetail jod
+		    on jod.code = jp.code
+		 inner join jy_scm_ims_outbound jo
+		    on jo.id = jod.outboundid
+		 inner join jy_scm_pur_ordersplit jos
+		    on jos.productid = jp.id
+		    where jos.orderDetailId = #{orderDetailId}
+	</select>
+	<update id="updateSplitStatus" parameterType="String">
+		update JY_SCM_IMS_PRODUCT t set t.status ='B' where  t.id in(select t1.productid from JY_SCM_PUR_ORDERSPLIT t1 WHERE t1.orderDetailId=#{orderDetailId} and t1.status='0' )
+	</update>
+	
+	
+	<update id="updateWarehouse" parameterType="product">
+		update jy_scm_ims_product  set orgid=#{orgId,jdbcType=VARCHAR},
+	         warehouseid=#{warehouseId,jdbcType=VARCHAR},
+			 locationid=#{locationId,jdbcType=VARCHAR},
+	         updatetime=sysdate,
+			 updateuser=#{updateUser,jdbcType=VARCHAR},
+			 inWarehouseDate=sysdate,
+			 inwarehousenum=#{inWarehouseNum,jdbcType=VARCHAR}
+		     where id=#{id}
+	</update>
+	
+	<select id="queryMoudleCode" parameterType="String" resultType="ScmMoudle">
+		select m.id,m.code
+	         from jy_scm_moudle m
+	        where m.status='1'
+	          and m.code like '%'||UPPER(#{code})||'%'
+	</select>
+	<select id="queryProductCode" resultType="product" parameterType="String">
+		select jsp.id,jsp.code from jy_scm_ims_product jsp where jsp.code like '%'||#{code}||'%' 
+	</select>
+		<select id="queryinWarehouseNum" resultType="product" parameterType="String">
+		select jsp.id,jsp.inwarehousenum from jy_scm_ims_product jsp where jsp.inwarehousenum like '%'||#{inWarehouseNum}||'%' 
+	</select>
+	<select id="queryOrg" resultType="BaseOrg" parameterType="String">
+		select distcode from jy_base_org  where id=#{id}
+	</select>
+	
+	<select id="findProductCode" resultType="product" parameterType="String">
+		select * from jy_scm_ims_product jsp where jsp.code=#{code} 
+	</select>
+	
+	<select id="queryMoudle" parameterType="String" resultType="ScmMoudle">
+		select code from jy_scm_moudle m where m.id=#{id}
+	</select>
+	<select id="query" parameterType="String" resultType="ScmMoudle">
+		select m.code, f.name,f.id
+		  from jy_scm_moudle m
+		  left join jy_scm_moudledetail d
+		    on m.id = d.moudleid
+		  left join jy_base_franchisee f
+		    on d.suppliercode = f.id
+          where d.id = #{id}
+	</select>
+
+	<insert id="batchInsertIntoTempTable" parameterType="java.util.List">
+    	<foreach collection="list" item="item" index="index" open="begin" close=";end;" separator=";">
+	    	insert into jy_scm_ims_temporary
+			  (purchasenum,noticeno,createtime, name, primarycode, procertificate, description, remarks, franchiseecode, moucode, series, finecolumn, circel, wagebasic, wagese, wholesale,wageew, wagecw, wageow, costcer, costadd, goldcost, totalweight, goldweight, goldcostlose, goldselllose, goldvalue, goldname, goldtype, catename, cateid, catejewelryname, catejewelryid, wagemod, warehouseid, locationid, orgid, pricesuggest, costfin, prime, price, multiplying, labeltype,  stonecode, stonename, stoneshape,stoneshapetype, stoneweight, stonecount, purcal, jeweler, clarity, color, cut, certificate, stonepkgno, stonecode1, stonename1, stoneweight1, stonecount1, purcal1, jeweler1, certificate1, stonepkgno1, stonecode2, stonename2, stoneweight2, stonecount2, purcal2, jeweler2, stonepkgno2, stonecode3, stonename3, stoneweight3, stonecount3, purcal3, jeweler3, stonepkgno3, stonecode4, stonename4, stoneweight4, stonecount4, purcal4, jeweler4, stonepkgno4,userid,temporaryid)
+			values
+			  (#{item.purchasenum,jdbcType=VARCHAR},#{item.noticeno,jdbcType=VARCHAR},#{item.createtime,jdbcType=DATE}, #{item.name,jdbcType=VARCHAR}, #{item.primarycode,jdbcType=VARCHAR}, #{item.procertificate,jdbcType=VARCHAR}, #{item.description,jdbcType=VARCHAR}, #{item.remarks,jdbcType=VARCHAR}, #{item.franchiseecode,jdbcType=VARCHAR}, #{item.moucode,jdbcType=VARCHAR}, #{item.series,jdbcType=VARCHAR}, #{item.finecolumn,jdbcType=VARCHAR}, #{item.circel,jdbcType=VARCHAR}, #{item.wagebasic,jdbcType=NUMERIC}, #{item.wagese,jdbcType=NUMERIC},#{item.wholesale,jdbcType=NUMERIC}, #{item.wageew,jdbcType=NUMERIC}, #{item.wagecw,jdbcType=NUMERIC}, #{item.wageow,jdbcType=NUMERIC}, #{item.costcer,jdbcType=NUMERIC}, #{item.costadd,jdbcType=NUMERIC}, #{item.goldcost,jdbcType=NUMERIC}, #{item.totalweight,jdbcType=NUMERIC}, #{item.goldweight,jdbcType=NUMERIC}, #{item.goldcostlose,jdbcType=NUMERIC}, #{item.goldselllose,jdbcType=NUMERIC}, #{item.goldvalue,jdbcType=NUMERIC}, #{item.goldname,jdbcType=VARCHAR}, #{item.goldtype,jdbcType=VARCHAR}, #{item.catename,jdbcType=VARCHAR}, #{item.cateid,jdbcType=VARCHAR}, #{item.catejewelryname,jdbcType=VARCHAR}, #{item.catejewelryid,jdbcType=VARCHAR}, #{item.wagemod,jdbcType=VARCHAR}, #{item.warehouseid,jdbcType=VARCHAR}, #{item.locationid,jdbcType=VARCHAR}, #{item.orgid,jdbcType=VARCHAR}, #{item.pricesuggest,jdbcType=NUMERIC}, #{item.costfin,jdbcType=NUMERIC}, #{item.prime,jdbcType=NUMERIC}, #{item.price,jdbcType=NUMERIC}, #{item.multiplying,jdbcType=NUMERIC}, #{item.labeltype,jdbcType=VARCHAR}, #{item.stonecode,jdbcType=VARCHAR}, #{item.stonename,jdbcType=VARCHAR}, #{item.stoneshape,jdbcType=VARCHAR},#{item.stoneshapetype,jdbcType=VARCHAR}, #{item.stoneweight,jdbcType=NUMERIC}, #{item.stonecount,jdbcType=NUMERIC}, #{item.purcal,jdbcType=NUMERIC}, #{item.jeweler,jdbcType=VARCHAR}, #{item.clarity,jdbcType=VARCHAR}, #{item.color,jdbcType=VARCHAR}, #{item.cut,jdbcType=VARCHAR}, #{item.certificate,jdbcType=VARCHAR}, #{item.stonepkgno,jdbcType=VARCHAR}, #{item.stonecode1,jdbcType=VARCHAR}, #{item.stonename1,jdbcType=VARCHAR}, #{item.stoneweight1,jdbcType=NUMERIC}, #{item.stonecount1,jdbcType=NUMERIC}, #{item.purcal1,jdbcType=NUMERIC}, #{item.jeweler1,jdbcType=VARCHAR}, #{item.certificate1,jdbcType=VARCHAR}, #{item.stonepkgno1,jdbcType=VARCHAR}, #{item.stonecode2,jdbcType=VARCHAR}, #{item.stonename2,jdbcType=VARCHAR}, #{item.stoneweight2,jdbcType=NUMERIC}, #{item.stonecount2,jdbcType=NUMERIC}, #{item.purcal2,jdbcType=NUMERIC}, #{item.jeweler2,jdbcType=VARCHAR}, #{item.stonepkgno2,jdbcType=VARCHAR}, #{item.stonecode3,jdbcType=VARCHAR}, #{item.stonename3,jdbcType=VARCHAR}, #{item.stoneweight3,jdbcType=NUMERIC}, #{item.stonecount3,jdbcType=NUMERIC}, #{item.purcal3,jdbcType=NUMERIC}, #{item.jeweler3,jdbcType=VARCHAR}, #{item.stonepkgno3,jdbcType=VARCHAR}, #{item.stonecode4,jdbcType=VARCHAR}, #{item.stonename4,jdbcType=VARCHAR}, #{item.stoneweight4,jdbcType=NUMERIC}, #{item.stonecount4,jdbcType=NUMERIC}, #{item.purcal4,jdbcType=NUMERIC}, #{item.jeweler4,jdbcType=VARCHAR}, #{item.stonepkgno4,jdbcType=VARCHAR},#{item.userid,jdbcType=VARCHAR},#{item.temporaryid,jdbcType=VARCHAR})
+	    </foreach>
+    </insert>
+	
+	<select id="queryProductTemp" parameterMap="testParameterMap" statementType="CALLABLE">
+		   {call mytest.pro_temporary (#{0},#{1})}
+	 </select> 
+
+	<delete id="deleteByUserId">
+		delete from jy_scm_ims_temporary where userid=#{userid}
+	</delete>
+	
+	<select id="getProductUpload" resultType="productTemp">
+		select * from jy_scm_ims_temporary where userid=#{userid}
+	</select>
+	
+	<select id="querySuppmoucode" parameterType="String" resultType="ScmMoudle">
+		select m.code, f.name, f.id
+		  from jy_scm_moudle m
+		  left join jy_scm_moudledetail d
+		    on m.id = d.moudleid
+		  left join jy_base_franchisee f
+		    on d.suppliercode = f.id
+		 where d.suppmoucode = #{suppmoucode}
+	</select>
+	
+	<select id ="findForInventory" resultType="product" parameterType="product">
+    	select t.id, t.code, t.name, t.count, t.totalweight, t.wagemode from jy_scm_ims_product t 
+    	where t.orgid = #{orgId} and t.warehouseid = #{warehouseId} and t.locationid = #{locationId} 
+    	<if test='cateId != null and cateId != ""'>
+			AND t.cateid = #{cateId}
+		</if>
+		<if test='cateJewelryId != null and cateJewelryId != ""'>
+			AND t.catejewelryid = #{cateJewelryId}
+		</if>
+    </select>
+    
+    <delete id="delete">
+    	delete from jy_scm_ims_product where id=#{id}
+    </delete>
+    
+    <select id="findnoticeNo" resultType="materialcome" parameterType="String">
+    	select STATUS from JY_SCM_FLOW_NOTICEORDER where noticeno=#{noticeNo}
+    </select>
+    <select id="queryProductNoticeno" resultType="product" parameterType="String">
+    	select * from JY_SCM_IMS_PRODUCT where noticeno=#{noticeNo}
+    </select>
+
+    <select id="findProductNumByMoCode" resultType="int" parameterType="product">
+    	select count(1) from jy_scm_ims_product p  where p.moucode=#{mouCode} and p.status='B' and p.orgId in (select o.id from jy_base_org o where o.companyid=#{orgId} and o.orggrade != '4')
+    </select>
+
+    
+    <select id ="findByProductCode" resultType="product" parameterType="String">
+    	select t.code, t.name, t.cateid, t.catejewelryid, t.warehouseid, t.locationid, t.count, t.totalweight from jy_scm_ims_product t where code = #{code}
+    </select>
+   
+</mapper>

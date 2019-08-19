@@ -1,0 +1,164 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.dao.scm.purorder.OrderSplitDao">
+
+	<resultMap id="base" type="ScmOrderSplit">
+	</resultMap>
+	
+	
+    <select id="find" parameterType="ScmOrderSplit" resultMap="base">
+    	select t.*
+       from JY_SCM_PUR_ORDERSPLIT t
+       where t.id = #{id}
+    </select>
+    <insert id="insert"  parameterType="ScmOrderSplit">	
+		insert into JY_SCM_PUR_ORDERSPLIT
+		  (
+		  id,
+		  status,
+		  orderDetailId,
+		  productId,
+		  createTime,
+		  createUser
+		  )
+		values
+		  (
+		  #{id},
+		  #{status},
+		  #{orderDetailId},
+		  #{productId},
+		  #{createTime},
+		  #{createUser}
+		   )
+	</insert>
+	<insert id="batchInsert"  parameterType="java.util.List">
+		<foreach collection="list" item="item" index="index" open="begin" close=";end;" separator=";">	
+		insert into JY_SCM_PUR_ORDERSPLIT
+		  (
+		  id,
+		  status,
+		  orderDetailId,
+		  productId,
+		  numbers,
+		  weight,
+		  type,
+		  createTime,
+		  createUser
+		  )
+		values
+		  (
+		  #{item.id,jdbcType=VARCHAR},
+		   #{item.status,jdbcType=VARCHAR},
+		   #{item.orderDetailId,jdbcType=VARCHAR},
+		   #{item.productId,jdbcType=VARCHAR},
+		   #{item.numbers,jdbcType=NUMERIC},
+		   #{item.weight,jdbcType=NUMERIC},
+		   #{item.type,jdbcType=VARCHAR},
+		   #{item.createTime,jdbcType=TIMESTAMP},
+		   #{item.createUser,jdbcType=VARCHAR}
+		   )
+		</foreach>
+	</insert>
+    <select id="findByPage"  resultMap="base" parameterType="ScmOrderSplit">
+        select  t.* ,( select jsim.code from jy_scm_ims_materialin jsim where jsim.id=t.productid) as productCode
+        		from JY_SCM_PUR_ORDERSPLIT t
+		 where 1=1
+       <if test='param.status != null and param.status != ""'>
+        	AND t.status=#{param.status}
+       </if> 
+       <if test='param.orderDetailId != null and param.orderDetailId != ""'>
+        	AND t.orderDetailId=#{param.orderDetailId}
+       </if>
+       <if test='param.productId != null and param.productId != ""'>
+        	AND t.productId=#{param.productId}
+       </if>
+      
+    </select>
+    
+    
+    <update id="update" parameterType="ScmOrderSplit">
+    	update JY_SCM_PUR_ORDERSPLIT
+	       set 
+			  orderDetailId= #{orderDetailId},
+			  status= #{status},
+			  productId= #{productId},
+	          updateTime = #{updateTime},
+	          updateUser = #{updateUser}
+	     where id = #{id}
+	    
+    </update>
+    <update id="updateScmOrderSplitState" parameterType="ScmOrderSplit">
+		UPDATE JY_SCM_PUR_ORDERSPLIT
+			SET   	
+				<if test='updateTime != null and updateTime != ""'>
+				    updateTime = #{updateTime},
+		          	updateUser = #{updateUser},
+	          	</if>
+	          	<if test='checkUser != null and checkUser != ""'>
+		        	checkUser=#{checkUser},
+		        	checkTime=#{checkTime},
+		        </if>
+	          	status = #{status}
+		WHERE id=#{id}
+	</update>
+	
+	
+	<update id="batchUpdateOrderState"  parameterType="java.util.List">  
+	        update JY_SCM_PUR_ORDERSPLIT
+	        set 
+	        <if test='orderSplit.updateUser != null and orderSplit.updateUser != ""'>
+	        	updateuser=#{orderSplit.updateUser},
+	        	updatetime=#{orderSplit.updateTime},
+	        </if>
+	        <if test='orderSplit.checkUser != null and orderSplit.checkUser != ""'>
+	        	checkUser=#{orderSplit.checkUser},
+	        	checktime=#{orderSplit.checkTime},
+	        </if>
+	        status=#{orderSplit.status}
+		    where id in
+		    <foreach collection="list" item="item" open="(" separator="," close=")">
+		    		#{item.id}
+	   		</foreach>
+	</update>
+	<delete id="deleteBatchProductId" parameterType ="java.util.List">
+	DELETE FROM JY_SCM_PUR_ORDERSPLIT WHERE productId in(
+		<foreach item="item" collection="list" open="" separator="," close="" >
+			#{item}
+		</foreach>
+		)
+	</delete>
+	<delete id="delete" parameterType="ScmOrderSplit">
+	delete from JY_SCM_PUR_ORDERSPLIT  
+	WHERE id=#{id}
+	</delete>
+	<delete id="deleteBatch" parameterType ="java.util.List">
+	DELETE FROM JY_SCM_PUR_ORDERSPLIT WHERE id in(
+		<foreach item="item" collection="list" open="" separator="," close="" >
+			#{item.id}
+		</foreach>
+		)
+	</delete>
+	<delete id="deleteBatchByOrder" parameterType ="java.util.List">
+	DELETE FROM JY_SCM_PUR_ORDERSPLIT WHERE orderDetailId in(
+		<foreach item="item" collection="list" open="" separator="," close="" >
+			#{item.orderDetailId}
+		</foreach>
+		)
+	</delete>
+	<delete id="deleteByOrder" parameterType ="ScmOrderSplit">
+		delete from JY_SCM_PUR_ORDERSPLIT  
+		WHERE orderDetailId=#{orderDetailId} and status='0'
+	</delete>
+	<select id="findOrder" parameterType="ScmOrderSplit" resultMap="base">
+		select jm.type as detailTyoe, jod.feetype, t.*
+		  from JY_SCM_PUR_ORDERSPLIT t
+		 inner join jy_scm_pur_orderdetail jod
+		    on t.orderdetailid = jod.id
+		 inner join jy_scm_pur_order jo
+		    on jod.orderid = jo.id
+		 inner join jy_scm_moudle jm
+		    on jod.mdcode = jm.id
+		 where jo.id=#{orderId}
+		 	and t.status='0'
+	</select>
+</mapper>

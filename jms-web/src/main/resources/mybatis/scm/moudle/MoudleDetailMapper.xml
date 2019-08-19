@@ -1,0 +1,103 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.dao.scm.moudle.MoudleDetailDao">
+
+	<resultMap id="base" type="ScmMoudleDetail"></resultMap>
+    
+    <insert id="insert"  parameterType="ScmMoudleDetail">	
+		insert into JY_SCM_MOUDLEDETAIL
+		  (id,
+		  moudleid,
+		  supplierCode,
+		  suppmouCode,
+		  laborCost,
+		  addLaborCost,
+		  saleLaborCost,
+		  saleLossRate,
+		  majorFlag,
+		  status
+		  )
+		values
+		  (#{id},
+		   #{moudleid},
+		   #{supplierCode},
+		   #{suppmouCode},
+		   #{laborCost},
+		   #{addLaborCost},
+		   #{saleLaborCost},
+		   #{saleLossRate},
+		   #{majorFlag},
+		   #{status}
+		   )
+	</insert>
+    
+    <select id="findByPage"  resultMap="base" parameterType="ScmMoudleDetail">
+        select  t.*,(select jsm.name from JY_SCM_Moudle jsm where jsm.id=t.moudleid) as moudleName ,t1.categoryid as categoryid,
+        		(select jbf.name from JY_BASE_FRANCHISEE jbf where jbf.id=t.suppliercode) as supplierName
+        		from JY_SCM_MOUDLEDETAIL t left join jy_scm_moudle t1 on t.moudleid = t1.id
+		 where 1=1
+	   <if test='param.moudleid != null and param.moudleid != ""'>
+        	AND t.moudleid=#{param.moudleid}
+       </if> 
+    </select>
+    
+    <select id="find" parameterType="ScmMoudleDetail" resultType="ScmMoudleDetail">
+    	select t.*,(select jsm.name from JY_SCM_Moudle jsm where jsm.id=t.moudleid) as moudleName,(select t1.categoryid from jy_scm_moudle t1 where t1.id =t.moudleid) as categoryid,
+    	(select jbf.name from JY_BASE_FRANCHISEE jbf where jbf.id=t.suppliercode) as supplierName
+       from JY_SCM_MOUDLEDETAIL t 
+       where t.id = #{id}
+    </select>
+    
+    <update id="update" parameterType="ScmMoudleDetail">
+    	update JY_SCM_MOUDLEDETAIL
+	       set 
+	           supplierCode = #{supplierCode},
+	           suppmouCode = #{suppmouCode},
+	           laborCost = #{laborCost},
+	           addLaborCost = #{addLaborCost},
+	           saleLaborCost = #{saleLaborCost},
+	           saleLossRate = #{saleLossRate},
+	           majorFlag = #{majorFlag},
+	           
+	           status = #{status}
+	     where id = #{id}
+	    
+    </update>
+	<update id="updateScmMoudleDetailState" parameterType="ScmMoudleDetail">
+		UPDATE JY_SCM_MOUDLEDETAIL
+		SET   status = #{status}
+		WHERE id=#{id}
+	</update>
+	
+	
+	<update id="batchUpdateScmMoudleDetailState"  parameterType="java.util.List">  
+	        update JY_SCM_MOUDLEDETAIL
+	        set status=#{moudle.status}
+		    where id in
+		    <foreach collection="list" item="item" open="(" separator="," close=")">
+		    		#{item.id}
+	   		</foreach>
+	</update>
+	
+	<select id="queryMajorFactoryNum" parameterType="String" resultType="int">
+		select count(id) from jy_scm_moudledetail where majorflag='1' and status='1' and moudleid=#{moudleId}
+	</select>
+	
+	<select id="findMoudleById" parameterType="String" resultType="ScmMoudleDetail">
+    	select t.*
+      	 from JY_SCM_MOUDLEDETAIL t 
+       where t.id = #{id}
+    </select>
+    <select id="queryModelCode"  parameterType="ScmMoudleDetail" resultType="ScmMoudleDetail" >
+		  select d.suppmoucode as suppmouCode, d.id
+	         from jy_scm_moudledetail d
+	        where d.status='1'
+	   <if test='supplierCode != null and supplierCode != ""'>
+        	AND d.supplierCode=#{supplierCode}
+       </if> 
+       <if test='moudleid != null and moudleid != ""'>
+       		AND d.moudleid=#{moudleid}
+       </if>
+	          and d.suppmouCode like '%'||suppmouCode||'%'
+	</select>
+</mapper>

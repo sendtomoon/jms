@@ -1,0 +1,93 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.dao.scm.purorder.OrderInterimDao">
+	<resultMap id="baseMap" type="scmOrderInterim">
+	</resultMap>
+    <select id="find" parameterType="scmOrderInterim" resultMap="baseMap">
+    	select t.*,
+       from jy_scm_pur_order_interim_interim t 
+       where t.sourceNo = #{sourceNo}
+    </select>
+    <insert id="insert"  parameterType="scmOrderInterim">	
+		insert into jy_scm_pur_order_interim_interim
+		  (
+		  sourceNo,
+		  userId,
+		  arrivalDate,
+		  totalNum,
+		  mdtlId,
+		  status
+		  )
+		values
+		  (
+		    #{sourceNo,jdbcType=VARCHAR},
+			#{userId,jdbcType=VARCHAR},
+			#{arrivalDate,jdbcType=VARCHAR},
+			#{totalNum,jdbcType=VARCHAR},
+			#{mdtlId,jdbcType=VARCHAR},
+			#{status,jdbcType=NUMERIC}
+		   )
+	</insert>
+	
+    
+    <select id="findByPage"  resultMap="baseMap" parameterType="scmOrderInterim">
+        select  distinct t.sourceNo,t.userId,t.arrivalDate,t.totalNum 
+        		from jy_scm_pur_order_interim t 
+		 where 1=1 
+       <if test='param.status != null and param.status != ""'>
+        	AND t.status=#{param.status}
+       </if> 
+       
+    </select>
+	
+     <select id="findList"  resultMap="baseMap" parameterType="scmOrderInterim" >
+        select  t.* 
+        		from jy_scm_pur_order_interim t left join jy_base_account a on a.id=t.userid
+		 where 
+		 		t.status != #{status}
+		 		<if test='orgId != null and orgId != ""'>
+		 			and  a.orgid IN (SELECT jbg.id FROM jy_base_org jbg start with jbg.id=#{orgId} connect by prior jbg.id = jbg.pid) 
+		 		</if>
+    </select>
+    
+    <select id="findOrderList"  resultMap="baseMap" parameterType="scmOrderInterim" >
+       select distinct t.sourceNo    as sourceNo,
+                t.userId      as userId,
+                t.arrivalDate as arrivalDate,
+                t.totalNum    as totalNum
+		  from jy_scm_pur_order_interim t left join jy_base_account a on a.id=t.userid
+		 where  t.status != #{status}
+		 		<if test='orgId != null and orgId != ""'>
+		 			and  a.orgid IN (SELECT jbg.id FROM jy_base_org jbg start with jbg.id=#{orgId} connect by prior jbg.id = jbg.pid) 
+		 		</if>
+    </select>
+    
+    <update id="updateOrderState" parameterType="scmOrderInterim">
+		UPDATE jy_scm_pur_order_interim
+			SET   	
+	          	status = #{status}
+		WHERE sourceNo = #{sourceNo}
+	</update>
+	
+	
+	<update id="batchUpdateOrderState"  parameterType="java.util.List">  
+	        update jy_scm_pur_order_interim
+	        set 
+	        status=#{order.status}
+		    where sourceNo in
+		    <foreach collection="list" item="item" open="(" separator="," close=")">
+		    		#{item.sourceNo}
+	   		</foreach>
+	</update>
+	<delete id="delete" parameterType="scmOrderInterim">
+	delete from jy_scm_pur_order_interim  
+	WHERE sourceNo =#{sourceNo}
+	</delete>
+	<delete id="deleteBatch" parameterType ="java.util.List">
+	DELETE FROM jy_scm_pur_order_interim WHERE id sourceNo(
+		<foreach item="item" collection="list" open="" separator="," close="" >
+			#{item.sourceNo}
+		</foreach>
+		)
+	</delete>
+</mapper>

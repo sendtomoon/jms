@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.dao.pos.handover.HandoverDao">
+
+    <select id="dataFilter_findByPage" parameterType="Handover"  resultType="Handover">
+    
+        select 
+             a.ORDERNO as orderNo,
+              a.STATUS as status,
+          a.CREATETIME as createTime,
+             a.HANDNUM as handNum,
+             a.HANDAMT as handAmt,
+              a.HANDWT as handWt,
+         a.RECEIVETIME as receiveTime,
+          a.RECEIVENUM as receiveNum,
+          a.RECEIVEAMT as receiveAmt,
+           a.RECEIVEWT as receiveWt,
+          a.DIFFERENCE as difference,
+                b.name as handerName,
+                c.name as receiverName,
+                d.name as orgName,
+               a.ORGID as orgId
+        from
+                 JY_POS_HANDOVER_ORDER a
+             left join JY_BASE_ACCOUNT b on b.id = a.HANDER
+             left join JY_BASE_ACCOUNT c on c.id = a.RECEIVER
+             left join JY_BASE_ORG     d on d.id = a.ORGID
+        where
+            DELTAG = '1'
+            
+        <if test='param.status != null and param.status != ""'>
+			AND a.status like '%'||#{param.status,jdbcType=VARCHAR}||'%'
+		</if>
+		<if test='param.orderNo != null and param.orderNo != ""'>
+			AND a.orderNo like '%'||#{param.orderNo,jdbcType=VARCHAR}||'%'
+		</if>
+		<if test='param.handerName != null and param.handerName != ""'>
+			AND b.name like '%'||#{param.handerName,jdbcType=VARCHAR}||'%'
+		</if>
+		<if test='param.receiverName != null and param.receiverName != ""'>
+			AND c.name like '%'||#{param.receiverName,jdbcType=VARCHAR}||'%'
+		</if>
+		<if test='param.startTime != null and param.startTime != ""'>
+			AND a.receivetime &gt;= #{param.startTime}
+		</if>
+		<if test='param.endTime != null and param.endTime != ""'>
+			AND a.receivetime &lt;= #{param.endTime}
+		</if>
+		order by a.ORDERNO desc
+		
+    </select>
+    
+    <select id="getAddHandoverDetail" parameterType="string" resultType="Handover">
+        select 
+                     c.name as add_cangwei,
+                   a.CATEID as add_Typecode,
+                     b.name as add_Typename,
+            count(a.cateid) as add_num,
+         sum(a.TOTALWEIGHT) as add_wt,
+               sum(a.price) as add_amt,
+                     d.name as orgName
+        from 
+            JY_SCM_IMS_PRODUCT a
+            left join JY_DATA_DICT_ITEM         b on b.value = a.CATEID
+            left join JY_SCM_WAREHOUSE_LOCATION c on c.id = a.LOCATIONID
+            left join JY_BASE_ORG               d on d.id = a.ORGID
+        where 
+            b.DICTID = '6812ec6d1de04fb6899be39bc9f33c94' and
+            a.ORGID = #{string} and
+            a.status != 'D' and 
+             a.status != '0'
+        group by 
+            c.name, a.CATEID, b.name, d.name
+    </select>
+    
+    <select id="findForHander" parameterType="string" resultType="Handover">
+        select
+            name as hander,
+              id as id
+        from
+            JY_BASE_ACCOUNT
+        where
+            ID = #{string}
+    </select>
+    
+    <select id="findForReceiverList" parameterType="string" resultType="Handover">
+        select
+            name as receiver, 
+              id as id,
+       LOGINNAME as loginName
+        from
+            JY_BASE_ACCOUNT
+        where
+            ORGID = #{string}
+    </select>
+    
+    <insert id="addHandoverDetail" parameterType="Handover">
+    
+        insert into 
+            JY_POS_HANDOVER_ORDER
+            (
+            ID,
+            ORDERNO,
+            STATUS,
+            ORGID,
+            CREATETIME,
+            HANDER,
+            HANDNUM,
+            HANDAMT,
+            HANDWT,
+            RECEIVETIME,
+            RECEIVER,
+            RECEIVENUM,
+            RECEIVEAMT,
+            RECEIVEWT,
+            DIFFERENCE,
+            DELTAG
+            )
+        values
+            (
+            #{id},
+            #{orderNo},
+            #{status},
+            #{orgId},
+            sysdate,
+            #{hander},
+            #{handNum},
+            #{handAmt},
+            #{handWt},
+            sysdate,
+            #{receiver},
+            #{receiveNum},
+            #{receiveAmt},
+            #{receiveWt},
+            #{difference},
+            1
+            )
+    
+    </insert>
+    
+    
+    <select id="find" parameterType="Handover"  resultType="Handover">
+    
+        select 
+             a.ORDERNO as orderNo,
+              a.STATUS as status,
+          a.CREATETIME as createTime,
+             a.HANDNUM as handNum,
+             a.HANDAMT as handAmt,
+              a.HANDWT as handWt,
+         a.RECEIVETIME as receiveTime,
+          a.RECEIVENUM as receiveNum,
+          a.RECEIVEAMT as receiveAmt,
+           a.RECEIVEWT as receiveWt,
+          a.DIFFERENCE as difference,
+            a.receiver as receiver,
+                b.name as handerName,
+                c.name as receiverName,
+                d.name as orgName
+        from
+                 JY_POS_HANDOVER_ORDER a
+             left join JY_BASE_ACCOUNT b on b.id = a.HANDER
+             left join JY_BASE_ACCOUNT c on c.id = a.RECEIVER
+             left join JY_BASE_ORG     d on d.id = a.ORGID
+        where
+            orderno = #{orderNo,jdbcType=VARCHAR}
+    </select>
+
+
+    <delete id="delete" parameterType="Handover">
+        delete from JY_POS_HANDOVER_ORDER where ORDERNO = #{orderNo}
+    </delete>
+    
+    <update id="deleteLogic" parameterType="Handover">
+        update JY_POS_HANDOVER_ORDER set DELTAG = '0' where  ORDERNO = #{orderNo}
+    </update>
+    
+    <select id="findSum" parameterType="string" resultType="Handover">
+        select 
+                count(a.id) as add_num,
+         sum(a.TOTALWEIGHT) as add_wt,
+               sum(a.price) as add_amt
+        from 
+            JY_SCM_IMS_PRODUCT a
+            left join JY_BASE_ORG d on d.id = a.ORGID
+        where 
+            a.ORGID = #{string} and
+            a.status != 'D' and 
+             a.status != '0'
+        group by 
+            a.ORGID
+    </select>
+    
+    <update id="modifyStatus"  parameterType="Handover">
+    update JY_POS_HANDOVER_ORDER set status = #{status}  where orderno = #{orderNo}
+    
+    </update>
+    
+    <update id="updateHandoverDetail" parameterType="Handover">
+    update JY_POS_HANDOVER_ORDER set
+            STATUS = #{status},
+            CREATETIME = sysdate ,
+            HANDNUM = #{handNum},
+            HANDAMT = #{handAmt},
+            HANDWT = #{handWt},
+            RECEIVETIME = sysdate ,
+            RECEIVER = #{receiver},
+            RECEIVENUM = #{receiveNum},
+            RECEIVEAMT = #{receiveAmt},
+            RECEIVEWT = #{receiveWt},
+            DIFFERENCE = #{difference},
+            DELTAG =  1
+     where ORDERNO = #{orderNo}
+    </update>
+
+</mapper>
+
+
+
+
+
+
+
+
+
+
+

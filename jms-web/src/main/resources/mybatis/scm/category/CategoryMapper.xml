@@ -1,0 +1,103 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.dao.scm.category.CategoryDao">
+
+	<resultMap id="base" type="ScmCategory"></resultMap>
+	
+    <resultMap id="ZNodes" type="com.jy.common.utils.tree.entity.ZNodes"></resultMap>
+    <insert id="insert"  parameterType="ScmCategory">	
+		insert into JY_SCM_CATEGORY
+		  (id,
+		  pid,
+		  name,
+		  code,
+		  type,
+		  sort,
+		  orgid,
+		  status,
+		  createtime,
+		  createuser
+		  )
+		values
+		  (#{id},
+		   #{pid},
+		   #{name},
+		   #{code},
+		   #{type},
+		   #{sort},
+		   #{orgid},
+		   #{status},
+		   #{createTime},
+		   #{createUser}
+		   )
+	</insert>
+    
+    <select id="findByPage"  resultMap="base" parameterType="ScmCategory">
+        select  t.*,(select jbo.name from jy_base_org jbo where jbo.id=t.orgid ) as orgName,(select jba.name from jy_base_account jba where jba.id= t.createuser) as createName ,(select jsm.name from JY_SCM_CATEGORY jsm  where jsm.id=t.pid ) as pName
+        
+        from
+		       JY_SCM_CATEGORY t
+		 where 1=1
+	   <if test='param.orgid != null and param.orgid != ""'>
+		 t.orgid in(SELECT jbg.id FROM jy_base_org jbg start with jbg.id=#{param.orgid} connect by prior jbg.id = jbg.pid)
+	   </if>
+       <if test='param.status != null and param.status != ""'>
+        	AND t.status=#{param.status}
+       </if> 
+        ORDER BY T.SORT
+    </select>
+    <select id="count"  resultType="int" parameterType="ScmCategory">
+       SELECT count(*) FROM JY_SCM_CATEGORY t  WHERE 1=1 
+    </select> 
+     <select id="findScmCategoryRecordByCode" parameterType="String" resultType="int">
+    	select count(1) from JY_SCM_CATEGORY where code=#{code}
+    </select>
+    
+    <select id="find" parameterType="ScmCategory" resultType="ScmCategory">
+    	select t.*,(select jbo.name from jy_base_org jbo where jbo.id=t.orgid ) as orgName,(select jba.name from jy_base_account jba where jba.id= t.createuser) as createName,(select jsm.name from JY_SCM_CATEGORY jsm  where jsm.id=t.pid ) as pName
+       from JY_SCM_CATEGORY t
+       where t.id = #{id} ORDER BY T.SORT
+    </select>
+    
+    <update id="update" parameterType="ScmCategory">
+    	update JY_SCM_CATEGORY
+	       set 
+	           pid = #{pid},
+	           name = #{name},
+	           type = #{type},
+	           sort = #{sort},
+	           code = #{code},
+	           orgid = #{orgid},
+	           status = #{status},
+	           updatetime =#{updateTime},
+			   updateuser = #{updateUser}
+	     where id = #{id}
+	    
+    </update>
+    <update id="updateScmCategoryState" parameterType="ScmCategory">
+		UPDATE JY_SCM_CATEGORY
+		SET   status = #{status},
+			  updatetime =#{updateTime},
+			  updateuser = #{updateUser}
+		WHERE id=#{id}
+	</update>
+	
+	
+	<update id="batchUpdateCategoryState"  parameterType="java.util.List">  
+	        update JY_SCM_CATEGORY
+	        set status=#{ScmCategory.status},
+	        	updateuser=#{ScmCategory.updateUser},
+	        	updatetime=sysdate
+		    where id in
+		    <foreach collection="list" item="item" open="(" separator="," close=")">
+		    		#{item.id}
+	   		</foreach>
+	</update>
+	<select id="getCategoryTree" resultMap="ZNodes" parameterType="String">
+		select id, name ,pid from JY_SCM_CATEGORY where status='1' ORDER BY SORT
+	</select>
+	<select id="getPreCategoryTree" resultMap="ZNodes" parameterType="String">
+		select id, name ,pid from JY_SCM_CATEGORY T where status='1' ORDER BY SORT
+	</select>
+	
+</mapper>

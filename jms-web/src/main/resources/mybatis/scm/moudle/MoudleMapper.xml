@@ -1,0 +1,110 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.dao.scm.moudle.MoudleDao">
+
+	<resultMap id="base" type="ScmMoudle"></resultMap>
+    
+    <insert id="insert"  parameterType="ScmMoudle">	
+		insert into JY_SCM_MOUDLE
+		  (id,
+		  type,
+		  name,
+		  code,
+		  status,
+		  categoryid,
+		  createTime,
+		  createUser,
+		  description)
+		values
+		  (#{id},
+		   #{type},
+		   #{name},
+		   #{code},
+		   #{status},
+		   #{categoryid},
+		   #{createTime},
+		   #{createUser},
+		   #{description}
+		   )
+	</insert>
+    
+    <select id="findByPage"  resultMap="base" parameterType="ScmMoudle">
+        select  t.* 
+        		from JY_SCM_MOUDLE t
+		 where 1=1
+       <if test='param.status != null and param.status != ""'>
+        	AND t.status=#{param.status}
+       </if> 
+       <if test='param.categoryid != null and param.categoryid != ""'>
+        	AND t.categoryid in (SELECT jsc.id FROM JY_SCM_CATEGORY jsc start with jsc.id=#{param.categoryid} connect by prior jsc.id = jsc.pid)
+       </if>
+        <if test='param.className != null and param.className != ""'>
+        	AND t.categoryid in  (select jsc.id from jy_scm_category jsc  where jsc.pid in (select jsc1.id from jy_scm_category jsc1  where jsc1.name = #{param.className}))
+       </if>
+       <if test='param.jewelry != null and param.jewelry != ""'>
+        	AND t.categoryid in (select jsc.id from jy_scm_category jsc where jsc.name = #{param.jewelry})
+       </if>
+       <if test='param.name != null and param.name != ""'>
+        	AND t.name like '%'||#{param.name}||'%'
+       </if>
+       <if test='param.code != null and param.code != ""'>
+        	AND t.code like '%'||#{param.code}||'%'
+       </if>
+        ORDER BY t.createTime desc
+    </select>
+     <select id="findScmMoudleRecordByCode" parameterType="String" resultType="int">
+    	select count(1) from JY_SCM_MOUDLE where code=#{code}
+    </select>
+    <select id="findScmMoudleByCode" resultMap="base" parameterType="String" >
+    	select id,code from JY_SCM_MOUDLE where code like  '%'||code||'%'
+    </select>
+    
+    <select id="find" parameterType="ScmMoudle" resultType="ScmMoudle">
+    	select t.*
+       from JY_SCM_MOUDLE t
+       where t.id = #{id}
+    </select>
+    
+    <update id="update" parameterType="ScmMoudle">
+    	update JY_SCM_MOUDLE
+	       set 
+	           type = #{type},
+	           name = #{name},
+	           status = #{status},
+	           categoryid = #{categoryid},
+	           description = #{description},
+	           updateTime = #{updateTime},
+	           updateUser = #{updateUser}
+	     where id = #{id}
+	    
+    </update>
+    <update id="updateScmMoudleState" parameterType="ScmMoudle">
+		UPDATE JY_SCM_MOUDLE
+		SET   	status = #{status},
+			    updateTime = #{updateTime},
+	          	updateUser = #{updateUser}
+		WHERE id=#{id}
+	</update>
+	
+	
+	<update id="batchUpdateCategoryState"  parameterType="java.util.List">  
+	        update JY_SCM_MOUDLE
+	        set status=#{moudle.status},
+	        	updateuser=#{moudle.updateUser},
+	        	updatetime=sysdate
+		    where id in
+		    <foreach collection="list" item="item" open="(" separator="," close=")">
+		    		#{item.id}
+	   		</foreach>
+	</update>
+	<select id="findRoleList4Select" resultType="SelectData">
+    	select id as key,code as value from JY_SCM_MOUDLE where status='1'
+    </select>
+	<select id="findAllList" resultMap="base" parameterType="ScmMoudle">
+		select t.*,jsa.name,jsa.path from jy_scm_moudle t left join JY_SYS_ATTACHMENT jsa on t.id=jsa.busnessid
+			where t.status='1'
+			<if test='type != null and type != ""'>
+				and t.type=#{type}
+			</if>
+	</select>
+</mapper>

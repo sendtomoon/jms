@@ -1,0 +1,151 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.dao.scm.inventory.InventoryDao">
+
+	<resultMap id="base" type="ScmInventory">
+	</resultMap>
+
+    <select id="find" parameterType="ScmInventory" resultMap="base">
+		select  i.*,
+		(select a.name from JY_BASE_ACCOUNT a where a.id = i.createuser) as createName,
+		(select a.name from JY_BASE_ACCOUNT a where a.id = i.updateuser) as updateName
+		from JY_SCM_IMS_INVENTORY i where 1 = 1
+		<if test='id != null and id != ""'>
+		     and i.id = #{id}
+		</if>
+    </select>
+    
+    <insert id="insert"  parameterType="ScmInventory">	
+		insert into JY_SCM_IMS_INVENTORY
+		  (
+			id,
+			inventoryno,
+			status,
+			categoryid,
+			groupid,
+			orgid,
+			whouseid,
+			locationid,
+			executetime,
+			createuser,
+			createtime,
+			remark,
+			description
+		  )
+		values
+		  (
+		   #{id, jdbcType=VARCHAR},
+		   #{inventoryNo, jdbcType=VARCHAR},
+		   #{status, jdbcType=VARCHAR},
+		   #{categoryId, jdbcType=VARCHAR},
+		   #{groupId, jdbcType=VARCHAR},
+		   #{orgId, jdbcType=VARCHAR},
+		   #{whouseId, jdbcType=VARCHAR},
+		   #{locationId, jdbcType=VARCHAR},
+		   #{executeTime},
+		   #{createUser, jdbcType=VARCHAR},
+		   sysdate,
+		   #{remark, jdbcType=VARCHAR},
+		   #{description, jdbcType=VARCHAR}
+		  )
+	</insert>
+    
+	<select id="findByPage"  resultMap="base" parameterType="ScmInventory">
+		select i.*,
+		(select a.name from JY_BASE_ACCOUNT a where a.id = i.createuser) as createName,
+		(select a.name from JY_BASE_ACCOUNT a where a.id = i.updateuser) as updateName,
+		(select a.name from JY_BASE_ACCOUNT a where a.id = i.checkuser) as checkName,
+		(select o.name from JY_BASE_ORG o where i.orgid = o.id) as orgName,
+		(select w.name from JY_SCM_WAREHOUSE w where i.whouseid = w.id) as whouseName,
+		(select l.name from JY_SCM_WAREHOUSE_LOCATION l where i.locationid = l.id) as locationName,
+		(select t.name from JY_DATA_DICT d join JY_DATA_DICT_ITEM t on t.dictid = d.id where d.datakey='SCM_PRO_CATE' and t.value = i.categoryid) as categoryName,
+		(select t.name from JY_DATA_DICT d join JY_DATA_DICT_ITEM t on t.dictid = d.id where d.datakey='SCM_PRO_GROUP' and t.value = i.groupid) as groupName 
+		from JY_SCM_IMS_INVENTORY i where 1 = 1 and i.delflag != '1'
+		<if test='param.status != null and param.status != ""'>
+			AND i.status = #{param.status}
+		</if> 
+		<if test='param.inventoryNo != null and param.inventoryNo != ""'>
+			AND i.inventoryNo like '%'||#{param.inventoryNo}||'%'
+		</if>
+		<if test='param.categoryId != null and param.categoryId != ""'>
+			AND i.categoryId = #{param.categoryId}
+		</if>
+		<if test='param.groupId != null and param.groupId != ""'>
+			AND i.groupId = #{param.groupId}
+		</if>
+		<if test='param.inventoryStartDate != null and param.inventoryStartDate != ""'>
+			AND i.executeTime &gt;= #{param.inventoryStartDate}
+		</if>
+		<if test='param.inventoryEndDate != null and param.inventoryEndDate != ""'>
+			AND i.executeTime &lt;= #{param.inventoryEndDate}
+		</if>
+		<if test='param.orgId != null and param.orgId != ""'>
+			AND i.orgid IN (SELECT jbg.id FROM jy_base_org jbg start with jbg.id=#{param.orgId} connect by prior jbg.id = jbg.pid)
+		</if>
+		order by i.status
+    </select>
+    
+    <select id="findForDetail"  resultMap="base" parameterType="ScmInventory">
+		select i.*,
+		(select a.name from JY_BASE_ACCOUNT a where a.id = i.createuser) as createName,
+		(select a.name from JY_BASE_ACCOUNT a where a.id = i.updateuser) as updateName,
+		(select a.name from JY_BASE_ACCOUNT a where a.id = i.checkuser) as checkName,
+		(select o.name from JY_BASE_ORG o where i.orgid = o.id) as orgName,
+		(select w.name from JY_SCM_WAREHOUSE w where i.whouseid = w.id) as whouseName,
+		(select l.name from JY_SCM_WAREHOUSE_LOCATION l where i.locationid = l.id) as locationName,
+		(select t.name from JY_DATA_DICT d join JY_DATA_DICT_ITEM t on t.dictid = d.id where d.datakey='SCM_PRO_CATE' and t.value = i.categoryid) as categoryName,
+		(select t.name from JY_DATA_DICT d join JY_DATA_DICT_ITEM t on t.dictid = d.id where d.datakey='SCM_PRO_GROUP' and t.value = i.groupid) as groupName 
+		from JY_SCM_IMS_INVENTORY i where i.delflag != '1' AND i.status in ('1', '2') 
+		<if test='param.inventoryNo != null and param.inventoryNo != ""'>
+			AND i.inventoryNo like '%'||#{param.inventoryNo}||'%'
+		</if>
+		<if test='param.orgId != null and param.orgId != ""'>
+			AND i.orgid IN (SELECT jbg.id FROM jy_base_org jbg start with jbg.id=#{param.orgId} connect by prior jbg.id = jbg.pid)
+		</if>
+		order by i.createtime desc
+    </select>
+    
+    <update id="update" parameterType="ScmInventory">
+		update JY_SCM_IMS_INVENTORY
+			set 
+				inventoryno = #{inventoryNo, jdbcType=VARCHAR},
+				status = #{status, jdbcType=VARCHAR},
+				categoryid = #{categoryId, jdbcType=VARCHAR},
+				groupid = #{groupId, jdbcType=VARCHAR},
+				orgid = #{orgId, jdbcType=VARCHAR},
+				whouseid = #{whouseId, jdbcType=VARCHAR},
+				locationid = #{locationId, jdbcType=VARCHAR},
+				executetime = #{executeTime, jdbcType=DATE},
+				updateuser = #{updateUser, jdbcType=VARCHAR},
+				updatetime = sysdate,
+				remark = #{remark, jdbcType=VARCHAR},
+				description = #{description, jdbcType=VARCHAR}
+		where id = #{id, jdbcType=VARCHAR}
+    </update>
+
+	<delete id="delete" parameterType="ScmInventory">
+		delete from jy_scm_ims_inventory where id = #{id, jdbcType=VARCHAR}
+	</delete>
+	
+	<update id="deleteById" parameterType="String">
+		update jy_scm_ims_inventory set delflag = '1'
+		WHERE id = #{id}
+	</update>
+	
+	<update id="batchDeleteById" parameterType="java.util.List">
+		update jy_scm_ims_inventory set delflag = '1' 
+		where id in
+		<foreach collection="list" item="item" open="(" separator="," close=")">
+		    #{item}
+	    </foreach>
+	</update>
+	
+	<update id="updateStatus" parameterType="ScmInventory">
+		update jy_scm_ims_inventory set status = #{status, jdbcType=VARCHAR} where id = #{id, jdbcType=VARCHAR}
+	</update>
+	
+	<select id="findById" parameterType="String" resultMap="base">
+		select  i.* from jy_scm_ims_inventory i where i.id = #{inventoryId}
+    </select>
+   
+</mapper>

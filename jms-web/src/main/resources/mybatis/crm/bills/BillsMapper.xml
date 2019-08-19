@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.dao.crm.bills.BillsDao">
+	<resultMap id="bills" type="bills" ></resultMap>
+	<resultMap id="posbill" type="posbill" ></resultMap>
+	<resultMap id="detail" type="posbillDetail" ></resultMap>
+	
+	<select id="findByPage" resultMap="bills" parameterType="bills">
+	    select b.*,m.cardno cardNo from jy_crm_bills b left join jy_pos_bill b1 on b.orderno = b1.billno
+		left join jy_crm_members m on b.memberid = m.id
+	       where b.delFalg='0' and b1.orgId=#{param.orgId,jdbcType=VARCHAR}
+	    <if test='param.orderNo != null and param.orderNo != ""'>
+		     and b1.billno like '%'||#{param.orderNo}||'%'
+		</if>
+    	<if test='param.status != null and param.status != ""'>
+		     and b.status=#{param.status}
+		</if>
+		<if test='param.cardNo != null and param.cardNo != ""'>
+		     and m.cardno=#{param.cardNo}
+		</if>
+		order by b.createtime desc
+	</select>
+	
+	<update id="deleteBills">
+		update jy_crm_bills set delfalg='1' where id=#{id,jdbcType=VARCHAR}
+	</update>
+	
+	<select id="findDetail" resultMap="detail">
+		 select b.cashier     cashier,
+		       b.customer    customer,
+		       b.vipcode     vipCode,
+		       b.assistant1  assistant1,
+		       (select o1.name from jy_base_account o1 where o1.id = b.assistant1) assistantName1,
+		       b.promrate1   promrate1,
+		       b.leader1     leader1,
+		       (select o1.name from jy_base_account o1 where o1.id = b.assistant2) assistantName2,
+		       b.assistant2  assistant2,
+		       (select o1.name from jy_base_account o1 where o1.id = b.leader1) leaderName1,
+		       b.promrate2   promrate2,
+		       b.leader2     leader2,
+		       (select o1.name from jy_base_account o1 where o1.id = b.leader2) leaderName2,
+		       b.saletime    saleTime,
+		       b.actualamt   actualAmt,
+		       b.earnest     earnest,
+		       b.note        notes,
+		       b.storeid     storeId,
+		       d.barcode     barCode,
+		       d.name        name,
+		       d.price       price,
+		       d.salecost    saleCost,
+		       d.promcoin    promCoin,
+		       d.saleprom    saleProm,
+		       d.gift        gift,
+		       d.count       count,
+		       d.actualprice actualPrice,
+		       d.goldtype    goldType,
+		       d.goldprice   goldPrice,
+		       d.goldullage  goldUllage,
+		       d.weight      weight,
+		       d.actualwt    actualWt,
+		       d.poundage    poundage,
+		       d.certullage  certUllage,
+		       d.goldullage  goldUllage,
+		       d.stoneullage stoneUllage,
+		       d.note        note,
+		       d.type type,
+		       d.coin coin
+		  from jy_pos_bill_detail d
+		  left join jy_pos_bill b
+		    on d.billid = b.id
+		  where b.billno=#{orderNo,jdbcType=VARCHAR}
+	</select>
+	
+	<select id="findPosBill" resultMap="posbill">
+		select b.billno billNo,
+			b.id id,
+			b.actualamt actualAmt,
+	       (select name from jy_base_account where id = b.createuser) createUser,
+	       (select o1.name from jy_base_org o1 where o1.id = b.orgid) orgName,
+	       b.createtime createTime,
+	       b.status status,
+	       (select name from jy_base_account where id = b.checkuser) checkUser,
+	       (select o1.name from jy_base_org o1 where o1.id = b.checkorg) checkOrgName,
+	       b.checktime checkTime,
+	       b.vipcode vipCode,
+	       b.bussitype bussiType,
+	       b.cashier     cashier,
+	       (select name from jy_base_account where id = b.cashier) cashierName,
+	       b.customer    customer,
+	       b.vipcode     vipCode,
+	       b.assistant1  assistant1,
+	       b.promrate1   promrate1,
+	       b.leader1     leader1,
+	       b.assistant2  assistant2,
+	       b.promrate2   promrate2,
+	       b.leader2     leader2,
+	       b.saletime    saleTime,
+	       b.actualamt   actualAmt,
+	       b.earnest     earnest,
+	       b.note        notes,
+	       b.storeid     storeId,
+	       (select o1.name from jy_base_account o1 where o1.id = b.assistant1) assistantName1,
+	       (select o1.name from jy_base_account o1 where o1.id = b.assistant2) assistantName2,
+	       (select o1.name from jy_base_account o1 where o1.id = b.leader1) leaderName1,
+	       (select o1.name from jy_base_account o1 where o1.id = b.leader2) leaderName2,
+           (select g.longname from jy_base_org g where g.id=b.storeid)storeName,
+           b.coin coin,
+           b.saleamt saleAmt,
+           b.specialrabate specialRabate,
+           b.rejectcause rejectCause,
+           b.originalno originalNo
+	  from jy_pos_bill b
+	  where b.billno = #{orderNo,jdbcType=VARCHAR}
+	</select>
+	
+	<insert id="insert"  parameterType="posPaymentBill">
+        insert into jy_crm_bills
+        (
+	        id,
+	        memberId,
+	        orderno,
+	        status,
+	        payAmount,
+	        createTime,
+	        types,
+	        payIntegral,
+	        getIntegral,
+	        delFalg
+	        )
+	        values
+	        (
+	        #{id, jdbcType=VARCHAR},
+	        #{memberId, jdbcType=VARCHAR},
+	        #{orderNo, jdbcType=VARCHAR},
+	        #{status, jdbcType=VARCHAR},
+	        #{payAmount, jdbcType=DECIMAL},
+	        sysdate,
+	        #{types, jdbcType=VARCHAR},
+	        #{payIntegral, jdbcType=NUMERIC},
+	        #{getIntegral, jdbcType=NUMERIC},
+	        '0'
+        )
+    </insert>
+    
+    <select id="findBills" resultMap="bills">
+    	select * from jy_crm_bills where id=#{id, jdbcType=VARCHAR}
+    </select>
+</mapper>

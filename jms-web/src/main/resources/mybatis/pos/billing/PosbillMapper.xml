@@ -1,0 +1,413 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.dao.pos.billing.PosbillDao">
+	<resultMap id="posbill" type="posbill" ></resultMap>
+	<resultMap id="detail" type="posbillDetail" ></resultMap>
+	<resultMap id="scmMembers" type="scmMembers" ></resultMap>
+	<resultMap id="pay" type="posPayments"></resultMap>
+	<resultMap id="bills" type="bills" ></resultMap>
+	
+	<select id="findByPage" resultMap="posbill" parameterType="posbill">
+	    select 
+	         b.id id,
+	         b.billno billNo,
+	         (select name from jy_base_account where id = b.createuser) createUser,
+	         (select o1.name from jy_base_org o1 where o1.id = b.orgid) orgName,
+	         b.createtime createTime,
+	         b.status status,
+	         (select name from jy_base_account where id = b.checkuser) checkUser,
+	         (select o1.name from jy_base_org o1 where o1.id = b.checkorg) checkOrgName,
+	         b.checktime checkTime,
+	         b.vipcode vipCode,
+	         b.bussitype bussiType,
+	         b.customer customer,
+	         (select name from jy_base_account where id = b.cashier) cashierName,
+	         (select o1.name from jy_base_account o1 where o1.id = b.assistant1) assistantName1,
+	         b.actualamt actualAmt,
+	         b.saletime saleTime
+	    from jy_pos_bill b
+	       where 1=1
+	    <if test='param.billNo != null and param.billNo != ""'>
+		     and b.billno like '%'||#{param.billNo}||'%'
+		</if>
+    	<if test='param.status != null and param.status != ""'>
+		     and b.status=#{param.status}
+		</if>
+		<if test='param.orgId != null and param.orgId != ""'>
+		     and b.orgid=#{param.orgId}
+		</if>
+		order by b.createtime desc
+	</select>
+	<select id="find" resultMap="posbill" parameterType="posbill">
+		 select 
+	         *
+	    from jy_pos_bill b
+	    where id=#{id}
+	</select>
+	<insert id="insert">
+		insert into jy_pos_bill
+		  (ID,
+		  BILLNO,
+		  SALETIME,
+		  SALEAMT,
+		  ACTUALAMT,
+		  BUSSITYPE,
+		  STATUS,
+		  VIPCODE,
+		  REFERRER,
+		  CUSTOMER,
+		  ORGID,
+		  CREATEUSER,
+		  CREATETIME,
+		  UPDATEUSER,
+		  UPDATEORG,
+		  UPDATETIME,
+		  CHECKUSER,
+		  CHECKORG,
+		  CHECKTIME,
+		  CASHIER,
+		  ASSISTANT1,
+		  PROMRATE1,
+		  LEADER1,
+		  ASSISTANT2,
+		  PROMRATE2,
+		  LEADER2,
+		  STOREID,
+		  COIN,
+		  EARNEST,
+		  SPECIALRABATE,
+		  REJECTCAUSE,
+		  OFFSETCAUSE,
+		  ORIGINALNO,
+		  NOTE
+		  )values(
+		  #{id,jdbcType=VARCHAR},
+		  #{billNo,jdbcType=VARCHAR},
+		  sysdate,
+		  #{saleAmt,jdbcType=NUMERIC},
+		  #{actualAmt,jdbcType=NUMERIC},
+		  #{bussiType,jdbcType=VARCHAR},
+		  #{status,jdbcType=VARCHAR},
+		  #{vipCode,jdbcType=VARCHAR},
+		  #{referrer,jdbcType=VARCHAR},
+		  #{customer,jdbcType=VARCHAR},
+		  #{orgId,jdbcType=VARCHAR},
+		  #{createUser,jdbcType=VARCHAR},
+		  sysdate,
+		  #{updateUser,jdbcType=VARCHAR},
+		  #{updateOrg,jdbcType=VARCHAR},
+		  #{updateTime,jdbcType=VARCHAR},
+		  #{checkUser,jdbcType=VARCHAR},
+		  #{checkOrg,jdbcType=VARCHAR},
+		  #{checkTime,jdbcType=VARCHAR},
+		  #{cashier,jdbcType=VARCHAR},
+		  #{assistant1,jdbcType=VARCHAR},
+		  #{promrate1,jdbcType=NUMERIC},
+		  #{leader1,jdbcType=VARCHAR},
+		  #{assistant2,jdbcType=VARCHAR},
+		  #{promrate2,jdbcType=NUMERIC},
+		  #{leader2,jdbcType=VARCHAR},
+		  #{storeId,jdbcType=VARCHAR},
+		  #{coin,jdbcType=VARCHAR},
+		  #{earnest,jdbcType=VARCHAR},
+		  #{specialRabate,jdbcType=VARCHAR},
+		  #{rejectCause,jdbcType=VARCHAR},
+		  #{offsetcause,jdbcType=VARCHAR},
+		  #{originalNo,jdbcType=VARCHAR},
+		  #{notes,jdbcType=VARCHAR}
+		  )
+	</insert>
+	
+	
+	<insert id="insertDetail" parameterType="java.util.List">
+		<foreach collection="list" item="item" index="index" open="begin" close=";end;" separator=";">
+			insert into jy_pos_bill_detail(
+				  ID,
+				  BILLID,
+				  BILLNO,
+				  TYPE,
+				  BARCODE,
+				  NAME,
+				  COUNT,
+				  WEIGHT,
+				  ACTUALWT,
+				  PRICE,
+				  ACTUALPRICE,
+				  COIN,
+				  COINCHANGE,
+				  GIFT,
+				  SALEPROM,
+				  PROMTYPE,
+				  PROMCOIN,
+				  SALECOST,
+				  GOLDPRICE,
+				  SALEDATE,
+				  GOLDULLAGE,
+				  STONEULLAGE,
+				  CERTULLAGE,
+				  POUNDAGE,
+				  REMARKS,
+				  NOTE
+				  )values(
+				  #{item.id,jdbcType=VARCHAR},
+				  #{item.billId,jdbcType=VARCHAR},
+				  #{item.billNo,jdbcType=VARCHAR},
+				  #{item.type,jdbcType=VARCHAR},
+				  #{item.barCode,jdbcType=VARCHAR},
+				  #{item.name,jdbcType=VARCHAR},
+				  #{item.count,jdbcType=NUMERIC},
+				  #{item.weight,jdbcType=NUMERIC},
+				  #{item.actualWt,jdbcType=NUMERIC},
+				  #{item.price,jdbcType=VARCHAR},
+				  #{item.actualPrice,jdbcType=NUMERIC},
+				  #{item.coin,jdbcType=NUMERIC},
+				  #{item.coinChange,jdbcType=NUMERIC},
+				  #{item.gift,jdbcType=VARCHAR},
+				  #{item.saleProm,jdbcType=NUMERIC},
+				  #{item.promType,jdbcType=VARCHAR},
+				  #{item.promCoin,jdbcType=VARCHAR},
+				  #{item.saleCost,jdbcType=NUMERIC},
+				  #{item.goldPrice,jdbcType=NUMERIC},
+				  sysdate,
+				  #{item.goldUllage,jdbcType=NUMERIC},
+				  #{item.stoneUllage,jdbcType=NUMERIC},
+				  #{item.certUllage,jdbcType=NUMERIC},
+				  #{item.poundage,jdbcType=NUMERIC},
+				  #{item.remarks,jdbcType=VARCHAR},
+				  #{item.note,jdbcType=VARCHAR}
+				  )
+		</foreach>
+	</insert>
+	
+	
+	<update id="update" parameterType="posbill">
+			update jy_pos_bill set
+				  BILLNO = #{billNo,jdbcType=VARCHAR},
+				  SALETIME = sysdate,
+				  SALEAMT = #{saleAmt,jdbcType=NUMERIC},
+				  ACTUALAMT = #{actualAmt,jdbcType=NUMERIC},
+				  BUSSITYPE = #{bussiType,jdbcType=VARCHAR},
+				  STATUS = #{status,jdbcType=VARCHAR},
+				  VIPCODE = #{vipCode,jdbcType=VARCHAR},
+				  REFERRER = #{referrer,jdbcType=VARCHAR},
+				  CUSTOMER = #{customer,jdbcType=VARCHAR},
+				  UPDATEUSER = #{updateUser,jdbcType=VARCHAR},
+				  UPDATEORG = #{updateOrg,jdbcType=VARCHAR},
+				  UPDATETIME = sysdate,
+				  CASHIER = #{cashier,jdbcType=VARCHAR},
+				  ASSISTANT1 = #{assistant1,jdbcType=VARCHAR},
+				  PROMRATE1 = #{promrate1,jdbcType=NUMERIC},
+				  LEADER1 = #{leader1,jdbcType=VARCHAR},
+				  ASSISTANT2 = #{assistant2,jdbcType=VARCHAR},
+				  PROMRATE2 = #{promrate2,jdbcType=NUMERIC},
+				  LEADER2 = #{leader2,jdbcType=VARCHAR},
+				  STOREID = #{storeId,jdbcType=VARCHAR},
+				  COIN = #{coin,jdbcType=VARCHAR},
+				  EARNEST = #{earnest,jdbcType=VARCHAR},
+				  SPECIALRABATE = #{specialRabate,jdbcType=VARCHAR},
+				  OFFSETCAUSE = #{offsetcause,jdbcType=VARCHAR},
+				  ORIGINALNO = #{originalNo,jdbcType=VARCHAR},
+				  NOTE = #{note,jdbcType=VARCHAR}
+			where id = #{id,jdbcType=VARCHAR}
+	</update>
+	
+	<update id="updateDetail" parameterType="java.util.List">
+		<foreach collection="list" item="item" index="index" open="begin" close=";end;" separator=";">
+			update jy_pos_bill_detail set
+				  BILLID = #{item.billId,jdbcType=VARCHAR},
+				  BILLNO = #{item.billNo,jdbcType=VARCHAR},
+				  TYPE = #{item.type,jdbcType=VARCHAR},
+				  BARCODE = #{item.barCode,jdbcType=VARCHAR},
+				  NAME = #{item.name,jdbcType=VARCHAR},
+				  COUNT = #{item.count,jdbcType=NUMERIC},
+				  WEIGHT = #{item.weight,jdbcType=NUMERIC},
+				  ACTUALWT = #{item.actualWt,jdbcType=NUMERIC},
+				  PRICE = #{item.price,jdbcType=VARCHAR},
+				  ACTUALPRICE = #{item.actualPrice,jdbcType=NUMERIC},
+				  COIN = #{item.coin,jdbcType=NUMERIC},
+				  COINCHANGE = #{item.coinChange,jdbcType=NUMERIC},
+				  GIFT = #{item.gift,jdbcType=VARCHAR},
+				  SALEPROM = #{item.saleProm,jdbcType=NUMERIC},
+				  PROMTYPE = #{item.promType,jdbcType=VARCHAR},
+				  PROMCOIN = #{item.promCoin,jdbcType=VARCHAR},
+				  SALECOST = #{item.saleCost,jdbcType=NUMERIC},
+				  GOLDPRICE = #{item.goldPrice,jdbcType=NUMERIC},
+				  sysdate,
+				  GOLDULLAGE = #{item.goldUllage,jdbcType=NUMERIC},
+				  STONEULLAGE = #{item.stoneUllage,jdbcType=NUMERIC},
+				  CERTULLAGE = #{item.certUllage,jdbcType=NUMERIC},
+				  POUNDAGE = #{item.poundage,jdbcType=NUMERIC},
+				  REMARKS = #{item.remarks,jdbcType=VARCHAR},
+				  NOTE = #{item.note,jdbcType=VARCHAR}
+			where id = #{item.billId,jdbcType=VARCHAR}
+		</foreach>
+	</update>
+	
+	<update id="updateStatus">
+		update jy_pos_bill set status = #{status,jdbcType=VARCHAR}
+		where id = #{id,jdbcType=VARCHAR}
+	</update>
+	
+	<update id="updateProductStatus">
+		update JY_SCM_IMS_PRODUCT set status=#{status,jdbcType=VARCHAR}
+			where code = #{barCode,jdbcType=VARCHAR}
+	</update>
+	
+	<select id="findProduct" resultMap="detail">
+		select p.code barCode,p.name name,p.price price,p.totalWeight actualWt,p.totalWeight weight from JY_SCM_IMS_PRODUCT p where p.code=#{barCode,jdbcType=VARCHAR} and status='B' and orgid = #{orgId,jdbcType=VARCHAR}
+	</select>
+	
+	<select id="findPosBill" resultMap="posbill">
+		select b.billno billNo,
+			b.id id,
+			b.actualamt actualAmt,
+	       (select name from jy_base_account where id = b.createuser) createUser,
+	       (select o1.name from jy_base_org o1 where o1.id = b.orgid) orgName,
+	       b.createtime createTime,
+	       b.status status,
+	       (select name from jy_base_account where id = b.checkuser) checkUser,
+	       (select o1.name from jy_base_org o1 where o1.id = b.checkorg) checkOrgName,
+	       b.checktime checkTime,
+	       b.vipcode vipCode,
+	       b.bussitype bussiType,
+	       b.cashier     cashier,
+	       (select name from jy_base_account where id = b.cashier) cashierName,
+	       b.customer    customer,
+	       b.vipcode     vipCode,
+	       b.assistant1  assistant1,
+	       b.promrate1   promrate1,
+	       b.leader1     leader1,
+	       b.assistant2  assistant2,
+	       b.promrate2   promrate2,
+	       b.leader2     leader2,
+	       b.saletime    saleTime,
+	       b.actualamt   actualAmt,
+	       b.earnest     earnest,
+	       b.note        notes,
+	       b.storeid     storeId,
+	       (select o1.name from jy_base_account o1 where o1.id = b.assistant1) assistantName1,
+	       (select o1.name from jy_base_account o1 where o1.id = b.assistant2) assistantName2,
+	       (select o1.name from jy_base_account o1 where o1.id = b.leader1) leaderName1,
+	       (select o1.name from jy_base_account o1 where o1.id = b.leader2) leaderName2,
+           (select g.longname from jy_base_org g where g.id=b.storeid)storeName,
+           b.coin coin,
+           b.saleamt saleAmt,
+           b.specialrabate specialRabate,
+           b.rejectcause rejectCause,
+           b.originalno originalNo
+	  from jy_pos_bill b
+	  where b.id = #{id,jdbcType=VARCHAR}
+	</select>
+	
+	<select id="getOrg" resultMap="posbill">
+		select sysdate saleTime,
+		(select o.name from jy_base_org o where o.id = #{orgId,jdbcType=VARCHAR})storeName,
+		(select name from jy_base_account where id = #{cashier,jdbcType=VARCHAR})cashierName from dual
+	</select>
+	
+	<select id="getDetailByCode" resultMap="detail">
+		select d.price price,d.saledate saleDate,d.actualprice actualPrice,d.actualwt actualWt from jy_pos_bill_detail d,jy_pos_bill b where d.billid=b.id and d.barcode=#{barCode,jdbcType=VARCHAR} and d.type='1'
+	</select>
+	
+	<select id="findDetail" resultMap="detail">
+		select b.cashier     cashier,
+		       b.customer    customer,
+		       b.vipcode     vipCode,
+		       b.assistant1  assistant1,
+		       (select o1.name from jy_base_account o1 where o1.id = b.assistant1) assistantName1,
+		       b.promrate1   promrate1,
+		       b.leader1     leader1,
+		       (select o1.name from jy_base_account o1 where o1.id = b.assistant2) assistantName2,
+		       b.assistant2  assistant2,
+		       (select o1.name from jy_base_account o1 where o1.id = b.leader1) leaderName1,
+		       b.promrate2   promrate2,
+		       b.leader2     leader2,
+		       (select o1.name from jy_base_account o1 where o1.id = b.leader2) leaderName2,
+		       b.saletime    saleTime,
+		       b.actualamt   actualAmt,
+		       b.earnest     earnest,
+		       b.note        notes,
+		       b.storeid     storeId,
+		       d.barcode     barCode,
+		       d.name        name,
+		       d.price       price,
+		       d.salecost    saleCost,
+		       d.promcoin    promCoin,
+		       d.saleprom    saleProm,
+		       d.gift        gift,
+		       d.count       count,
+		       d.actualprice actualPrice,
+		       d.goldtype    goldType,
+		       d.goldprice   goldPrice,
+		       d.goldullage  goldUllage,
+		       d.weight      weight,
+		       d.actualwt    actualWt,
+		       d.poundage    poundage,
+		       d.certullage  certUllage,
+		       d.goldullage  goldUllage,
+		       d.stoneullage stoneUllage,
+		       d.note        note,
+		       d.type type
+		  from jy_pos_bill_detail d
+		  left join jy_pos_bill b
+		    on d.billid = b.id
+		  where b.id=#{id,jdbcType=VARCHAR}
+		
+	</select>
+	
+	<select id="getGoldPrice" resultMap="detail">
+		select l.price goldPrice from jy_pos_price_config l where l.code=#{goldType,jdbcType=VARCHAR}
+	</select>
+	
+	<select id="getEarnest" resultMap="posbill">
+		select o.amount actualAmt,
+			o.vipcode vipCode,
+			o.customer customer
+		from JY_POS_EARNEST_ORDER o where o.orderno = #{earnest,jdbcType=VARCHAR} and o.status='1' and o.type='1'
+	</select>
+	
+	<select id="getStore" resultMap="posbill">
+		select a.id key,a.longname value from jy_base_org a where companyid in (select o.companyid from jy_base_org o where id=#{orgId,jdbcType=VARCHAR}) and a.orggrade='4'
+	</select>
+	
+	<select id="getAssistant" resultMap="posbill">
+		select b.id key,b.name value from jy_base_org a left join  jy_base_account b on a.id=b.orgid where a.orggrade='4' and a.id=#{orgId,jdbcType=VARCHAR}
+	</select>
+	
+	<update id="updateEarnest">
+		update JY_POS_EARNEST_ORDER r set r.status = #{status,jdbcType=VARCHAR} where r.orderno = #{earnest,jdbcType=VARCHAR}
+	</update>
+	
+	<delete id="deletePosBill">
+		<foreach collection="list" item="item" index="index" open="begin" close=";end;" separator=";">
+			delete jy_pos_bill where id = #{item.id,jdbcType=VARCHAR}
+		</foreach>
+	</delete>
+	
+	<delete id="deleteDetail">
+		<foreach collection="list" item="item" index="index" open="begin" close=";end;" separator=";">
+			delete jy_pos_bill_detail where billId = #{item.billId,jdbcType=VARCHAR}
+		</foreach>
+	</delete>
+	
+	<update id="updateEarnestList">
+		<foreach collection="list" item="item" index="index" open="begin" close=";end;" separator=";">
+			update JY_POS_EARNEST_ORDER r set r.status = #{item.status,jdbcType=VARCHAR} where r.orderno = #{item.earnest,jdbcType=VARCHAR}
+		</foreach>
+	</update>
+	
+	<select id="getVip" resultMap="scmMembers">
+		select m.id id,m.name name,m.cardno cardNo,m.mobile mobile from JY_CRM_MEMBERS m where m.cardno=#{cardNo,jdbcType=VARCHAR} or m.mobile=#{cardNo,jdbcType=VARCHAR}
+	</select>
+	
+	<select id="findPay" resultMap="pay">
+    	select t.*
+       from jy_pos_payments t
+       where t.orderid = #{orderId,jdbcType=VARCHAR} and t.orderno = #{orderNo,jdbcType=VARCHAR}
+    </select>
+    
+    <delete id="deleteBills">
+    	delete jy_crm_bills where memberid=(select id from jy_crm_members s where s.cardno = #{vipCode,jdbcType=VARCHAR}) 
+    		and orderno=#{billNo,jdbcType=VARCHAR}
+    </delete>
+</mapper>

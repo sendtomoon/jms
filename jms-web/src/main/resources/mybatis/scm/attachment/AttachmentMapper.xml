@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.dao.scm.attachment.AttachmentDao">
+	<!--  com.jy.entity.scm.attachment.Accessory -->
+    <resultMap id="base" type="Attachment">
+    	
+    </resultMap> 
+    
+    
+    <select id="findByPage"  resultMap="base" parameterType="Attachment">
+      select t.id as id,t.busnessid as busnessid,t.name as name,t.path as path,t.createtime as createtime,t.updatetime as updatetime from JY_SYS_ATTACHMENT t 
+      where 1=1
+      <if test='param.busnessid != null and param.busnessid != ""'>
+        	AND t.busnessid=#{param.busnessid}
+       </if>
+    </select>
+    
+    <select id="find"  resultMap="base" parameterType="Attachment">
+      select * from JY_SYS_ATTACHMENT t where 1=1 
+      <if test="id != null and id !=''">
+        	and t.id=#{id}
+       </if>
+    </select>
+    
+    <select id="getAccessoryById" resultMap="base">
+		select * from JY_SYS_ATTACHMENT where id=#{id}
+	</select>
+    
+    
+    <update id="update" parameterType="Attachment">
+		UPDATE JY_SYS_ATTACHMENT 
+		SET name =#{name},
+			path=#{path}, 
+			updatetime =#{updateTime}
+		WHERE id=#{id}
+	</update>
+	
+	<insert id="insert" parameterType="Attachment">
+    	<![CDATA[ 
+    		insert into JY_SYS_ATTACHMENT(id,busnessid,name,path,createtime,updatetime) values(#{id},#{busnessid},#{name},#{path},#{createTime},#{updateTime})
+    	]]>
+    </insert>
+    
+    <delete id="delete" parameterType="Attachment">
+    	delete from JY_SYS_ATTACHMENT WHERE id=#{id}
+	</delete>
+	
+	<delete id="removeDistrict" parameterType="java.util.List">
+		delete from JY_SYS_ATTACHMENT WHERE id in(
+		<foreach item="d" collection="list" open="" separator="," close="">
+				#{d.id}
+		</foreach>
+		)
+	</delete>
+	
+	 <select id="getByBusnessid" resultMap="base">
+		select * from JY_SYS_ATTACHMENT where busnessid=#{busnessid}
+	</select>
+</mapper>

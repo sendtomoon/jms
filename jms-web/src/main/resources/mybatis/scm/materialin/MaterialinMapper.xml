@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.dao.scm.materialin.MaterialinDao">
+	<resultMap id="base" type="materialin" ></resultMap>
+	<select id="findByPage" resultMap="base" parameterType="materialin">
+	    select t.id,t.code,m.name as remarks,o.name as orgid,h.name as warehouseid,l.name as locationid,t.num,t.weight,t.status,t.createtime from jy_scm_ims_materialin t 
+	    left join jy_scm_ims_material m on  t.code=m.code 
+	    left join jy_scm_warehouse h on h.id=t.warehouseid
+	    left join jy_scm_warehouse_location l on l.id=t.locationid 
+	    left join jy_base_org o on o.id=t.orgid
+	    where 1=1
+    	<if test='param.status != null and param.status != ""'>
+		     and t.status=#{param.status}
+		</if>
+		<if test='param.code != null and param.code != ""'>
+		     and t.code like '%'||#{param.code}||'%'
+		</if>
+		order by t.createtime desc
+	</select>
+	
+	<select id="dataFilter_findByPage" resultMap="base" parameterType="materialin">
+		select t.id,m.name as name,t.code,h.name as warehouseid,l.name as locationid,m.feetype as type,t.availnum,t.availweight,t.orgId,
+		(select t.name from JY_DATA_DICT d join JY_DATA_DICT_ITEM t on t.dictid=d.id where d.datakey='SCM_DATA_COLOR' and t.value=m.color) as color ,
+	  	(select t.name from JY_DATA_DICT d join JY_DATA_DICT_ITEM t on t.dictid=d.id where d.datakey='SCM_DATA_CLARITY' and t.value=m.clartity)  AS clartity,
+	  	(select t.name from JY_DATA_DICT d join JY_DATA_DICT_ITEM t on t.dictid=d.id where d.datakey='SCM_DATA_CUT' and t.value=m.cut) AS cut
+		from jy_scm_ims_materialin t 
+		left join jy_scm_ims_material m on t.code=m.code
+		left join jy_scm_warehouse h on h.id=t.warehouseid
+		left join jy_scm_warehouse_location l on l.id=t.locationid
+		<!-- left join (select name,value from Jy_Data_Dict_Item t where t.dictid=(SELECT id FROM JY_DATA_DICT jdd WHERE jdd.dataKey = 'SCMWAGEMOD')) item on item.value=t.type -->
+		where 1=1
+		<if test='param.code != null and param.code != ""'>
+		     and t.code like '%'||#{param.code}||'%'
+		</if>
+		<if test='param.name != null and param.name != ""'>
+		     and m.name like '%'||#{param.name}||'%'
+		</if>
+		<if test='param.type != null and param.type != ""'>
+		     and m.feetype = #{param.type}
+		</if>
+		order by t.createtime asc
+	</select>
+	
+	
+	
+	<insert id="batchInsert" parameterType="java.util.List">
+		<foreach collection="list" item="item" index="index" open="begin" close=";end;" separator=";">
+		      insert into jy_scm_ims_materialin(id, code, orgid, status, batchnum, warehouseid, locationid, num, weight, price, purcost, saleprice, remarks, description,createtime,createuser)
+			  values
+		    (#{item.id,jdbcType=VARCHAR}, #{item.code,jdbcType=VARCHAR}, #{item.orgId,jdbcType=VARCHAR}, #{item.status,jdbcType=VARCHAR},#{item.batchnum,jdbcType=VARCHAR} , #{item.warehouseId,jdbcType=VARCHAR}, 
+		    #{item.locationId,jdbcType=VARCHAR}, #{item.num,jdbcType=NUMERIC}, #{item.weight,jdbcType=NUMERIC}, #{item.price,jdbcType=NUMERIC}, #{item.purcost,jdbcType=NUMERIC}, #{item.saleprice,jdbcType=NUMERIC}, 
+		    #{item.remarks,jdbcType=VARCHAR}, #{item.description,jdbcType=VARCHAR}, sysdate, #{item.createUser,jdbcType=VARCHAR})
+         </foreach>
+    </insert>
+    
+    <select id="find" resultType="materialin">
+		select t.id,t.code,t.orgid,t.status,t.num,t.weight,t.price,t.purcost,t.saleprice,t.remarks,t.description,t.createtime,t.updatetime,t.availnum,t.availweight,
+		m.name as name,h.name as warehouseid,l.name as locationid,t.type as type,a.name as createUser,c.name as updateUser from jy_scm_ims_materialin t  
+		left join jy_scm_ims_material m on t.code=m.code
+		left join jy_scm_warehouse h on h.id=t.warehouseid
+		left join jy_scm_warehouse_location l on l.id=t.locationid
+		<!-- left join (select name,value from Jy_Data_Dict_Item t where t.dictid=(SELECT id FROM JY_DATA_DICT jdd WHERE jdd.dataKey = 'SCMWAGEMOD')) item on item.value=t.type -->
+		left join jy_base_account a on a.id=t.createuser
+		left join jy_base_account c on c.id=t.updateuser
+		where 1=1
+		<if test='id != null and id != ""'>
+		     and t.id=#{id}
+		</if>
+		<if test='code != null and code != ""'>
+		     and t.code=#{code}
+		</if>
+		<if test='orgId != null and orgId != ""'>
+		     and t.orgid=#{orgId}
+		</if>
+		<if test='warehouseId != null and warehouseId != ""'>
+		     and t.warehouseid=#{warehouseId}
+		</if>
+		<if test='locationId != null and locationId != ""'>
+		     and t.locationid=#{locationId}
+		</if>
+	</select>
+	
+	<select id="findMaterial" resultType="matinventory">
+		select t.id as id,t.name as name,t.code as code,h.name as warehouseId,l.name as locationId,m.availnum as availNum,m.availweight as availWeight,
+		<!-- (select j.name from JY_DATA_DICT d join JY_DATA_DICT_ITEM j on j.dictid=d.id where d.datakey='SCM_DATA_CUT' and j.value=t.cut) AS feetype, -->
+		t.feetype as feetype,
+		m.price as price,m.purcost as purcost,m.saleprice as saleprice,
+		(select c.name from JY_SCM_CATEGORY C where t.CATEID=C.ID) as cateId,t.batchnum as batchNum,
+		t.moudlecode as moudleCode,t.pwidth as pwidth,t.materialsize as materialsize,
+		t.cernum as cerNum,t.pdeep as pdeep,
+		(select j.name from JY_DATA_DICT d join JY_DATA_DICT_ITEM j on j.dictid=d.id where d.datakey='SCM_DATA_MATERIALTYPE' and j.value=t.type) AS type,
+		(select j.name from JY_DATA_DICT d join JY_DATA_DICT_ITEM j on j.dictid=d.id where d.datakey='SCM_DATA_COLOR' and j.value=t.color) AS color,
+		(select j.name from JY_DATA_DICT d join JY_DATA_DICT_ITEM j on j.dictid=d.id where d.datakey='SCM_DATA_CLARITY' and j.value=t.clartity) AS clartity,
+		(select j.name from JY_DATA_DICT d join JY_DATA_DICT_ITEM j on j.dictid=d.id where d.datakey='SCM_DATA_CUT' and j.value=t.cut) AS cut,
+		(select j.name from JY_DATA_DICT d join JY_DATA_DICT_ITEM j on j.dictid=d.id where d.datakey='SCM_DATA_FLUORESCENCE' and j.value=t.fluoreScence) AS fluoreScence,
+		(select j.name from JY_DATA_DICT d join JY_DATA_DICT_ITEM j on j.dictid=d.id where d.datakey='stoneShape' and j.value=t.stoneShape) AS stoneShape,
+		(select j.name from JY_DATA_DICT d join JY_DATA_DICT_ITEM j on j.dictid=d.id where d.datakey='SCM_DATA_SYMMETRY' and j.value=t.symmety) AS symmety,
+		(select j.name from JY_DATA_DICT d join JY_DATA_DICT_ITEM j on j.dictid=d.id where d.datakey='SCM_DATA_POLISH' and j.value=t.polish) AS polish
+		from JY_SCM_IMS_MATERIALIN m 
+		left join JY_SCM_IMS_MATERIAL t on m.code=t.code
+		left join jy_scm_warehouse h on h.id=m.warehouseid
+		left join jy_scm_warehouse_location l on l.id=m.locationid
+		where m.id=#{id}
+	</select>
+	
+	<update id="update" parameterType="materialin">
+		update jy_scm_ims_materialin set code=#{code,jdbcType=VARCHAR}, orgid=#{orgId,jdbcType=VARCHAR}, status=#{status,jdbcType=VARCHAR}, batchnum=#{batchnum,jdbcType=VARCHAR}, warehouseid= #{warehouseId,jdbcType=VARCHAR}, 
+		locationid=#{locationId,jdbcType=VARCHAR}, price=#{price,jdbcType=NUMERIC}, purcost=#{purcost,jdbcType=NUMERIC}, saleprice=#{saleprice,jdbcType=NUMERIC}, 
+		remarks=#{remarks,jdbcType=VARCHAR}, description= #{description,jdbcType=VARCHAR},updatetime=sysdate,updateuser=#{updateUser,jdbcType=VARCHAR} where id=#{id,jdbcType=VARCHAR}
+	</update>
+	
+	
+	<delete id="delete" parameterType="materialin">
+		delete jy_scm_ims_materialin where id=#{id,jdbcType=VARCHAR}
+	</delete>
+	
+	<select id="findByCode" parameterType="String" resultType="int">
+    	select count(1) from JY_SCM_IMS_MATERIAL m where m.code=#{code,jdbcType=VARCHAR} and m.status='1'
+    </select>
+    
+    <!-- 
+     -->
+    
+    <select id="findProductCode" parameterType="String" resultType="int">
+		select count(1)
+	         from jy_scm_ims_product m
+	        where m.status in ('A','C') and m.code =#{code,jdbcType=VARCHAR}
+	</select>
+    
+    <select id="findByLocation" parameterType="String" resultMap="base">
+    	select * from jy_scm_ims_materialin where locationid=#{locationId,jdbcType=VARCHAR}
+    </select>
+    
+    
+	<insert id="insert" parameterType="materialin">
+		      insert into jy_scm_ims_materialin(id, code, orgid, status, batchnum, warehouseid, locationid, num, weight, price, purcost, saleprice, remarks, description,createtime,createuser,availNum,availWeight,type)
+			  values
+		    (#{ id,jdbcType=VARCHAR}, #{ code,jdbcType=VARCHAR}, #{ orgId,jdbcType=VARCHAR}, #{ status,jdbcType=VARCHAR},#{ batchnum,jdbcType=VARCHAR} , #{ warehouseId,jdbcType=VARCHAR}, 
+		    #{ locationId,jdbcType=VARCHAR}, #{ num,jdbcType=NUMERIC}, #{ weight,jdbcType=NUMERIC}, #{ price,jdbcType=NUMERIC}, #{ purcost,jdbcType=NUMERIC}, #{ saleprice,jdbcType=NUMERIC}, 
+		    #{ remarks,jdbcType=VARCHAR}, #{ description,jdbcType=VARCHAR}, sysdate, #{ createUser,jdbcType=VARCHAR}, #{ availNum,jdbcType=NUMERIC}, #{ availWeight,jdbcType=NUMERIC},#{ type,jdbcType=VARCHAR} )
+    </insert>
+    
+    <update id="updateInventoryNum">
+    	update jy_scm_ims_materialin 
+    	set 
+    	<if test='weight!="" and weight!=null'>
+    	weight=weight-#{weight,jdbcType=NUMERIC},
+    	</if>
+    	<if test='num!="" and num!=null'>
+    	num=num-#{num,jdbcType=NUMERIC},
+    	</if>
+    	updateuser=#{updateUser,jdbcType=VARCHAR},
+    	updatetime=sysdate 
+    	where 
+    	id=#{id,jdbcType=VARCHAR}
+    </update>
+    
+    <update id="updateInventoryAvailNum">
+    	update jy_scm_ims_materialin 
+    	set 
+    	<if test='availWeight!="" and availWeight!=null'>
+    		availweight=availweight-#{availWeight,jdbcType=NUMERIC},
+    	</if>
+    	<if test='availNum!="" and availNum!=null'>
+    		availnum=availnum-#{availNum,jdbcType=NUMERIC},
+    	</if>
+    	updateuser=#{updateUser,jdbcType=VARCHAR},
+    	updatetime=sysdate 
+    	where 
+    	id=#{id,jdbcType=VARCHAR}
+    </update>
+    
+    <select id="getMaterialinByConditions" resultType="materialin" parameterType="materialin">
+    	select id,
+		       code,
+		       orgid       as orgId,
+		       status,
+		       warehouseid as warehouseId,
+		       locationid  as locationId,
+		       num,
+		       weight,
+		       type,
+		       availnum	   as availNum,
+		       availweight as availWeight
+		  from jy_scm_ims_materialin
+		 where code = #{code}
+		   and orgid = #{orgId}
+		   and warehouseid = #{warehouseId}
+		    and locationid = #{locationId} 
+    </select>
+    
+    <update id="increaseInventory">
+    	update jy_scm_ims_materialin 
+    	set
+    	<if test='weight!="" and weight!=null'>
+    		weight=weight+#{weight,jdbcType=NUMERIC},
+    		availweight=availweight+#{weight,jdbcType=NUMERIC},
+    	</if>
+    	<if test='num!="" and num!=null'>
+    		num=num+#{num,jdbcType=NUMERIC},
+	    	availnum=availnum+#{num,jdbcType=NUMERIC},
+    	</if>
+    	updateuser=#{updateUser,jdbcType=VARCHAR},
+    	updatetime=sysdate 
+    	where id=#{id,jdbcType=VARCHAR}
+    </update>
+    <select id="findMaterialinSplit" resultMap="base" parameterType="materialin">
+    	select t.id, t1.name, t.availnum as num, t.availweight as weight, t.code, t.price
+		  from jy_scm_ims_materialin t
+		 inner join jy_scm_ims_material t1
+		    on t.code = t1.code
+		     left join jy_scm_moudle m on m.code=t1.moudlecode
+		 where t.orgId = #{param.orgId}
+	<if test='param.moudleCode != null and param.moudleCode != ""'>
+		   and m.id = #{param.moudleCode}
+	</if>
+		 order by t.createtime
+<!--     	select t.id,t1.name ,t.num,t.weight,t.code,t.price from jy_scm_ims_materialin t inner join  jy_scm_ims_material t1 on t.code=t1.code -->
+<!--     		where t.orgId=#{param.orgId} -->
+<!--     		<if test='param.moudleCode != null and param.moudleCode != ""'> -->
+<!-- 			     and t1.moudleCode=#{param.moudleCode} -->
+<!-- 			</if> -->
+<!--     			order by t.createtime  -->
+				
+    </select>
+    <select id="getMaterialinById" resultType="materialin" parameterType="String">
+    	select id,
+		       code,
+		       orgid       as orgId,
+		       status,
+		       type,
+		       warehouseid as warehouseId,
+		       locationid  as locationId,
+		       num,
+		       weight,
+		       availnum	   as availNum,
+		       availweight as availWeight,
+		       type 
+		  from jy_scm_ims_materialin
+		 where id=#{id}
+    </select>
+ 
+    <update id="recoverLockedInventory">
+    	update jy_scm_ims_materialin 
+    	set
+    	<if test='availWeight!="" and availWeight!=null'>
+    		availweight=availweight+#{availWeight,jdbcType=NUMERIC},
+    	</if>
+    	<if test='availNum!="" and availNum!=null'>
+    		availnum=availnum+#{availNum,jdbcType=NUMERIC},
+    	</if>
+    	updateuser=#{updateUser,jdbcType=VARCHAR},
+    	updatetime=sysdate 
+    	where id=#{id,jdbcType=VARCHAR}
+    </update>
+    
+      <select id="queryCode" resultMap="base" parameterType="String">
+		select * from jy_scm_ims_materialin where code =#{code}  and status = '3'	
+	  </select>
+</mapper>

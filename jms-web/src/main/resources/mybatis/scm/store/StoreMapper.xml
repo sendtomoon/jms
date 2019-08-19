@@ -1,0 +1,195 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.dao.scm.store.StoreDao">
+
+	<resultMap id="base" type="Store"></resultMap>
+    
+    <insert id="insert"  parameterType="Store">	
+		insert into jy_base_store
+		  (id,
+		   code,
+		   orgid,
+		   type,
+		   name,
+		   longname,
+		   distcode,
+		   status,
+		   address,
+		   postaddress,
+		   director,
+		   directornm,
+		   contractor,
+		   contractornm,
+		   createuser,
+		   createname,
+		   createtime,
+		   description,
+		   perpoty)
+		values
+		  (#{id},
+		   #{code},
+		   #{orgId},
+		   #{type},
+		   #{name},
+		   #{longName},
+		   #{distCode},
+		   '1',
+		   #{address},
+		   #{postAddress},
+		   #{director},
+		   #{directorNm},
+		   #{contractor},
+		   #{contractorNm},
+		   #{createUser},
+		   #{createName},
+		   sysdate,
+		   #{description},
+		   #{perpoty})
+	</insert>
+    
+    <select id="findByPage"  resultMap="base" parameterType="Store">
+        select jbs.id,
+		       jbs.code,
+		       jbs.orgid        as orgId,
+		       jbs.type,
+		       jbs.name,
+		       jbs.longname     as longName,
+		       jbs.distcode     as distCode,
+		       jbs.status,
+		       jbs.address,
+		       jbs.postaddress  as postAddress,
+		       jbs.director,
+		       jbs.directornm   as directorNm,
+		       jbs.contractor,
+		       jbs.contractornm as contractorNm,
+		       jbs.description,
+		       jbs.perpoty
+		  from (SELECT *
+		          FROM jy_base_org jbo
+		         START WITH ID = #{param.orgId}
+		        CONNECT BY jbo.pid = PRIOR ID) t1,
+		       jy_base_store jbs
+		 where t1.id = jbs.orgid
+       <if test='param.status != null and param.status != ""'>
+        	AND jbs.status=#{param.status}
+       </if>
+       <if test='param.keyWord != null and param.keyWord != ""'>
+        	AND jbs.name like '%'||#{param.keyWord}||'%'
+       </if> 
+        ORDER BY jbs.createTime desc
+    </select>
+    
+    <select id="findStoreRecordByCode" parameterType="String" resultType="int">
+    	select count(code) from jy_base_store where code=#{code}
+    </select>
+    
+    <select id="findOrgById"  resultType="BaseOrg" parameterType="String">
+       SELECT t.* FROM jy_base_org t WHERE t.id=#{id}
+
+    </select> 
+    <insert id="addOrg"  parameterType="BaseOrg">	
+	 	insert into jy_base_org (id, pid, code, name, longName, distcode, status, createTime, createUser, createName,orggrade)
+	 	VALUES (#{id},#{pId},#{code},#{name},#{longName},#{distcode},#{status},#{createTime},#{createUser},#{createName},#{orgGrade})
+	</insert>
+    
+    <select id="find" parameterType="Store" resultType="Store">
+    	select jbs.id,
+           jbs.code,
+           jbs.orgid as orgId,
+           (select name from jy_base_org where id = jbo.pid) as orgName,
+           jbs.type,
+           jbs.name,
+           jbs.longname as longName,
+           jbs.distcode as distCode,
+           jbs.status,
+           jbs.address,
+           jbs.postaddress as postAddress,
+           jbs.director,
+           jbs.directornm as directorNm,
+           jbs.contractor,
+           jbs.contractornm as contractorNm,
+           jbs.description,
+           jbs.perpoty
+      from jy_base_store jbs
+      left join jy_base_org jbo
+        on jbs.orgid = jbo.id
+       where jbs.id = #{id}
+    </select>
+    
+    <update id="update" parameterType="Store">
+    	update jy_base_store
+	       set 
+	           type = #{type},
+	           name = #{name},
+	           longname = #{longName},
+	           status = #{status},
+	           address = #{address},
+	           postaddress = #{postAddress},
+	           director = #{director},
+	           directornm = #{directorNm},
+	           contractor = #{contractor},
+	           contractornm = #{contractorNm},
+	           updateuser = #{updateUser},
+	           updatename = #{updateName},
+	           updatetime = #{updateTime},
+	           description = #{description},
+	           perpoty = #{perpoty},
+	           DISTCODE = #{distCode}
+	     where id = #{id}
+    </update>
+    
+    <update id="updateStoreState" parameterType="Store">
+		UPDATE jy_base_store
+		SET   status = #{status},
+			  updatetime =#{updateTime},
+			  updateuser = #{updateUser},
+			  updateName = #{updateName}
+		WHERE id=#{id}
+	</update>
+	
+	<update id="batchUpdateStoreState"  parameterType="java.util.List">  
+	        update jy_base_store
+	        set status=#{store.status},
+	        	updateuser=#{store.updateUser},
+	        	updatename=#{store.updateName},
+	        	updatetime=sysdate
+		    where id in
+		    <foreach collection="list" item="item" open="(" separator="," close=")">
+		    		#{item.id}
+	   		</foreach>
+	</update>
+	
+	<update id="updateOrgState" parameterType="Store">
+		UPDATE jy_base_org
+		SET   status = #{status},
+			  updatetime =#{updateTime},
+			  updateuser = #{updateUser},
+			  updateName = #{updateName}
+		WHERE id=(select orgId from jy_base_store where id = #{id})
+	</update>
+	
+	<update id="batchUpdateOrgState"  parameterType="java.util.List">  
+	        update jy_base_org
+	        set status=#{store.status},
+	        	updateuser=#{store.updateUser},
+	        	updatename=#{store.updateName},
+	        	updatetime=sysdate
+		    where id in
+		    <foreach collection="list" item="item" open="(" separator="," close=")">
+		    		#{item.orgId}
+	   		</foreach>
+	</update>
+	
+	<select id="countOrgState" parameterType="Store" resultType="int">
+		select count(id) from jy_base_org where id=#{orgId} and status=#{status}
+	</select>
+	
+	<update id="changeOrgId">
+		update jy_base_org
+		set pid=#{orgId},
+			updateuser=#{updateUser},
+	        updatename=#{updateName},
+	        updatetime=sysdate
+	    where id=#{pId}
+	</update>
+</mapper>

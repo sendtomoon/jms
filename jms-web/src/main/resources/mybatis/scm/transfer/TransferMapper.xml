@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.dao.scm.transfer.TransferDao">
+	<resultMap id="transfer" type="ScmTransfer"></resultMap>
+	 <select id="find" resultMap="transfer" parameterType="ScmTransfer">
+		select t.*,
+		(select u.name from jy_base_account u where t.createuser=u.id) as createName,
+    	(select u.name from jy_base_account u where t.updateUser=u.id) as updateName,
+    	(select u.name from jy_base_account u where t.checkUser=u.id) as checkName
+		from JY_SCM_IMS_TRANSFER  t where 1=1
+		<if test='id != null and id != ""'>
+		     and t.id=#{id,jdbcType=VARCHAR}
+		</if>
+	</select>
+     
+
+	<select id="dataFilter_findByPage" resultMap="transfer" parameterType="ScmTransfer">
+     select f.id as id, f.transferno as transferno,f.type as type,a.name as createUser,c.name as checkUser,f.createtime as createTime,
+     f.updatetime as updateTime, f.status as status ,f.checktime as checkTime,f.catgory as catgory,h.name as inWarehouseId,l.name as inLocationId,
+     (select sum(d.num) from jy_scm_ims_transferdetail d where f.id=d.TRANSFERID) as num,
+     (select sum(d.weight) from jy_scm_ims_transferdetail d where f.id=d.TRANSFERID) as weight,(select orgid from jy_base_account t where t.id=f.createuser) as orgId
+     from jy_scm_ims_transfer f 
+     left join jy_base_account a on  a.id=f.createuser
+     left join jy_base_account c on  c.id=f.checkuser
+     left join jy_scm_warehouse h on h.id=f.inWarehouseId
+	 left join jy_scm_warehouse_location l on l.id=f.inLocationId
+     where 1=1
+	<if test='param.status != null and param.status != ""'>
+        AND F.STATUS=#{param.status,jdbcType=VARCHAR}
+    </if>  
+    <if test='param.catgory != null and param.catgory != ""'>
+        AND F.catgory=#{param.catgory,jdbcType=VARCHAR}
+    </if>  
+     <if test='param.transferNo != null and param.transferNo != ""'>
+        AND upper(F.transferno） like '%'||upper(#{param.transferNo})||'%'
+    </if>     
+       ORDER BY F.CREATETIME asc
+	</select>
+	
+	
+	 <insert id="insert" parameterType="ScmTransfer">
+		  <![CDATA[ 
+		        INSERT INTO JY_SCM_IMS_TRANSFER(id,transferno,status,type,remarks,description,createtime,createuser,inwarehouseid,inlocationid,catgory)
+		        VALUES(#{id,jdbcType=VARCHAR},#{transferNo,jdbcType=VARCHAR},#{status,jdbcType=VARCHAR},#{type,jdbcType=VARCHAR},#{remarks,jdbcType=VARCHAR},#{description,jdbcType=VARCHAR},sysdate,#{createUser,jdbcType=VARCHAR},
+		        #{inWarehouseId,jdbcType=VARCHAR},#{inLocationId,jdbcType=VARCHAR},#{catgory,jdbcType=VARCHAR})
+	      ]]> 
+	 </insert>
+	 
+	 
+	<delete id="delete" parameterType="ScmTransfer">
+		delete JY_SCM_IMS_TRANSFER where id=#{id,jdbcType=VARCHAR}
+	</delete>
+	
+	
+	
+	<update id="update" parameterType="ScmTransfer">
+    UPDATE JY_SCM_IMS_TRANSFER
+    SET   
+    status=#{status,jdbcType=VARCHAR}, 
+    remarks=#{remarks,jdbcType=VARCHAR},   
+    description=#{description,jdbcType=VARCHAR},  
+    updateuser=#{updateUser,jdbcType=VARCHAR},   
+    updatetime=sysdate
+    WHERE
+    id=#{id,jdbcType=VARCHAR}
+    </update>
+	  
+	<update id="check" parameterType="ScmTransfer">
+    UPDATE JY_SCM_IMS_TRANSFER
+    SET   
+    status=#{status,jdbcType=VARCHAR}, 
+    remarks=#{remarks,jdbcType=VARCHAR},   
+    description=#{description,jdbcType=VARCHAR},  
+    checkuser=#{checkUser,jdbcType=VARCHAR},   
+    checktime=sysdate
+    WHERE
+    id=#{id,jdbcType=VARCHAR}
+    </update>
+</mapper>

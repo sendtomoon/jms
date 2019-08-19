@@ -1,0 +1,73 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.dao.pos.goldprice.PriceDetailDao">
+
+	<resultMap id="base" type="ScmPriceDetail">
+	</resultMap>
+
+	<insert id="insert"  parameterType="ScmPriceDetail">
+		insert into jy_pos_price_detail
+		(
+			id,
+			applyid,
+			goldcode,
+			oldprice,
+			price,
+			otherprice,
+			note
+		)
+		values
+		(
+			#{id, jdbcType=VARCHAR},
+			#{applyId, jdbcType=VARCHAR},
+			#{goldCode, jdbcType=VARCHAR},
+			#{oldPrice, jdbcType=DECIMAL},
+			#{price, jdbcType=DECIMAL},
+			#{otherPrice, jdbcType=DECIMAL},
+			#{note, jdbcType=VARCHAR}
+		)
+	</insert>
+
+	<insert id="batchInsert" parameterType="java.util.List">
+		<foreach collection="list" item="item" index="index" open="begin" close=";end;" separator=";">
+			insert into jy_pos_price_detail
+			(
+				id,
+				applyid,
+				goldcode,
+				oldprice,
+				price,
+				otherprice,
+				note
+			)
+			values
+			(
+				#{item.id, jdbcType=VARCHAR},
+				#{item.applyId, jdbcType=VARCHAR},
+				#{item.goldCode, jdbcType=VARCHAR},
+				#{item.oldPrice, jdbcType=DECIMAL},
+				#{item.price, jdbcType=DECIMAL},
+				#{item.otherPrice, jdbcType=DECIMAL},
+				#{item.note, jdbcType=VARCHAR}
+			)
+		</foreach>
+	</insert>
+
+    <select id="find" parameterType="ScmPriceDetail" resultMap="base">
+		select  i.* from jy_pos_price_detail i where 1 = 1
+		<if test='applyId != null and applyId != ""'>
+			and i.applyId = #{applyId}
+		</if>
+    </select>
+
+	<delete id="batchDeleteByApplyId" parameterType="java.util.List">
+		delete from jy_pos_price_detail
+		where applyid in
+		<foreach collection="list" item="item" open="(" separator="," close=")">
+			#{item}
+		</foreach>
+	</delete>
+    
+
+   
+</mapper>

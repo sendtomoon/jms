@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.dao.scm.transfer.TransferDetailDao">
+	<resultMap id="TransferDetail" type="ScmTransferDetail"></resultMap>
+	
+	<select id="find" resultMap="TransferDetail" parameterType="ScmTransferDetail">
+        SELECT * FROM JY_SCM_IMS_TRANSFERDETAIL f
+        WHERE 1=1
+        <if test='id != null and id != ""'>
+		     AND F.id=#{id,jdbcType=VARCHAR}
+		</if>
+		<if test='transferId != null and transferId != ""'>
+		     and F.transferId=#{transferId,jdbcType=VARCHAR}
+		</if>
+	</select>
+	
+		
+	<select id="findProduct" resultMap="TransferDetail" parameterType="ScmTransferDetail">
+         SELECT f.id as id ,p.name as name,f.transferId as transferId ,f.transferNo as transferNo,
+        f.code as code,f.num as num,f.weight as weight,f.diffWeight as diffWeight,
+        w.name as outWarehouseIdName,l.name as outLocationIdName,
+        f.description as description
+        FROM JY_SCM_IMS_TRANSFERDETAIL f
+        left join jy_scm_warehouse w on w.id= f.outWarehouseId  
+        left join jy_scm_warehouse_location l on l.id=f.outLocationId  
+        left join jy_scm_ims_product p on p.code=f.code
+        WHERE 1=1
+		<if test='transferId != null and transferId != ""'>
+		     and F.transferId=#{transferId,jdbcType=VARCHAR}
+		</if>
+	</select>
+	
+	
+	<select id="findByCode" resultMap="TransferDetail" parameterType="ScmTransferDetail">
+		select p.name as name, p.code as code,p.count as num,nvl(p.totalweight,0) as weight,0 as type,w.name as outWarehouseIdName,p.warehouseid as outWarehouseId,l.name  as outLocationIdName ,p.locationid as outLocationId
+		from jy_scm_ims_product p 
+		left join jy_scm_warehouse w on w.id= p.warehouseid  
+		left join jy_scm_warehouse_location l on l.id=p.locationid where upper(p.code)=upper(#{code,jdbcType=VARCHAR}) and p.orgid=#{orgId,jdbcType=VARCHAR} and p.status='B'
+		<!-- union all
+		select (select r.name from jy_scm_ims_material r where r.code=m.code) as name,m.code as code,0 as num,0 as weight,1 as type,w.name as outWarehouseIdName,m.warehouseid as outWarehouseId,l.name as outLocationIdName,m.locationid as outLocationId
+		from jy_scm_ims_materialin m 
+		left join jy_scm_warehouse w on w.id= m.warehouseid  
+		left join jy_scm_warehouse_location l on l.id=m.locationid  
+		where m.status='3' and upper(m.code) like '%'||upper(#{code})||'%' -->
+	</select>
+	<insert id="batchInsert" parameterType="java.util.List">
+    <foreach collection="list" item="item" index="item" open="begin" close=";end;" separator=";">
+     INSERT INTO JY_SCM_IMS_TRANSFERDETAIL(id,transferId,transferNo,code,num,weight,diffWeight,outWarehouseId,outLocationId,inWarehouseId,inLocationId,description)
+     VALUES(#{item.id,jdbcType=VARCHAR},#{item.transferId,jdbcType=VARCHAR},#{item.transferNo,jdbcType=VARCHAR},#{item.code,jdbcType=VARCHAR},#{item.num,jdbcType=NUMERIC},#{item.weight,jdbcType=NUMERIC},
+     #{item.diffWeight,jdbcType=NUMERIC},#{item.outWarehouseId,jdbcType=VARCHAR},#{item.outLocationId,jdbcType=VARCHAR},#{item.inWarehouseId,jdbcType=VARCHAR},#{item.inLocationId,jdbcType=VARCHAR},
+     #{item.description,jdbcType=VARCHAR})
+    </foreach>
+  </insert>
+	
+	<!-- 被删除的报告详情表id -->
+   	<select id="byDeleteBatch"  resultType="ScmTransferDetail" parameterType="java.util.List">
+		select * from  JY_SCM_IMS_TRANSFERDETAIL  
+		where id not in
+		<foreach collection="list" item="item" open="(" separator="," close=")">
+		    #{item.id,jdbcType=VARCHAR}
+	    </foreach>
+	    and transferId=#{transferId,jdbcType=VARCHAR}
+	</select>
+    
+    
+    <delete id="deleteBatch" parameterType ="java.util.List">
+	       DELETE FROM JY_SCM_IMS_TRANSFERDETAIL WHERE id in(
+	  <foreach item="item" collection="list" open="" separator="," close="" >
+			#{item.id,jdbcType=VARCHAR}
+	  </foreach>
+		)
+	</delete>
+	
+	
+   <update id="updateAuditing" parameterType="java.util.List">
+	   <foreach collection="list" item="item" index="index" open="begin" close=";end;" separator=";">
+	    UPDATE JY_SCM_IMS_TRANSFERDETAIL
+	    SET  num=#{item.num,jdbcType=NUMERIC},weight=#{item.weight,jdbcType=NUMERIC},diffWeight=#{item.diffWeight,jdbcType=NUMERIC},description=#{item.description,jdbcType=VARCHAR}
+	    WHERE id=#{item.id,jdbcType=VARCHAR}
+	  </foreach>
+  </update>
+	
+
+</mapper>

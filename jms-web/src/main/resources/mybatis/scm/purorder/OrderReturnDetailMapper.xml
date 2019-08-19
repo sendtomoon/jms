@@ -1,0 +1,126 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.dao.scm.purorder.OrderReturnDetailDao">
+
+	<resultMap id="base" type="scmOrderReturnDetail">
+	</resultMap>
+    <select id="find" parameterType="scmOrderReturnDetail" resultType="scmOrderReturnDetail">
+    	select t.*,
+        		(select name from jy_scm_warehouse where id=t.dialoutWarehouseId) as dialoutWarehouseName,
+    			(select name from jy_base_org where id=t.dialoutOrgId) as dialoutOrgName
+       from jy_scm_pur_order_returndetail t 
+       where t.id = #{id}
+    </select>
+     <select id="findReturnId" parameterType="scmOrderReturnDetail" resultType="scmOrderReturnDetail">
+    	select t.*,
+        		(select name from jy_scm_warehouse where id=t.dialoutWarehouseId) as dialoutWarehouseName,
+    			(select name from jy_base_org where id=t.dialoutOrgId) as dialoutOrgName
+       from jy_scm_pur_order_returndetail t 
+       where t.returnId = #{returnId}
+    </select>
+     <select id="findByPage"  resultMap="base" parameterType="scmOrderReturnDetail">
+        select  t.*,
+        		(select name from jy_scm_warehouse where id=t.dialoutWarehouseId) as dialoutWarehouseName,
+    			(select name from jy_base_org where id=t.dialoutOrgId) as dialoutOrgName
+        		from jy_scm_pur_order_returndetail  t 
+		 where 1=1
+		 <if test="param.orderId != null and param.orderId !='' ">
+		 	and t.orderId=#{param.orderId}
+		 </if>
+    </select>
+    <insert id="insert"  parameterType="scmOrderReturnDetail">	
+		insert into jy_scm_pur_order_returndetail
+		  (id,
+		  returnId,
+		  code,
+		  name,
+		  count,
+		  count2,
+		  weight,
+		  price,
+		  dialoutOrgId,
+		  dialoutWarehouseId,
+		  remarks
+		  )
+		values
+		  (#{id,jdbcType=VARCHAR},
+		   #{returnId,jdbcType=VARCHAR},
+		   #{code,jdbcType=VARCHAR},
+		   #{name,jdbcType=VARCHAR},
+		   #{count,jdbcType=NUMERIC},
+		   #{count2,jdbcType=NUMERIC},
+		   #{weight,jdbcType=NUMERIC},
+		   #{price,jdbcType=NUMERIC},
+		   #{dialoutOrgId,jdbcType=VARCHAR},
+		   #{dialoutWarehouseId,jdbcType=VARCHAR},
+		   #{remarks,jdbcType=VARCHAR}
+		   )
+	</insert>
+    
+    <update id="update" parameterType="scmOrderReturnDetail">
+    	update jy_scm_pur_order_returndetail
+	       set 
+	       	remarks = #{remarks,jdbcType=VARCHAR}
+	     where id = #{id}
+	    
+    </update>
+	<delete id="delete" parameterType="scmOrderReturnDetail">
+		delete from jy_scm_pur_order_returndetail  
+		WHERE id=#{id}
+	</delete>
+	<delete id="deleteBatch" parameterType ="java.util.List">
+		DELETE FROM jy_scm_pur_order_returndetail WHERE id in(
+		<foreach item="item" collection="list" open="" separator="," close="" >
+			#{item.id}
+		</foreach>
+		)
+	</delete>
+	<delete id="deleteBatchReturnId" parameterType ="java.util.List">
+		DELETE FROM jy_scm_pur_order_returndetail WHERE returnId in(
+		<foreach item="item" collection="list" open="" separator="," close="" >
+			#{item.returnId}
+		</foreach>
+		)
+	</delete>
+	<delete id="deleteByReturnId" parameterType="scmOrderReturnDetail">
+		DELETE FROM jy_scm_pur_order_returndetail WHERE returnId=#{returnId}
+	</delete>
+	<insert id="batchInsert" parameterType="java.util.List">
+    	<foreach collection="list" item="item" index="index" open="begin" close=";end;" separator=";">
+	    insert into jy_scm_pur_order_returndetail
+		  (id,
+		  returnId,
+		  code,
+		  name,
+		  count,
+		  count2,
+		  weight,
+		  price,
+		  dialoutOrgId,
+		  dialoutWarehouseId,
+		  remarks
+		  )
+		values
+		  (#{item.id,jdbcType=VARCHAR},
+		   #{item.returnId,jdbcType=VARCHAR},
+		   #{item.code,jdbcType=VARCHAR},
+		   #{item.name,jdbcType=VARCHAR},
+		   #{item.count,jdbcType=NUMERIC},
+		   #{item.count2,jdbcType=NUMERIC},
+		   #{item.weight,jdbcType=NUMERIC},
+		   #{item.price,jdbcType=NUMERIC},
+		   #{item.dialoutOrgId,jdbcType=VARCHAR},
+		   #{item.dialoutWarehouseId,jdbcType=VARCHAR},
+		   #{item.remarks,jdbcType=VARCHAR}
+		   )
+         </foreach>
+    </insert>
+     <update id="batchUpdate"  parameterType="java.util.List">
+	   <foreach collection="list" item="item" index="index" open="begin" close=";end;" separator=";">
+			update jy_scm_pur_order_returndetail
+		       set 
+		       	remarks = #{remarks,jdbcType=VARCHAR}
+		     where id = #{id}
+	   </foreach>
+    </update>
+</mapper>

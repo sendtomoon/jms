@@ -1,0 +1,167 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.dao.scm.purorder.OrderReturnDao">
+
+	<resultMap id="base" type="scmOrderReturn">
+		<collection property="list" column="returnId" ofType="scmOrderReturnDetail" select="getItem"/>
+	</resultMap>
+	<resultMap id="baseItem" type="scmOrderReturnDetail" ></resultMap>
+	 <select id="getItem"  resultMap="baseItem" parameterType="scmOrderDetail">
+    	select jsp.* ,
+        		(select name from jy_scm_warehouse where id=jsp.dialoutWarehouseId) as dialoutWarehouseName,
+    			(select name from jy_base_org where id=jsp.dialoutOrgId) as dialoutOrgName
+    	from jy_scm_pur_order_returndetail jsp 
+    	where jsp.returnId=#{returnId}
+    </select>
+    <select id="find" parameterType="scmOrderReturn" resultMap="base">
+    	select t.*,t.id as returnId,
+    	(select u.name from jy_base_account u where t.createuser=u.id) as createName,
+    	(select u.name from jy_base_account u where t.updateUser=u.id) as updateName,
+    	(select u.name from jy_base_account u where t.checkUser=u.id) as checkName,
+    	(select name from jy_scm_warehouse where id=t.dialinWarehouseId) as dialinWarehouseNaem,
+    	(select name from jy_scm_warehouse where id=t.dialoutWarehouseId) as dialoutWarehouseName,
+    	(select name from jy_base_org where id=t.orgId) as orgName,
+    	(select name from jy_base_org where id=t.dialinOrgId) as dialinOrgName,
+    	(select name from jy_base_org where id=t.dialoutOrgId) as dialoutOrgName
+       from jy_scm_pur_order_return t 
+       where t.id = #{id}
+    </select>
+    <insert id="insert"  parameterType="scmOrderReturn">	
+		insert into jy_scm_pur_order_return
+		  (
+		  id,
+		  returnNo,
+		  orgId,
+		  status,
+		  dialinOrgId,
+		  dialinWarehouseId,
+		  dialoutOrgId,
+		  dialoutWarehouseId,
+		  orderType,
+		  returnCause,
+		  remarks,
+		  createTime,
+		  createUser
+		  )
+		values
+		  (
+		    #{id,jdbcType=VARCHAR},
+			#{returnNo,jdbcType=VARCHAR},
+			#{orgId,jdbcType=VARCHAR},
+			#{status,jdbcType=VARCHAR},
+			#{dialinOrgId,jdbcType=VARCHAR},
+			#{dialinWarehouseId,jdbcType=NUMERIC},
+			#{dialoutOrgId,jdbcType=VARCHAR},
+			#{dialoutWarehouseId,jdbcType=VARCHAR},
+			#{orderType,jdbcType=VARCHAR},
+			#{returnCause,jdbcType=VARCHAR},
+			#{remarks,jdbcType=DATE},
+			#{createTime,jdbcType=TIMESTAMP},
+			#{createUser,jdbcType=VARCHAR}
+		   )
+	</insert>
+	<insert id="batchInsert">
+ 		<foreach collection="list" item="item" index="index" open="begin" close=";end;" separator=";">	
+ 		insert into jy_scm_pur_order_return
+		  (
+		  id,
+		  returnNo,
+		  orgId,
+		  status,
+		  dialinOrgId,
+		  dialinWarehouseId,
+		  dialoutOrgId,
+		  dialoutWarehouseId,
+		  orderType,
+		  returnCause,
+		  remarks,
+		  createTime,
+		  createUser
+		  )
+		values
+		  (
+		    #{item.id,jdbcType=VARCHAR},
+			#{item.returnNo,jdbcType=VARCHAR},
+			#{item.orgId,jdbcType=VARCHAR},
+			#{item.status,jdbcType=VARCHAR},
+			#{item.dialinOrgId,jdbcType=VARCHAR},
+			#{item.dialinWarehouseId,jdbcType=NUMERIC},
+			#{item.dialoutOrgId,jdbcType=VARCHAR},
+			#{item.dialoutWarehouseId,jdbcType=VARCHAR},
+			#{item.orderType,jdbcType=VARCHAR},
+			#{item.returnCause,jdbcType=VARCHAR},
+			#{item.remarks,jdbcType=DATE},
+			#{item.createTime,jdbcType=TIMESTAMP},
+			#{item.createUser,jdbcType=VARCHAR}
+		   )
+		</foreach>
+
+	</insert>
+    
+    
+    <select id="findByPage"  resultMap="base" parameterType="scmOrderReturn">
+        select  t.*,
+    	(select u.name from jy_base_account u where t.createuser=u.id) as createName,
+    	(select u.name from jy_base_account u where t.updateUser=u.id) as updateName,
+    	(select u.name from jy_base_account u where t.checkUser=u.id) as checkName,
+    	(select name from jy_scm_warehouse where id=t.dialinWarehouseId) as dialinWarehouseNaem,
+    	(select name from jy_scm_warehouse where id=t.dialoutWarehouseId) as dialoutWarehouseName,
+    	(select name from jy_base_org where id=t.orgId) as orgName,
+    	(select name from jy_base_org where id=t.dialinOrgId) as dialinOrgName,
+    	(select name from jy_base_org where id=t.dialoutOrgId) as dialoutOrgName
+        		from jy_scm_pur_order_return t 
+		 where 1=1 
+       <if test='param.status != null and param.status != ""'>
+        	AND t.status = #{param.status}
+       </if>
+       <if test='param.company != null and param.company != ""'>
+		     and (t.orgId in (SELECT id FROM jy_base_org o start with o.id =  #{param.company} connect by prior o.id = o.pid) or t.dialinOrgId in (SELECT id FROM jy_base_org o start with o.id =  #{param.company} connect by prior o.id = o.pid))
+		</if>
+		<if test='param.returnNo != null and param.returnNo != ""'>
+        	AND t.returnNo = #{param.returnNo}
+       </if>
+        ORDER BY t.createTime
+    </select>
+    
+    
+    <update id="update" parameterType="scmOrderReturn">
+    	update jy_scm_pur_order_return
+	       set 
+			  returnCause= #{returnCause,jdbcType=VARCHAR},
+			  remarks=#{remarks,jdbcType=VARCHAR},
+			  status=#{status,jdbcType=VARCHAR},
+	          updateTime = #{updateTime,jdbcType=TIMESTAMP},
+	          updateUser = #{updateUser,jdbcType=VARCHAR},
+	          updateOrgId = #{updateOrgId,jdbcType=VARCHAR}
+	     where id = #{id}
+    </update>
+    <update id="check" parameterType="scmOrderReturn">
+    	update jy_scm_pur_order_return
+	       set 
+	       	  status=#{status,jdbcType=VARCHAR},
+			  rejectInfo=#{rejectInfo,jdbcType=VARCHAR},
+	          checkTime = #{checkTime,jdbcType=TIMESTAMP},
+	          checkUser = #{checkUser,jdbcType=VARCHAR},
+	          checkOrgId = #{checkOrgId,jdbcType=VARCHAR}
+	     where id = #{id}
+    </update>
+    <update id="reject" parameterType="scmOrderReturn">
+    	update jy_scm_pur_order_return
+	       set 
+	       	  rejectInfo=#{rejectInfo,jdbcType=VARCHAR}
+	     where id = #{id}
+    </update>
+    
+	<delete id="delete" parameterType="scmOrderReturn">
+	delete from jy_scm_pur_order_return  
+	WHERE id =#{id} 
+	</delete>
+	<delete id="deleteBatch" parameterType ="java.util.List">
+	DELETE FROM jy_scm_pur_order_return WHERE id in(
+		<foreach item="item" collection="list" open="" separator="," close="" >
+			#{item.id}
+		</foreach>
+		)
+	</delete>
+   
+</mapper>

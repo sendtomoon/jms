@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.dao.scm.report.ReportDao">
+	<resultMap id="base" type="report" ></resultMap>
+	
+	<!-- 质检报告列表数据 -->
+	<select id="findByPage" parameterType="report" resultType="report">
+		select t.id as id,t.reportno as reportNo,t.entryno as entryNo,t.qcnumber as qcNumber,
+		t.qcweight as qcWeight,t.qcngnumber as qcNgNumber,t.qcngweight as qcNgWeight,b.name as supplierId,t.remarks as remarks,
+		t.status as status,t.createuser as createUser,t.createtime as createTime,
+		(select name from jy_base_account where id=t.qcuserid) as qcUserName,
+		(select name from jy_base_account where id=t.createuser) as createName,
+		(select name from jy_base_account where id=t.checkuser) as checkName,
+		t.checktime as checkTime 
+		from JY_SCM_QC_REPORT t left join JY_BASE_FRANCHISEE b on b.id=t.supplierid
+		where 1=1
+		<if test='param.status != null and param.status != ""'>
+			and t.status=#{param.status,jdbcType=VARCHAR}
+		</if>
+		<if test='param.reportNo !=null and param.reportNo != ""'>
+		 	and t.reportno like '%'||#{param.reportNo}||'%'
+		</if>
+		<if test='param.entryNo != null and param.entryNo != ""'>
+			and t.entryno like '%'||#{param.entryNo}||'%'
+		</if>
+		<if test='param.supplierId != null and param.supplierId != ""'>
+			and b.name like '%'||#{param.supplierId}||'%'
+		</if>
+		order by t.createTime desc
+	</select>
+	
+	
+	<!--增加质检报告主表 -->
+	<insert id="insertReport" parameterType="report">
+		insert into JY_SCM_QC_REPORT(id,reportno,handid,entryno,qcuserid,qcorgid,puruserid,purorgid,supplierid,qcweight,qcnumber,qcngweight,qcngnumber,remarks,delflag,createuser,createtime,createorg,status) 
+		values(#{report.id,jdbcType=VARCHAR},#{report.reportNo,jdbcType=VARCHAR},#{report.handId,jdbcType=VARCHAR},#{report.entryNo,jdbcType=VARCHAR},#{report.qcUserId,jdbcType=VARCHAR},#{report.qcOrgId,jdbcType=VARCHAR},
+		#{report.purUserId,jdbcType=VARCHAR},#{report.purOrgId,jdbcType=VARCHAR},#{report.supplierId,jdbcType=VARCHAR},#{report.qcWeight,jdbcType=NUMERIC},#{report.qcNumber,jdbcType=NUMERIC},#{report.qcNgWeight,jdbcType=NUMERIC},#{report.qcNgNumber,jdbcType=NUMERIC},
+		#{report.remarks,jdbcType=VARCHAR},#{report.delflag,jdbcType=VARCHAR},#{report.createUser,jdbcType=VARCHAR},sysdate,#{report.createOrg,jdbcType=VARCHAR},#{report.status,jdbcType=VARCHAR})
+	</insert>
+	
+	
+	<!-- 批量增加详情表 -->
+	<insert id="insertReportDetail" parameterType="java.util.List">
+		<foreach collection="list" item="item" index="item" open="begin" close=";end;" separator=";">
+			insert into JY_SCM_QC_REPORTDTL(id,reportid,suppmouCode,ngnumber,ngweight,qcfaqid,qcfaqdesc,remarks,prodid) 
+			values(#{item.id,jdbcType=VARCHAR},#{item.reportId,jdbcType=VARCHAR},#{item.suppmouCode,jdbcType=VARCHAR},#{item.ngNumber,jdbcType=NUMERIC},#{item.ngWeight,jdbcType=NUMERIC},#{item.qcFaqId,jdbcType=VARCHAR},#{item.qcFaqDesc,jdbcType=VARCHAR},
+			#{item.remarks,jdbcType=VARCHAR},#{item.prodId,jdbcType=VARCHAR})
+		</foreach>
+	</insert>	
+	
+	<!-- 查看单个质检报告 -->
+	<select id="find" parameterType="report" resultType="report">
+		select t.id,t.reportno,t.handid,t.entryno,t.qcuserid,t.qcorgid,t.puruserid,t.purorgid,t.qcweight,t.qcnumber,t.qcngweight,t.qcngnumber,t.remarks,t.delflag,t.createuser,t.createtime,t.updatetime,t.checktime,t.createorg,t.status,b.name as supplierId,b.longname as supplierName,(select name from jy_base_account where id=t.createuser) as createName,(select name from jy_base_account where id=t.checkuser) as checkName,(select name from jy_base_account where id=t.qcuserid) as qcUserName,
+		(select name from jy_base_account where id=t.updateuser) as updateName,(select name from jy_base_account where id=t.qcuserid) qcUserName,t.rejectinfo as rejectinfo,n.TOTALCOUNT as num,n.TOTALWT as weight, to_char(n.createtime,'yyyy-MM-dd') printCreate, to_char(n.updatetime,'yyyy-MM-dd') printUpdate, to_char(n.checktime,'yyyy-MM-dd') printCheck
+		from JY_SCM_QC_REPORT t 
+	    left join JY_BASE_FRANCHISEE b on b.id=t.supplierid
+	    left join JY_SCM_FLOW_NOTICEORDER n on n.noticeno=t.entryno
+		where t.id=#{id,jdbcType=VARCHAR}
+	</select>
+	
+	<select id="findReport" parameterType="report" resultType="report">
+		select * from JY_SCM_QC_REPORT t where t.id=#{id,jdbcType=VARCHAR}
+	</select>
+	
+	
+	
+	<!-- 修改质检报告主表 -->
+	<update id="update" parameterType="report">
+		update JY_SCM_QC_REPORT set handid=#{handId,jdbcType=VARCHAR},entryno=#{entryNo,jdbcType=VARCHAR},qcuserid=#{qcUserId,jdbcType=VARCHAR},
+		qcorgid=#{qcOrgId,jdbcType=VARCHAR},puruserid=#{purUserId,jdbcType=VARCHAR},purorgid=#{purOrgId,jdbcType=VARCHAR},supplierid=#{supplierId,jdbcType=VARCHAR},qcweight=#{qcWeight,jdbcType=NUMERIC},
+		qcnumber=#{qcNumber,jdbcType=NUMERIC},qcngweight=#{qcNgWeight,jdbcType=NUMERIC},qcngnumber=#{qcNgNumber,jdbcType=NUMERIC},remarks=#{remarks,jdbcType=VARCHAR},updateuser=#{updateUser,jdbcType=VARCHAR},
+		updatetime=sysdate,status=#{status,jdbcType=VARCHAR} where id=#{id,jdbcType=VARCHAR}
+	</update>
+	
+	<!-- 批量修改质检报告详情表 -->
+	<update id="updateReportDetail" parameterType="java.util.List">
+		<foreach collection="list" item="item" index="item" open="begin" close=";end;" separator=";">
+			update JY_SCM_QC_REPORTDTL set reportid=#{item.reportId,jdbcType=VARCHAR},suppmouCode=#{item.suppmouCode,jdbcType=VARCHAR},ngnumber=#{item.ngNumber,jdbcType=NUMERIC},ngweight=#{item.ngWeight,jdbcType=NUMERIC},qcfaqid=#{item.qcFaqId,jdbcType=VARCHAR},qcfaqdesc=#{item.qcFaqDesc,jdbcType=VARCHAR},
+			remarks=#{item.remarks,jdbcType=VARCHAR},prodid=#{item.prodId,jdbcType=VARCHAR} where id=#{item.id,jdbcType=VARCHAR}
+		</foreach>
+	</update>
+	
+	<!-- 审核质检报告 -->
+	<update id="checkReport" parameterType="report">
+		update JY_SCM_QC_REPORT set status=#{status,jdbcType=VARCHAR},checkuser=#{checkUser,jdbcType=VARCHAR},checktime=sysdate,rejectinfo=#{rejectinfo,jdbcType=VARCHAR} where id=#{id,jdbcType=VARCHAR}
+	</update>
+	
+	<!-- 删除质检报告主表 -->
+	<update id="delete" parameterType="report">
+		<!-- delete from JY_SCM_QC_REPORT where id=#{id,jdbcType=VARCHAR} -->
+		update JY_SCM_QC_REPORT set delflag=#{delflag,jdbcType=VARCHAR},updateuser=#{updateUser,jdbcType=VARCHAR},status=#{status,jdbcType=VARCHAR},updatetime=sysdate where id=#{id,jdbcType=VARCHAR}
+	</update>
+	
+	<!-- 批量删除报告详情表 -->
+	<delete id="deleteReportDetail" parameterType="java.util.List">
+		delete from JY_SCM_QC_REPORTDTL where id in
+		<foreach collection="list" item="item" open="(" separator="," close=")">
+			#{item.id}
+		</foreach>
+	</delete>
+	
+	<!-- 被删除的报告详情表id -->
+   	<select id="byDeleteBatch"  resultType="reportDetail" parameterType="java.util.List">
+		select * from  JY_SCM_QC_REPORTDTL  
+		where id not in
+		<foreach collection="list" item="item" open="(" separator="," close=")">
+		    #{item.id}
+	    </foreach>
+	    and reportid=#{reportno}
+	</select>
+	
+	<!-- 根据商品条码和入库通知查数据 -->
+	<select id="reportCode" parameterType="reportDetail" resultType="reportDetail">
+		select p.id as prodId,p.code as code,p.name as name,(select b.name from JY_DATA_DICT d join JY_DATA_DICT_ITEM b on b.dictid=d.id where d.datakey='SCM_PRO_GOLD_TYPE' and b.value=p.goldtype) as goldtype,
+		p.count as ngNumber,p.totalweight as ngWeight,p.moucode as suppmouCode from JY_SCM_IMS_PRODUCT p
+		left join JY_SCM_FLOW_NOTICEORDER n on p.NOTICENO=n.noticeno
+		where n.status='2' and n.delflag='1' and n.flag='1'  and  p.id not in (select prodId from jy_scm_qc_reportdtl d left join JY_SCM_QC_REPORT t on t.id=d.reportid where t.delflag='0' and  t.status!='9') and 
+		p.noticeno=#{detail.reportId,jdbcType=VARCHAR} and p.code=#{detail.code,jdbcType=VARCHAR}
+	</select>
+	
+	<!-- 根据入库通知单查数据 -->
+	<select id="reportNoticeno" parameterType="reportDetail" resultType="reportDetail">
+	 <![CDATA[
+		select t.id as prodId,t.name as name,(select b.name from JY_DATA_DICT d join JY_DATA_DICT_ITEM b on b.dictid=d.id where d.datakey='SCM_PRO_GOLD_TYPE' and b.value=t.goldtype) as goldtype,
+		t.count as ngNumber,t.actualwt as ngWeight,t.count as tolNgNumber,t.actualwt as tolNgWeight from JY_SCM_FLOW_NOTICEORDER n left join JY_SCM_FLOW_NOTICEDETAIL t on n.id=t.noticeid where 
+	    n.status='2' and n.delflag='1' and n.flag='0'  and  t.id not in (select prodId from jy_scm_qc_reportdtl d left join JY_SCM_QC_REPORT t on t.id=d.reportid where t.delflag='0' and  t.status!='9') and n.noticeno=#{reportId} 
+	]]>		
+	</select>
+	<!-- 查质检报告详情数据 -->
+	<select id="findDetail" parameterType="reportDetail" resultType="reportDetail">
+		select *  from JY_SCM_QC_REPORTDTL n  where  n.reportid=#{reportId}
+	</select>
+	
+	
+	
+	<!-- 根据入库通知单号 查供应商和采购信息-->
+	<select id="selectByPur" resultType="report">
+		select n.surpplyid as supplierId,b.name as supplierName,o.createuser as purUserId,o.orgid as purOrgId,n.flag as flag,n.TOTALCOUNT as qcNumber,n.TOTALWT as qcWeight from  JY_SCM_FLOW_NOTICEORDER n
+		left join JY_SCM_PUR_ORDER o on n.purchaseno=o.orderno left join JY_BASE_FRANCHISEE b on b.id=n.surpplyid  where n.noticeno=#{entryNo} and  n.status='2' and n.delflag='1'
+	</select>
+	
+	<!-- 根据质检报告详情 查入库通知单详细信息-->
+	<select id="detailNoticeno" parameterType="reportDetail" resultType="reportDetail">
+		select d.*,n.name as name,n.goldtypename as goldtype,(select b.name from JY_DATA_DICT d join JY_DATA_DICT_ITEM b on b.dictid=d.id where d.datakey='SCM_QC_PROBLEM' and b.value=d.qcFaqId) as qcFaqName,n.count as tolNgNumber,n.actualwt as tolNgWeight
+		 from jy_scm_qc_reportdtl d left join jy_scm_flow_noticedetail n  on d.prodid=n.id where 1=1
+			and d.reportid=#{detail.reportId}
+	</select>
+	
+	<!-- 根据质检报告详情查商品表信息-->
+	<select id="detailByPur" parameterType="reportDetail" resultType="reportDetail">
+		select d.*,p.code as code,p.name as name,(select t.name from JY_DATA_DICT d join JY_DATA_DICT_ITEM t on t.dictid=d.id where d.datakey='SCM_PRO_GOLD_TYPE' and t.value=p.goldtype) as goldtype,
+		(select b.name from JY_DATA_DICT d join JY_DATA_DICT_ITEM b on b.dictid=d.id where d.datakey='SCM_QC_PROBLEM' and b.value=d.qcFaqId) as qcFaqName 
+		from jy_scm_qc_reportdtl d left join jy_scm_ims_product p on d.prodid=p.id where 1=1
+		and d.reportid=#{detail.reportId}
+	</select>
+	
+	<!-- 质检人列表 -->
+	<select id="findOrg" resultType="SelectData"  parameterType="String">
+		select t.id as key,t.name as value from JY_BASE_ACCOUNT t where t.orgid=#{orgId}
+	</select>
+	
+	<!-- 获取入库通知到详情表 -->
+	<select id="getNoticedetail" resultType="materialcome" parameterType="reportDetail">
+    	select * from jy_scm_flow_noticedetail where id=#{prodId,jdbcType=VARCHAR}
+    </select>
+    
+    
+</mapper>

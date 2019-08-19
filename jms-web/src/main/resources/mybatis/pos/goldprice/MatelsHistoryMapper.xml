@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.dao.pos.goldprice.MatelsHistoryDao">
+	<resultMap id="baseMatelsHistory" type="matelsHistory"></resultMap>
+	<insert id="insertMatelsHistory" parameterType="java.util.List">
+		<foreach collection="list" item="item" index="index" open="begin" close=";end;" separator=";">
+			insert into jy_pos_price_history(id,orgid,goldcode,oldprice,goldprice,operateTime,orderNo)
+									values(#{item.id},#{item.orgId},#{item.goldCode},#{item.oldprice},#{item.goldPrice},#{item.operateTime},#{item.orderNo})
+		</foreach>
+	</insert>
+</mapper>

@@ -1,0 +1,193 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.dao.scm.warehouse.WarehouseDao">
+
+	<resultMap id="base" type="ScmWarehouse"></resultMap>
+    
+    <insert id="insert"  parameterType="ScmWarehouse">	
+		insert into jy_scm_warehouse
+		  (id,
+		  code,
+		  name,
+		  orgid,
+		  distcode ,
+		  type,
+		  status,
+		  defaults,
+		  province,
+		  city,
+		  county,
+		  zipcode,
+		  address,
+		  director,
+		  directornm,
+		  description,
+		  createtime,
+		  createuser,
+		  createname)
+		values
+		  (#{id},
+		   #{code},
+		   #{name},
+		   #{orgId},
+		   #{distcode},
+		   #{type},
+		   #{status},
+		   #{defaults},
+		   #{province},
+		   #{city},
+		   #{county},
+		   #{zipcode},
+		   #{address},
+		   #{director},
+		   #{directornm},
+		   #{description},
+		   sysdate,
+		   #{createUser},
+		   #{createName}
+		   )
+	</insert>
+    
+    <select id="findByPage"  resultMap="base" parameterType="ScmWarehouse">
+        select  t.*,(select jbo.name from jy_base_org jbo where jbo.id=t.orgid ) as orgName,(select jba.name from jy_base_account jba where jba.id= t.director) as userName from
+		       jy_scm_warehouse t
+		 where t.orgid in(SELECT jbg.id FROM jy_base_org jbg start with jbg.id=#{param.orgId} connect by prior jbg.id = jbg.pid)
+       <if test='param.status != null and param.status != ""'>
+        	AND t.status=#{param.status}
+       </if> 
+       <if test='param.name != null and param.name != ""'>
+        	AND t.name like '%'||#{param.name}||'%'
+       </if>
+        ORDER BY t.createTime desc
+    </select>
+     <select id="findScmWarehouseRecordByCode" parameterType="String" resultType="int">
+    	select count(1) from jy_scm_warehouse where orgid=#{orgId} and code=#{code} 
+    </select>
+    
+     <select id="findScmWarehouseRecordByName" parameterType="String" resultType="ScmWarehouse">
+    	select id from jy_scm_warehouse where orgid=#{orgId} and name=#{name}
+    </select>
+    
+    <select id ="findDefaults" parameterType="String" resultType="int">
+    	select count(1) from  jy_scm_warehouse t where t.orgid =#{orgid} and t.defaults='1'
+    </select>
+    
+    <select id="find" parameterType="ScmWarehouse" resultType="ScmWarehouse">
+    	select t.*,(select jbo.name from jy_base_org jbo where jbo.id=t.orgid ) as orgName,(select jba.name from jy_base_account jba where jba.id= t.director) as userName
+       from jy_scm_warehouse t
+       where t.id = #{id}
+    </select>
+    <select id="count"  resultType="int" parameterType="ScmWarehouse">
+       SELECT count(*) FROM jy_scm_warehouse t  WHERE 1=1 
+    </select> 
+    <update id="update" parameterType="ScmWarehouse">
+    	update jy_scm_warehouse
+	       set 
+	           name = #{name},
+	           orgid = #{orgId},
+	           distcode = #{distcode},
+	           status = #{status},
+	           defaults = #{defaults},
+	           province = #{province},
+	           city = #{city},
+	           county = #{county},
+	           address = #{address},
+	           zipcode = #{zipcode},
+	           director = #{director},
+	           directornm = #{directornm},
+	           description = #{description},
+	           updatetime = sysdate,
+	           updateuser = #{updateUser},
+	           updatename = #{updateName}
+	     where id = #{id}
+    </update>
+    <update id="updateScmWarehouseState" parameterType="ScmWarehouse">
+		UPDATE jy_scm_warehouse
+		SET   status = #{status},
+			  updatetime =#{updateTime},
+			  updateuser = #{updateUser},
+			  updateName = #{updateName}
+		WHERE id=#{id}
+	</update>
+	
+	<select id="findRoleList4Select" resultType="SelectData">
+    	select id as key,name as value from jy_scm_warehouse where status='1'
+    </select>
+	
+	<update id="batchUpdateWarehouseState"  parameterType="java.util.List">  
+	        update jy_scm_warehouse
+	        set status=#{warehouse.status},
+	        	updateuser=#{warehouse.updateUser},
+	        	updatename=#{warehouse.updateName},
+	        	updatetime=sysdate
+		    where id in
+		    <foreach collection="list" item="item" open="(" separator="," close=")">
+		    		#{item.id}
+	   		</foreach>
+	</update>
+	
+	
+	<!-- 查询门店所有的仓库信息 -->
+	<select id="findWarehouseAll" resultType="SelectData" parameterType="String">
+    	select id as key,name as value from jy_scm_warehouse where status='1'  and orgid=#{orgid,jdbcType=VARCHAR}
+    		<!-- and (orgid in (select o.id from jy_base_org o where o.companyid=#{orgid,jdbcType=VARCHAR} and o.orggrade != '4') or orgid=#{orgid,jdbcType=VARCHAR}) -->
+    </select>
+    
+    
+    <select id="findWarehouseDefault" parameterType="String" resultType="ScmWarehouse">
+    	select * from jy_scm_warehouse where status='1' and orgid=#{orgId} and defaults='1'
+    </select>
+    
+    
+    
+    <!-- 查询省级id查省级信息 -->
+    <select id="getDictById" resultType="baseDict" parameterType="String">
+        select jsd.paramvalue,jsd.id from jy_sys_dict jsd where jsd.id=#{id} 
+	</select>
+	
+	<!-- 查机构的默认仓库信息 -->
+	<select id ="findOrgWarehouse" resultType="ScmWarehouse" parameterType="String">
+    	select * from  jy_scm_warehouse t where t.orgid =#{orgid} and t.defaults='1'
+    </select>
+    
+    
+    <!-- 仓库中的产品信息 -->
+    <select id ="findProductWarehouse" resultType="product" parameterType="product">
+    	select * from jy_scm_ims_product p where 1=1
+    	<if test='warehouseId != null and warehouseId != ""'>
+        	AND p.warehouseid = #{warehouseId}
+       </if>
+       <if test='locationId != null and locationId != ""'>
+        	AND p.locationid = #{locationId}
+       </if>
+    </select>
+    
+    <!-- 删除仓库 -->
+    <delete id="delete" parameterType="ScmWarehouse">
+    	delete from jy_scm_warehouse WHERE id=#{id}
+	</delete>
+	
+	<!-- 查询公司或部门所有的仓库信息 -->
+	<select id="findWarehouseAlls" resultType="SelectData"  parameterType="java.util.List">  
+	       select id as key,name as value from jy_scm_warehouse where status='1' 
+    		and orgid  in
+		    <foreach collection="nodes" item="item" open="(" separator="," close=")">
+		    		#{item.id}
+	   		</foreach>
+	</select>
+	
+	<!-- 公司或门店机构树 -->
+	<resultMap id="ZNodes" type="com.jy.common.utils.tree.entity.ZNodes"></resultMap>
+    <select id="getPreOrgTree" resultMap="ZNodes" parameterType="String">
+       SELECT t.id as id,
+	   		  t.name as name,
+	   		  t.pId as pId,
+	   		  t.orggrade as orgGrade
+	   FROM JY_BASE_ORG t
+	   where 1=1
+	   <if test='pId !=null and pId != ""'>
+	   		and t.id in(SELECT jbg.id FROM jy_base_org jbg start with jbg.id=#{pId} connect by prior jbg.id = jbg.pid)
+	   </if>
+       ORDER BY t.id,t.name
+    </select> 
+</mapper>

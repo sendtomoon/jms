@@ -1,0 +1,208 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.dao.system.attribute.AttributeDao">
+	<resultMap id="ZNodes" type="com.jy.common.utils.tree.entity.ZNodes"></resultMap>
+	<resultMap type="AttributeGroup" id="base">
+		<collection property="items" select="getAttributes" column="groupId" ofType="Attribute"></collection>
+	</resultMap>
+	<resultMap id="baseItem" type="Attribute" ></resultMap>
+	<resultMap id="base1" type="AttributeValue">
+	</resultMap>
+	
+    <insert id="insertAttribute"  parameterType="Attribute">	
+		insert into jy_scm_attribute
+		  (id, groupid, ATTRDICTID)
+		values       
+		  (#{id}, #{groupId},#{attrdictId})
+	</insert>
+	
+    <insert id="insert" parameterType="AttributeGroup">
+    	insert into jy_scm_attributegroup
+		  (id, name, sort, categoryid,description,type)
+		values
+		  (#{id}, #{name}, #{sort}, #{categoryId},#{description},#{type})
+    </insert>
+    
+    <insert id="insertAttrValue" parameterType="AttributeValue">
+    	insert into jy_scm_attributevalue
+		  (id, businessid, attrdictid, value)
+		values
+		  (#{id}, #{businessId}, #{attributeId}, #{value})
+    </insert>
+    
+    <select id="findAttrGroupCount" parameterType="String" resultType="int">
+    	select count(id) from jy_scm_attributegroup where categoryId=#{categoryId}
+    </select>
+    
+    <select id="getCategoryTree" resultMap="ZNodes">
+       SELECT t.id as id,
+	   		  t.name as name,
+	   		  t.pId as pId
+	   FROM jy_scm_category t
+       ORDER BY t.id,t.name
+    </select>
+    
+    <select id="findCountByCode" parameterType="Attribute" resultType="int">
+    	select count(id) from jy_scm_attribute where code=#{code} and groupid=#{groupId}
+    </select>
+    
+    <select id="findByPage"  resultType="AttributeGroup" parameterType="AttributeGroup">
+		    select c.id        as categoryId,
+			       c.name      as categoryName,
+			       g.id,
+			       g.name,
+			       g.sort,
+			       g.type
+			  from jy_scm_category c
+			 right join jy_scm_attributegroup g
+			    on c.id = g.categoryid
+		 where 1=1
+		 <if test='param.categoryId != null and param.categoryId !=""'>
+			and g.categoryid in (select id from jy_scm_category start with id = #{param.categoryId} connect by prior id = pid)
+	     </if>
+	     <if test='param.keyWord != null and param.keyWord !=""'>	     
+    	    and g.name like '%'||#{param.keyWord}||'%'
+	     </if>
+    </select>
+    
+    <delete id="deleteAttributesByGid" parameterType="String">
+    	delete from jy_scm_attribute a where a.groupid=#{gId}
+    </delete>
+    
+    <insert id="insertAttributes" parameterType="java.util.List">
+		INSERT ALL  
+		<foreach item="o" collection="list"  separator=" " >
+			into jy_scm_attribute
+			  (id, groupid, attrdictid)
+			values
+			  (#{o.id}, #{o.groupId},#{o.attrdictId})
+		</foreach>
+		SELECT 1 FROM DUAL
+	</insert>
+	
+	<select id="find"  resultMap="base" parameterType="AttributeGroup">
+       select t.id, t.name, t.sort, t.categoryid as categoryId,c.name as categoryName,t.id as groupId,t.description,t.type
+       from jy_scm_attributegroup t,jy_scm_category c 
+       where t.categoryid = c.id and t.id=#{id}
+    </select>
+	
+    <select id="getAttributes"  resultMap="baseItem" parameterType="Attribute">
+        SELECT  t.id,
+           t.groupid as groupId,
+           t.attrdictid as attrdictId
+      FROM jy_scm_attribute t
+     WHERE t.groupid = #{groupId}
+    </select> 
+    
+    <update id="update" parameterType="AttributeGroup">
+    	update jy_scm_attributegroup
+			   set
+			       name = #{name},
+			       sort = #{sort},
+			       description = #{description},
+			       type = #{type}
+			 where id = #{id}
+    </update>
+    
+    <update id="updateAttributes"  parameterType="java.util.List">
+	   <foreach collection="list" item="item" index="index" open="begin" close=";end;" separator=";">
+				update jy_scm_attribute 
+				set
+			       name = #{item.name},
+			       sort = #{item.sort},
+			       type = #{item.type},
+			       dictid = #{item.dictId},
+			       length = #{item.length},
+			       nullable = #{item.nullable},
+			       filtertag = #{item.filterTag},
+			       status = #{item.status}
+				where id = #{item.id}
+	   </foreach>
+    </update>
+    
+    <select id="findAttrsByCid" parameterType="AttributeGroup" resultType="Attribute">
+    	select d.id,
+           d.name,
+           d.code,
+           d.sort,
+           d.type,
+           d.dictid    as dictId,
+           d.length,
+           d.nullable,
+           d.filtertag as filterTag
+      from jy_scm_attributegroup g
+      left join jy_scm_attribute a
+        on g.id = a.groupid
+        left join jy_scm_attributedict d
+        on a.attrdictid=d.id
+      where g.categoryid = #{categoryId}
+		 	and g.type = #{type}
+    </select>
+    
+    <insert id="addAttrsValue" parameterType="java.util.List">
+    	<foreach collection="list" item="item" index="index" open="begin" close=";end;" separator=";">
+	    	insert into jy_scm_attributevalue
+			  (id, businessid, attrdictid, value)
+			values
+			  (#{item.id}, #{item.businessId}, #{item.attributeId}, #{item.value})
+         </foreach>
+    </insert>
+    
+    <update id="updateAttrsValue"  parameterType="java.util.List">
+	   <foreach collection="list" item="item" index="index" open="begin" close=";end;" separator=";">
+				update jy_scm_attributevalue
+				set
+			       value = #{item.value}
+				where id = #{item.id}
+	   </foreach>
+    </update>
+    
+    <select id="selectAttrGroups" resultType="SelectData">
+    	select id as key, name as value from jy_scm_attributegroup where categoryid=#{categoryId} order by sort
+    </select>
+    
+    <select id="findAttrValuesByBid" parameterType="AttributeValue" resultType="AttributeValue">
+    	select aa.id, d.code as name, aa.value
+		   from jy_scm_attributevalue aa
+         left join jy_scm_attributedict d
+         on aa.attrdictid=d.id
+		  where aa.businessid = #{businessId}
+    </select>
+    
+    <select id="findDictItems" parameterType="String" resultType="SelectData">
+    	select i.value, i.name as key
+	        from jy_data_dict d
+	        left join jy_data_dict_item i
+	          on d.id = i.dictid
+	       where d.id = #{dictId}
+	         and d.isValid = '1'
+	       order by i.sort
+    </select>
+    
+    <select id="findAttrCodeNum" parameterType="Attribute" resultType="int">
+    	select count(code)
+		  from jy_scm_attributegroup gp
+		  left join jy_scm_attribute ar
+		    on gp.id = ar.groupid
+		 where gp.categoryid = #{categoryId}
+		   and ar.code = #{code}
+    </select>
+    
+    <select id="getDictsByName" resultType="SelectData">
+    	select id as key ,name || ',' || datakey as value from jy_data_dict where isValid = '1' and name like '%'||#{dictName}||'%'
+    </select>
+    
+    	<select id="queryGroupCount" resultType="int" parameterType="Attribute">
+		SELECT count(*) FROM jy_scm_attribute ar WHERE ar.GROUPID=#{groupId}
+	</select>
+    <select id="findBusinessId"  parameterType="String" resultMap="base1">
+    	select t.businessid as businessId,
+		       t.attrdictid as attributeId,
+		       t.value as value,
+		       t1.name as name,
+		       t1.code  attributeCode
+		  from JY_SCM_ATTRIBUTEVALUE t left join jy_scm_attributedict t1 on t.attrdictid =t1.id
+		  where t.businessid =#{str}
+    </select>
+    
+</mapper>

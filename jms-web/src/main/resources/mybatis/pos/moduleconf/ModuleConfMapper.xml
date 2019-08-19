@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.dao.pos.moduleconf.ModuleConfDao">
+	<resultMap id="basemoduleConf" type="moduleConf"></resultMap>
+	
+	<select id="findByPage" parameterType="moduleConf" resultType="moduleConf">
+		select t.* from JY_SYS_APP_MODULE_CONF t  where 1=1
+		<if test='param.status != null and param.status !="" '>
+		 and t.status=#{param.status}
+		</if>
+		<if test='param.sysCode != null and param.sysCode !="" '>
+		 and  upper(t.sysCode) like '%'||upper(#{param.sysCode})||'%'
+		</if>
+		<if test='param.sysName != null and param.sysName !="" '>
+		 and upper(t.sysName) like '%'||upper(#{param.sysName})||'%'
+		</if>
+		<if test='param.moduleCode != null and param.moduleCode !="" '>
+		 and upper(t.moduleCode) like '%'||upper(#{param.moduleCode})||'%'
+		</if>
+		<if test='param.moduleName != null and param.moduleName !="" '>
+		 and upper(t.moduleName) like '%'||upper(#{param.moduleName})||'%'
+		</if>
+		order by t.createtime desc
+	</select>
+	<select id="find" parameterType="moduleConf" resultType="moduleConf">
+		select t.* from JY_SYS_APP_MODULE_CONF t
+	</select>
+	<insert id="insert" parameterType="moduleConf">
+		insert into JY_SYS_APP_MODULE_CONF(id,sysCode,sysName,moduleCode,moduleName,status,createuser,createtime,remarks)values(#{id},#{sysCode},#{sysName},#{moduleCode},#{moduleName},#{status},#{createUser},sysdate,#{remarks})
+	</insert>
+	<update id="update" parameterType="moduleConf">
+		update JY_SYS_APP_MODULE_CONF
+		set sysCode=#{sysCode},
+		sysName=#{sysName},
+		moduleCode=#{moduleCode},
+		moduleName=#{moduleName},
+		status=#{status},
+		createuser=#{createUser},
+		remarks=#{remarks,jdbcType=VARCHAR},
+		createtime=sysdate
+		where id=#{id}
+	</update>
+	<delete id="deleteBatch" parameterType="java.util.List">
+		update JY_SYS_APP_MODULE_CONF set  status='0'
+		where id in
+		<foreach collection="list" item="item" open="(" separator="," close=")">
+		    #{item.id}
+	    </foreach>
+	</delete>
+</mapper>
