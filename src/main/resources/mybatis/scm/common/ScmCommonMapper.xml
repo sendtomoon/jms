@@ -1,0 +1,51 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.dao.scm.common.CommonDao">
+
+	<!-- 查商品表(product) -->
+    <select id="queryProductsByConditions" resultType="codeVO" parameterType="codeVO">
+		 select 
+		   p.id,
+	       p.code,
+	       p.PRIMARYCODE as primaryCode,
+	       p.name,
+	       p.warehouseid as outWarehouseId,
+	       p.locationid  as outLocationId,
+	       p.count       as num,
+	       p.totalweight as weight,
+	       p.wagemode    as feeType,
+	       p.orgid       as orgId
+		  from jy_scm_ims_product p
+		 <choose>  
+            <when test='codeVO.type=="0"'>  
+              where p.code=#{codeVO.code}
+            </when>   
+            <otherwise>  
+              where p.PRIMARYCODE=#{codeVO.code}
+              <if test='codeVO.orgId!="" and codeVO.orgId!=null'>
+		        	and p.orgid=#{codeVO.orgId}
+		      </if>
+            </otherwise>  
+        </choose>
+        
+    </select>
+	
+	<!-- 查原料库存表(materialin) -->
+	<select id="queryMaterialsByConditions" resultType="codeVO" parameterType="codeVO">
+		 select 
+		   mn.id,
+	       mn.code,
+	       m.name as name,
+	       mn.warehouseid as outWarehouseId,
+	       mn.locationid as outLocationId,
+	       mn.num,
+		   mn.weight,
+		   mn.type as feeType,
+		   mn.orgid as orgId
+		 from jy_scm_ims_materialin mn left join jy_scm_ims_material m on mn.code = m.code
+		 where mn.code=#{codeVO.code}
+	</select>
+	
+	
+
+</mapper>

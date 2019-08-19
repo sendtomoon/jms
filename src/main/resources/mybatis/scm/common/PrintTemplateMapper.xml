@@ -1,0 +1,66 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.dao.scm.common.PrintTemplateDao">
+
+	<select id="getTemplateById" resultType="printTemplateVO" parameterType="String">
+		select  p.id,
+				p.name,
+				p.template,
+				p.note,
+				p.createtime as createTime,
+				p.createuser as createUser,
+				p.updatetime as updateTime,
+				p.updateuser as updateUser,
+				p.type,
+				p.delflag    as delFlag,
+				p.orgid      as orgId
+		from jy_scm_print_template p
+		where p.id=#{id}
+	</select>
+
+	<insert id="insertTemplate" parameterType="printTemplateVO">
+		insert into jy_scm_print_template
+		  (id, name, template, note, createtime, createuser, type,delflag,orgid)
+		values
+		  (#{id}, #{name}, #{template}, #{note,jdbcType=VARCHAR}, sysdate, #{createUser,jdbcType=VARCHAR}, #{type,jdbcType=VARCHAR},#{delFlag,jdbcType=VARCHAR},#{orgId,jdbcType=VARCHAR})
+	</insert>
+	
+	<update id="updateTemplate" parameterType="printTemplateVO">
+		update jy_scm_print_template
+		   set 
+		       template = #{template},
+		       updatetime = sysdate,
+		       updateuser = #{updateUser}
+		 where id = #{id}
+	</update>
+	
+	<update id="deleteTemplate" parameterType="String">
+		update jy_scm_print_template set updatetime=sysdate,updateuser=#{updateUser},delflag=#{delFlag} where id=#{id}
+	</update>
+	
+	<select id="getTemplateSelectByType" resultType="SelectData" parameterType="String">
+		select id as value,name as key from jy_scm_print_template where type=#{type} and delflag='1' order by createtime desc
+	</select>
+	
+	<select id="getTemplateList" resultType="printTemplateVO" parameterType="printTemplateVO">
+		select  p.id,
+				p.name,
+				p.template,
+				p.note,
+				p.createtime as createTime,
+				p.createuser as createUser,
+				p.updatetime as updateTime,
+				p.updateuser as updateUser,
+				p.type,
+				p.delflag    as delFlag,
+				p.orgid		 as orgId
+		from jy_scm_print_template p
+		where p.delflag='1'
+		<if test='type!=null and type!=""'>
+			and p.type = #{type}
+		</if>
+		order by p.createtime desc
+	</select>
+	
+	
+</mapper>

@@ -1,0 +1,61 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.dao.scm.demo.DemoDao">
+	
+    <select id="findByPage" resultType="Demo" parameterType="Demo">
+		    select  id, 
+				    chs_name as chsName, 
+				    en_name as enName, 
+				    gender, 
+				    age, 
+				    education, 
+				    school, 
+				    description, 
+				    status, 
+				    birthday 
+			 from jy_test_demo1
+			 where 1=1
+			 <if test='param.status != null and param.status != ""'>
+		         AND status=#{param.status}
+		     </if>
+		     <if test='param.chsName != null and param.chsName != ""'>
+		         AND chsName like '%'||#{param.chsName}||'%'
+		     </if>
+    </select>
+	
+    <insert id="batchInsert" parameterType="java.util.List">
+    	<foreach collection="list" item="item" index="index" open="begin" close=";end;" separator=";">
+	    	insert into jy_test_demo1
+			  (id, chs_name, en_name, gender, age, education, school, description, status, birthday)
+			values
+			  (#{item.id}, #{item.chsName}, #{item.enName}, #{item.gender}, #{item.age}, #{item.education}, #{item.school}, #{item.description}, #{item.status}, #{item.birthday})
+         </foreach>
+    </insert>
+    
+    <update id="batchUpdate"  parameterType="java.util.List">
+	   <foreach collection="list" item="item" index="index" open="begin" close=";end;" separator=";">
+				update jy_test_demo1
+				   set chs_name = #{item.chsName},
+				       en_name = #{item.enName},
+				       gender = #{item.gender},
+				       age = #{item.age},
+				       education = #{item.education},
+				       school = #{item.school},
+				       description = #{item.description},
+				       birthday = #{item.birthday},
+				       status = #{item.status}
+				 where id = #{item.id}
+	   </foreach>
+    </update>
+    
+    <update id="batchDelete"  parameterType="java.util.List">  
+	        update jy_test_demo1
+	        set status='0'
+		    where id in
+		    <foreach collection="list" item="item" open="(" separator="," close=")">
+		    		#{item.id}
+	   		</foreach>
+	</update>
+	
+	
+</mapper>
