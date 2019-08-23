@@ -66,19 +66,13 @@ public class LoginController extends BaseController<Object> {
 			// shiro管理的session
 			Subject currentUser = SecurityUtils.getSubject();
 			Session session = currentUser.getSession();
-			String sessionCode = (String) session.getAttribute(Const.SESSION_SECURITY_CODE); // 获取session中的验证码
-			String code = ""; // KEYDATA[2];
 			String username = KEYDATA[0];
 			String password = KEYDATA[1];
-			// if(null == code || "".equals(code)){
-			// errInfo = "nullcode"; //验证码为空
-			// }else
 			if (StringUtils.isEmpty(username) || StringUtils.isEmpty(password)) {
 				errInfo = "nullup"; // 缺少用户名或密码
 			} else {
 				// shiro加入身份验证
 				UsernamePasswordToken token = new UsernamePasswordToken(username, password.toUpperCase());
-				// token.setRememberMe(true);
 				try {
 					if (!currentUser.isAuthenticated()) {
 						currentUser.login(token);

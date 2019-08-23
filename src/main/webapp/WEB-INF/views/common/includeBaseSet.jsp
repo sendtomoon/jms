@@ -28,7 +28,7 @@
 <script type="text/javascript">
 			if("ontouchend" in document) {
 				//手机适应;
-				document.write("<script src='"+jypath+"/static/js/jquery/jquery.mobile.custom.min.js'><"+"/script>");
+				document.write("<script src='"+jypath+"/static/js/jquery/jquery.mobile.custom.min.js' />");
 			}
 </script>
 <link rel="stylesheet" href="${jypath}/static/js/jquery/layer/skin/default/layer.css" />
